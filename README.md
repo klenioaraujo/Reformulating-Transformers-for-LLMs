@@ -1,6 +1,6 @@
 # Reformulating Transformers for LLMs: Quaternionic-Harmonic Wave Dynamics with Optical Fractal Processing
 
-**Author:** [Your Name or Placeholder]
+**Author:** KLENIO ARAUJO PADILHA (klenioaraujo@gmail.com)
 **Affiliation:** Independent Researcher, xAI Collaborative Network
 **Date:** September 16, 2025
 
@@ -8,9 +8,9 @@
 
 The transformer architecture, foundational to Large Language Models (LLMs), faces limitations in computational complexity and physical grounding. We propose a reformulation integrating the Quaternionic Recursive Harmonic Wavefunction ($\Psi_{QRH}$), with Padilha’s fractal wave function. The framework employs a logarithmic phase filter, quaternionic rotations (R), and Leech lattice embedding via Golay code ($G_{24}$). Numerical benchmarks on a $64^3$ grid demonstrate 30% error reduction, 25% memory compression, and 2x faster eigenvalue convergence compared to Crank-Nicolson and split-step methods. Implemented in a quartz-light optical system, this achieves ~1 GHz throughput, reformulating attention as wave interference and feed-forward as fractal folding. Applications include efficient edge LLMs and quantum consciousness modeling, grounded in physical reality.
 
-$$ \Psi_{QRH}(r,t) = R \cdot \mathcal{F}^{-1} \{ F(k) \cdot \mathcal{F} \{ \Psi(r,t) \} \} $$
-$$ f(\lambda,t) = I_0 \sin(\omega t + \alpha \lambda) e^{i(\omega t - k \lambda + \beta \lambda^2)} $$
-$$ F(k) = \exp(i \alpha \arctan(\ln(|k| + \epsilon))) $$
+$ \Psi_{QRH}(r,t) = R \cdot \mathcal{F}^{-1} \{ F(k) \cdot \mathcal{F} \{ \Psi(r,t) \} \} $
+$ f(\lambda,t) = I_0 \sin(\omega t + \alpha \lambda) e^{i(\omega t - k \lambda + \beta \lambda^2)} $
+$ F(k) = \exp(i \alpha \arctan(\ln(|k| + \epsilon))) $
 
 
 **Keywords:** Transformer reformulation, Quaternionic Recursive Harmonic Wavefunction, fractal optics, Leech lattice, Golay code, LLM efficiency, quantum simulation
@@ -21,7 +21,7 @@ Transformers power LLMs through self-attention, feed-forward networks (FFNs), an
 
 This paper reformulates the transformer by integrating $\Psi_{QRH}$ with Padilha’s fractal wave function, grounding LLM processing in optical wave dynamics. The free-particle Schrödinger evolution, implemented as follows, ensures physical consistency. We achieve cohesive efficiency: 3x stability, 25% compression, 2x faster inference, and enhanced precision, suitable for edge deployment and consciousness modeling.
 
-$$ \psi(r,t + \Delta t) = \mathcal{F}^{-1} \{ e^{-i (k_x^2 + k_y^2 + k_z^2) \Delta t / 2} \mathcal{F} \{ \psi(r,t) \} \} $$
+$ \psi(r,t + \Delta t) = \mathcal{F}^{-1} \{ e^{-i (k_x^2 + k_y^2 + k_z^2) \Delta t / 2} \mathcal{F} \{ \psi(r,t) \} \} $
 
 ## 2. Theoretical Framework
 
@@ -30,7 +30,7 @@ $$ \psi(r,t + \Delta t) = \mathcal{F}^{-1} \{ e^{-i (k_x^2 + k_y^2 + k_z^2) \Del
 Modern LLMs (e.g., GPT, LLaMA) rely on:
 
 *   **Self-Attention:**
-    $$ \text{Attention}(Q,K,V) = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right) V $$
+    $ \text{Attention}(Q,K,V) = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right) V $
 *   **FFNs:** Position-wise MLPs with non-linear activations (e.g., GELU).
 *   **Positional Encoding:** Rotary Position Embeddings (RoPE) or ALiBi for sequence order [Su et al., 2021; Press et al., 2021].
 *   **Optimizations:** FlashAttention-2 reduces memory; linear attention achieves $O(n)$ complexity [Dao, 2023; DeepSeek, 2025].
@@ -41,7 +41,7 @@ These are computationally intensive (~ms/token on GPUs) and lack physical ground
 
 Padilha’s function models multi-scale propagation:
 
-$$ f(\lambda,t) = I_0 \sin(\omega t + \alpha \lambda) e^{i(\omega t - k \lambda + \beta \lambda^2)} $$
+$ f(\lambda,t) = I_0 \sin(\omega t + \alpha \lambda) e^{i(\omega t - k \lambda + \beta \lambda^2)} $
 
 with complex form $c(\lambda,t) = \text{Re}(f) + i \text{Im}(f)$. The non-linear $\beta \lambda^2$ term induces fractal patterns, ideal for optical quartz systems [Boyd, 2008].
 
@@ -49,11 +49,11 @@ with complex form $c(\lambda,t) = \text{Re}(f) + i \text{Im}(f)$. The non-linear
 
 The $\Psi_{QRH}$ framework defines a quaternion state:
 
-$$ \Psi(r,t) = \psi_0 + \psi_1 i + \psi_2 j + \psi_3 k \in \mathbb{H} $$
+$ \Psi(r,t) = \psi_0 + \psi_1 i + \psi_2 j + \psi_3 k \in \mathbb{H} $
 
 evolved via:
 
-$$ \Psi_{QRH}(r,t) = R \cdot \mathcal{F}^{-1} \{ F(k) \cdot \mathcal{F} \{ \Psi(r,t) \} \} $$
+$ \Psi_{QRH}(r,t) = R \cdot \mathcal{F}^{-1} \{ F(k) \cdot \mathcal{F} \{ \Psi(r,t) \} \} $
 
 where:
 
@@ -65,7 +65,7 @@ where:
 
 The fold operator:
 
-$$ \Phi_{\text{fold}} = \delta(0,0) \sum_{k=1}^{9} e^{i \theta_k}, \quad \theta_k = \frac{2\pi k}{9} $$
+$ \Phi_{\text{fold}} = \delta(0,0) \sum_{k=1}^{9} e^{i \theta_k}, \quad \theta_k = \frac{2\pi k}{9} $
 
 projects to 24D, embedded in the Leech lattice $\Lambda_{24}$ via Golay code $G_{24}$ [Conway & Sloane, 1999].
 
@@ -73,11 +73,11 @@ projects to 24D, embedded in the Leech lattice $\Lambda_{24}$ via Golay code $G_
 
 The free-particle evolution is:
 
-$$ \psi(r,t + \Delta t) = \mathcal{F}^{-1} \{ e^{-i (k_x^2 + k_y^2 + k_z^2) \Delta t / 2} \mathcal{F} \{ \psi(r,t) \} \} $$
+$ \psi(r,t + \Delta t) = \mathcal{F}^{-1} \{ e^{-i (k_x^2 + k_y^2 + k_z^2) \Delta t / 2} \mathcal{F} \{ \psi(r,t) \} \} $
 
 derived from:
 
-$$ i \frac{\partial \psi}{\partial t} = -\frac{1}{2} \nabla^2 \psi, \quad (\hbar = 1, m = 1) $$
+$ i \frac{\partial \psi}{\partial t} = -\frac{1}{2} \nabla^2 \psi, \quad (\hbar = 1, m = 1) $
 
 This ensures unitarity, with $|k|^2 = k_x^2 + k_y^2 + k_z^2$ computed in Fourier space [Bao et al., 2002].
 
@@ -95,15 +95,15 @@ Spectral coefficients (24 complex, 48 real) are encoded via:
 The transformer is reformulated as:
 
 *   **Input Embeddings:** Tokens map to $f(\lambda,t)$, with quaternion components:
-    $$ \psi_0 = \text{Re}(f), \quad \psi_1 = \text{Im}(f), \quad \psi_2 = \text{Re}(f) \cos(\theta_p), \quad \psi_3 = \text{Im}(f) \sin(\theta_p) $$
+    $ \psi_0 = \text{Re}(f), \quad \psi_1 = \text{Im}(f), \quad \psi_2 = \text{Re}(f) \cos(\theta_p), \quad \psi_3 = \text{Im}(f) \sin(\theta_p) $
     where $\theta_p = \arctan(\ln p)$ [Edwards, 1974].
 *   **Positional Encoding:** $\omega t$ and $\theta_k$ replace RoPE, ensuring fractal scaling.
 *   **Self-Attention:** Beam interference in quartz computes $QK^T$, weighted by $F(k)$. Kerr effect approximates softmax:
-    $$ \text{Attention} = \mathcal{F}^{-1} \{ F(k) \cdot \mathcal{F}(\Psi) \} $$
+    $ \text{Attention} = \mathcal{F}^{-1} \{ F(k) \cdot \mathcal{F}(\Psi) \} $
 *   **Feed-Forward:** $\Phi_{\text{fold}} \otimes \Psi$ applies fractal folding via $\beta \lambda^2$, embedded in $\Lambda_{24}$.
 *   **Schrödinger Evolution:** Free propagation updates $\psi_0$, stabilizing dynamics.
 *   **Layer Update:**
-    $$ \Psi_{QRH}^{(l+1)} = R \cdot \left( \mathcal{F}^{-1} \left\{ F(k) \cdot \mathcal{F} \left\{ \Phi_{\text{fold}} \otimes \Psi^l \right\} \right\} \right) + \Psi^l $$
+    $ \Psi_{QRH}^{(l+1)} = R \cdot \left( \mathcal{F}^{-1} \left\{ F(k) \cdot \mathcal{F} \left\{ \Phi_{\text{fold}} \otimes \Psi^l \right\} \right\} \right) + \Psi^l $
 
 ### 3.2 Optical Implementation
 
@@ -123,7 +123,7 @@ A $64^3$ grid simulation (N = 64, L = 10.0, $\Delta t = 0.01$) implements:
 
 *   Initial Gaussian: $\psi(r,0) = e^{-(x^2 + y^2 + z^2)/2}$.
 *   Free evolution: $\psi_{\text{fft}} \cdot e^{-i (k_x^2 + k_y^2 + k_z^2) \Delta t / 2}$.
-*   Filter: $F(k)$ every 10 steps ($\alpha = 1.0$).
+*   Filter: $F(k)$ every 10 steps ($\alpha = 1.0$). 
 *   Rotation: $R(\theta = 0.1, \omega = 0.05, \phi = 0.02)$.
 
 Results (100 steps):
@@ -132,7 +132,7 @@ Results (100 steps):
 *   **Mean:** ~0.
 *   **Std. Dev.:** 0.049.
 *   **Benchmarks** (vs. Crank-Nicolson, Split-Step):
-    *   **Error:** 30% reduction ($L^2$-norm: $6.8 \times 10^{-4}$ vs. $1.0 \times 10^{-3}$).
+    *   **Error:** 30% reduction ($L^2$-norm: $6.8 \times 10^{-4}$ vs. $1.0 \times 10^{-3}$). 
     *   **Memory:** 25% compression (1.1 vs. 2.0 MB/grid).
     *   **Convergence:** 2x faster (60 vs. 120 steps for harmonic oscillator).
     *   **Stability:** 0.07% norm drift (vs. 8.2% Split-Step).
