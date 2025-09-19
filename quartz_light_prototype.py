@@ -361,6 +361,222 @@ class ParallelQuartzArray:
         return coherence
 
 
+class CorrectedFractalAnalyzer:
+    """
+    Corrected fractal dimension analyzer with proper multidimensional equations
+    """
+
+    @staticmethod
+    def corrected_spectral_dimension(points: np.ndarray,
+                                   embedding_dim: int = 2,
+                                   grid_size: int = 256) -> Tuple[float, float]:
+        """
+        Corrected spectral analysis with proper β-D relationship
+
+        Mathematical foundation for multidimensional embeddings:
+        - 1D: β = 3 - 2D
+        - 2D: β = 5 - 2D  ✓ CORRECTED
+        - 3D: β = 7 - 2D  ✓ CORRECTED
+
+        General form: β = (2*embedding_dim + 1) - 2D
+        """
+        if points.shape[1] < embedding_dim:
+            # Pad points if needed
+            padding = np.zeros((points.shape[0], embedding_dim - points.shape[1]))
+            points = np.hstack([points, padding])
+        else:
+            points = points[:, :embedding_dim]
+
+        if embedding_dim == 2:
+            # 2D spectral analysis
+            grid, _, _ = np.histogram2d(points[:, 0], points[:, 1], bins=grid_size)
+            grid = grid.astype(float)
+            grid[grid == 0] = 1e-10  # Avoid log(0)
+
+            # 2D FFT
+            fft_2d = np.fft.fft2(grid)
+            power_spectrum = np.abs(fft_2d)**2
+            power_spectrum = np.fft.fftshift(power_spectrum)
+
+            # Radial averaging
+            center = grid_size // 2
+            y_idx, x_idx = np.indices((grid_size, grid_size))
+            r = np.sqrt((x_idx - center)**2 + (y_idx - center)**2).astype(int)
+
+            k_values = np.arange(1, center//2)  # Valid frequency range
+            spectrum_avg = np.array([np.mean(power_spectrum[r == k]) for k in k_values])
+
+            # Remove invalid values
+            valid = (spectrum_avg > 1e-12) & np.isfinite(spectrum_avg)
+            if np.sum(valid) < 3:
+                return np.nan, np.nan
+
+            k_valid = k_values[valid]
+            spectrum_valid = spectrum_avg[valid]
+
+            # Power law fitting: P(k) = A * k^(-β)
+            log_k = np.log(k_valid)
+            log_power = np.log(spectrum_valid)
+
+            # Robust linear regression
+            coeffs = np.polyfit(log_k, log_power, 1)
+            beta = -coeffs[0]  # Negative slope gives β
+
+            # Calculate fractal dimension using corrected formula for 2D
+            # β = 5 - 2D  =>  D = (5 - β) / 2
+            fractal_dim = (5 - beta) / 2
+
+            return fractal_dim, beta
+
+        elif embedding_dim == 3:
+            # 3D analysis (simplified for computational efficiency)
+            # Use 3D histogram approach
+            hist_3d, edges = np.histogramdd(points, bins=32)  # Smaller bins for 3D
+            hist_3d = hist_3d.astype(float)
+            hist_3d[hist_3d == 0] = 1e-10
+
+            # 3D FFT
+            fft_3d = np.fft.fftn(hist_3d)
+            power_spectrum_3d = np.abs(fft_3d)**2
+
+            # Spherical averaging (simplified)
+            center = 16  # hist_3d.shape[0] // 2
+            z_idx, y_idx, x_idx = np.indices(hist_3d.shape)
+            r = np.sqrt((x_idx - center)**2 + (y_idx - center)**2 + (z_idx - center)**2).astype(int)
+
+            k_values = np.arange(1, center//2)
+            spectrum_avg = np.array([np.mean(power_spectrum_3d[r == k]) for k in k_values])
+
+            valid = (spectrum_avg > 1e-12) & np.isfinite(spectrum_avg)
+            if np.sum(valid) < 3:
+                return np.nan, np.nan
+
+            k_valid = k_values[valid]
+            spectrum_valid = spectrum_avg[valid]
+
+            # Power law fitting
+            log_k = np.log(k_valid)
+            log_power = np.log(spectrum_valid)
+            coeffs = np.polyfit(log_k, log_power, 1)
+            beta = -coeffs[0]
+
+            # Calculate fractal dimension using corrected formula for 3D
+            # β = 7 - 2D  =>  D = (7 - β) / 2
+            fractal_dim = (7 - beta) / 2
+
+            return fractal_dim, beta
+        else:
+            # 1D case (original formula)
+            # β = 3 - 2D  =>  D = (3 - β) / 2
+            signal_1d = points[:, 0]
+
+            # 1D power spectrum
+            fft_1d = np.fft.fft(signal_1d)
+            power_1d = np.abs(fft_1d)**2
+
+            freqs = np.fft.fftfreq(len(signal_1d))
+            valid_freqs = freqs[1:len(freqs)//2]  # Positive frequencies only
+            valid_power = power_1d[1:len(power_1d)//2]
+
+            # Power law fitting
+            valid = (valid_power > 1e-12) & (valid_freqs > 0)
+            if np.sum(valid) < 3:
+                return np.nan, np.nan
+
+            log_freq = np.log(valid_freqs[valid])
+            log_power = np.log(valid_power[valid])
+            coeffs = np.polyfit(log_freq, log_power, 1)
+            beta = -coeffs[0]
+
+            # 1D formula: β = 3 - 2D
+            fractal_dim = (3 - beta) / 2
+
+            return fractal_dim, beta
+
+    @staticmethod
+    def corrected_alpha_mapping(fractal_dim: float,
+                              embedding_dim: int = 2,
+                              base_alpha: float = 1.0) -> float:
+        """
+        Corrected mathematical mapping between fractal dimension D and spectral filter α
+
+        Physical motivation:
+        - Higher fractal dimension => more complex structure => stronger regularization
+        - Lower fractal dimension => simpler structure => weaker regularization
+
+        Mathematical formula:
+        α(D) = base_alpha * (1 + λ * (D - D_euclidean))
+
+        Where:
+        - D_euclidean = embedding_dim (Euclidean dimension)
+        - λ = coupling strength parameter
+        """
+        if np.isnan(fractal_dim):
+            return base_alpha
+
+        # Euclidean dimension for reference
+        d_euclidean = float(embedding_dim)
+
+        # Coupling strength (empirically determined)
+        lambda_coupling = 0.8
+
+        # Relative complexity measure
+        complexity_ratio = (fractal_dim - d_euclidean) / d_euclidean
+
+        # Corrected alpha mapping with physical bounds
+        alpha = base_alpha * (1 + lambda_coupling * complexity_ratio)
+
+        # Physical constraints: α ∈ [0.1, 3.0]
+        alpha = np.clip(alpha, 0.1, 3.0)
+
+        return alpha
+
+    @staticmethod
+    def laser_probe_integration(points: np.ndarray,
+                               fractal_dim: float,
+                               wavelength: float = 1064e-9,
+                               alpha_laser: float = 0.1,
+                               beta_chirp: float = 0.05) -> np.ndarray:
+        """
+        Integrated laser probing with fractal-informed parameters
+
+        Corrected laser pulse equation:
+        f(λ,t) = I₀ * sin(ωt + α_laser*λ*D) * exp[i(ωt - kλ + β_chirp*λ²*D)]
+
+        Where D (fractal dimension) modulates both spatial phase and chirp
+        """
+        if np.isnan(fractal_dim):
+            fractal_dim = 2.0  # Default to Euclidean dimension
+
+        # Laser parameters
+        omega = 2 * np.pi * 3e8 / wavelength  # Angular frequency
+        k = 2 * np.pi / wavelength            # Wave number
+        I0 = 1.0                              # Normalized intensity
+
+        # Spatial and temporal sampling
+        lambda_coords = points[:, 0] if points.shape[1] > 0 else np.linspace(0, 1, 100)
+        t_scan = np.linspace(0, 1e-9, 100)    # 1 ns scan time
+
+        # Initialize probe response
+        probe_response = np.zeros((len(t_scan), len(lambda_coords)), dtype=complex)
+
+        for i, t in enumerate(t_scan):
+            for j, lam in enumerate(lambda_coords):
+                # Fractal-modulated spatial phase
+                spatial_phase = alpha_laser * lam * fractal_dim
+
+                # Fractal-modulated quadratic chirp
+                chirp_term = beta_chirp * (lam**2) * fractal_dim
+
+                # Complete laser pulse with fractal integration
+                amplitude = I0 * np.sin(omega * t + spatial_phase)
+                phase = 1j * (omega * t - k * lam + chirp_term)
+
+                probe_response[i, j] = amplitude * np.exp(phase)
+
+        return probe_response
+
+
 class QuartzLightSystemController:
     """
     High-level controller for the complete quartz-light system
@@ -379,21 +595,27 @@ class QuartzLightSystemController:
         # Initialize optical array
         self.optical_array = ParallelQuartzArray(array_size)
 
-        # Initialize neural components
+        # Initialize neural components with improved fractal integration
         self.neural_layer = AdaptiveFractalQRHLayer(
             embed_dim=neural_embed_dim,
-            enable_adaptive_alpha=True
+            enable_adaptive_alpha=True,
+            fractal_analysis_freq=50  # More frequent analysis
         )
 
         # Control system
         self.voltage_controller = nn.Linear(4 * neural_embed_dim, array_size[0] * array_size[1])
 
+        # Corrected fractal analyzer with proper multidimensional equations
+        self.fractal_analyzer = CorrectedFractalAnalyzer()
+
         # State history for analysis
         self.processing_history = []
+        self.fractal_history = []
 
         print(f"Quartz-Light System Controller Initialized")
         print(f"  Optical Array: {array_size[0]}×{array_size[1]}")
         print(f"  Neural Embedding: {neural_embed_dim}")
+        print(f"  Enhanced Fractal Integration: Enabled")
 
     def hybrid_forward_pass(self,
                           neural_input: torch.Tensor,
@@ -452,6 +674,10 @@ class QuartzLightSystemController:
             control_voltages.cpu().numpy()[:quaternion_array.shape[0], :quaternion_array.shape[1]]
         )
 
+        # Enhanced fractal analysis integration
+        if optical_feedback and len(self.processing_history) % 10 == 0:
+            self.perform_integrated_fractal_analysis(neural_output, optical_output)
+
         # Store processing history
         self.processing_history.append({
             'timestamp': time.time(),
@@ -462,6 +688,94 @@ class QuartzLightSystemController:
         })
 
         return neural_output, optical_output
+
+    def perform_integrated_fractal_analysis(self,
+                                          neural_output: torch.Tensor,
+                                          optical_output: np.ndarray):
+        """
+        Perform corrected integrated fractal analysis with proper multidimensional equations
+
+        This method uses the corrected β-D relationships and proper α mapping
+        """
+        # Determine embedding dimension from neural output
+        embedding_dim = min(neural_output.shape[-1] // 4, 3)  # Max 3D for efficiency
+
+        # Extract points for fractal analysis
+        neural_data = neural_output.detach().cpu().numpy()
+        neural_points = neural_data.reshape(-1, neural_data.shape[-1])[:, :embedding_dim]
+
+        # Apply corrected spectral dimension analysis
+        neural_fractal_dim, beta_value = self.fractal_analyzer.corrected_spectral_dimension(
+            neural_points, embedding_dim=embedding_dim
+        )
+
+        if not np.isnan(neural_fractal_dim):
+            # Use corrected alpha mapping
+            new_alpha = self.fractal_analyzer.corrected_alpha_mapping(
+                neural_fractal_dim, embedding_dim=embedding_dim, base_alpha=1.0
+            )
+
+            # Apply stability filtering
+            momentum = 0.85  # Reduced for better responsiveness
+            with torch.no_grad():
+                current_alpha = self.neural_layer.alpha.item()
+                updated_alpha = momentum * current_alpha + (1 - momentum) * new_alpha
+                self.neural_layer.alpha.data = torch.tensor(updated_alpha)
+
+            # Laser probe integration for enhanced analysis
+            probe_response = self.fractal_analyzer.laser_probe_integration(
+                neural_points[:100], neural_fractal_dim  # Sample for efficiency
+            )
+            probe_intensity = np.mean(np.abs(probe_response))
+
+            # Theoretical comparison
+            if embedding_dim == 2:
+                sierpinski_theoretical = np.log(3) / np.log(2)  # ≈ 1.585
+                theoretical_beta = 5 - 2 * sierpinski_theoretical  # ≈ 1.83
+            else:
+                sierpinski_theoretical = 1.585  # Default
+                theoretical_beta = (2 * embedding_dim + 1) - 2 * sierpinski_theoretical
+
+            # Store comprehensive fractal analysis results
+            self.fractal_history.append({
+                'timestamp': time.time(),
+                'embedding_dim': embedding_dim,
+                'neural_fractal_dim': neural_fractal_dim,
+                'beta_value': beta_value,
+                'theoretical_beta': theoretical_beta,
+                'alpha_before': current_alpha,
+                'alpha_after': updated_alpha,
+                'alpha_change': abs(updated_alpha - current_alpha),
+                'probe_intensity': probe_intensity,
+                'equation_used': f"β = {2*embedding_dim + 1} - 2D"
+            })
+
+            print(f"Corrected Fractal Analysis Update:")
+            print(f"  Embedding Dimension: {embedding_dim}D")
+            print(f"  Equation: β = {2*embedding_dim + 1} - 2D")
+            print(f"  Measured β: {beta_value:.4f} (theoretical: {theoretical_beta:.4f})")
+            print(f"  Fractal Dimension: {neural_fractal_dim:.4f}")
+            print(f"  Alpha: {current_alpha:.4f} → {updated_alpha:.4f}")
+            print(f"  Laser Probe Intensity: {probe_intensity:.4f}")
+
+    def get_enhanced_fractal_analysis(self) -> Dict:
+        """Get comprehensive fractal analysis results"""
+        if not self.fractal_history:
+            return {"status": "No enhanced fractal data available"}
+
+        recent_analysis = self.fractal_history[-5:]  # Last 5 analyses
+
+        fractal_dims = [entry['neural_fractal_dim'] for entry in recent_analysis]
+        alpha_changes = [entry['alpha_change'] for entry in recent_analysis]
+
+        return {
+            'mean_fractal_dim': np.mean(fractal_dims),
+            'std_fractal_dim': np.std(fractal_dims),
+            'mean_alpha_change': np.mean(alpha_changes),
+            'total_adaptations': len(self.fractal_history),
+            'latest_analysis': recent_analysis[-1] if recent_analysis else None,
+            'fractal_stability': 1.0 / (np.std(fractal_dims) + 1e-6)
+        }
 
     def calibrate_system(self, num_calibration_steps: int = 100) -> Dict:
         """
@@ -527,14 +841,15 @@ class QuartzLightSystemController:
         Returns:
             Validation metrics for AGI potential
         """
-        print("Validating AGI properties...")
+        print("Validating AGI properties with enhanced fractal integration...")
 
         validation_results = {
             'information_processing_capacity': 0.0,
             'coherent_state_maintenance': 0.0,
             'adaptive_behavior': 0.0,
             'emergence_indicators': 0.0,
-            'physical_grounding_score': 0.0
+            'physical_grounding_score': 0.0,
+            'fractal_integration_quality': 0.0
         }
 
         # Test 1: Information Processing Capacity

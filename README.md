@@ -427,6 +427,16 @@ The ΨQRH framework has been successfully integrated with PyTorch and validated 
 ![Fractal Integration Results](fractal_pytorch_integration_results.png)
 *Figure 7: Real-time fractal dimension evolution, performance metrics, and system architecture validation*
 
+### 8.2.1 Corrected Fractal Integration Results
+
+![Corrected Fractal Integration](corrected_fractal_integration_results.png)
+*Figure 8: Updated fractal integration with corrected multidimensional β-D equations and unified laser probe implementation*
+
+**Key Corrections Implemented:**
+- **Multidimensional β-D equations**: 1D: β = 3 - 2D, 2D: β = 5 - 2D, 3D: β = 7 - 2D
+- **Physical α mapping**: α(D) = α₀(1 + λ(D - n)) with bounds [0.1, 3.0]
+- **Integrated laser probe**: f(λ,t) = I₀sin(ωt + αλD)e^{i(ωt-kλ+βλ²D)} with fractal modulation
+
 ### 8.3 Key Performance Metrics
 
 | Component | Status | Performance |
