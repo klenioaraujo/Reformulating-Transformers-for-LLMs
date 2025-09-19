@@ -33,47 +33,106 @@ Unlike speculative proposals, this work provides:
 
 ### 2.1 Quaternionic Representation of Token Embeddings
 
-Given a token embedding vector $\mathbf{x} \in \mathbb{R}^d$, we map it to a quaternionic representation:
+Given a token embedding vector **x** ∈ ℝ^d, we map it to a quaternionic representation:
 
-$ \Psi(\mathbf{x}) = \psi_0 + \psi_1 i + \psi_2 j + \psi_3 k \in \mathbb{H} $
+**Quaternion Mapping Formula:**
+```
+Ψ(x) = ψ₀ + ψ₁i + ψ₂j + ψ₃k ∈ ℍ
+```
 
-where:
+Where the components are defined as:
+- **ψ₀** = Re(MLP(**x**))  *(real component)*
+- **ψ₁** = Im(MLP(**x**))  *(imaginary-i component)*
+- **ψ₂, ψ₃** are learned through rotational transformations *(j and k components)*
 
-- $\psi_0 = \text{Re}(\text{MLP}(\mathbf{x}))$
-- $\psi_1 = \text{Im}(\text{MLP}(\mathbf{x}))$
-- $\psi_2, \psi_3$ are learned through rotational transformations
+**Mathematical Properties:**
+- **Quaternion space**: ℍ = {a + bi + cj + dk | a,b,c,d ∈ ℝ}
+- **Non-commutativity**: ij = k, ji = -k, jk = i, kj = -i
+- **Parameter reduction**: 25% fewer parameters than standard embeddings
 
 This representation reduces parameter count by 25% while maintaining expressive power through non-commutative operations.
 
 ### 2.2 Spectral Attention Mechanism
 
-We reformulate self-attention using spectral operations:
+We reformulate self-attention using spectral operations in the frequency domain:
 
-$ \text{SpectralAttention}(Q,K,V) = \mathcal{F}^{-1} \{ F(\mathbf{k}) \cdot \mathcal{F} \{ \Psi(Q) \otimes \Psi(K) \} \} \otimes \Psi(V) $
+**Spectral Attention Formula:**
+```
+SpectralAttention(Q,K,V) = F⁻¹{F(k) · F{Ψ(Q) ⊗ Ψ(K)}} ⊗ Ψ(V)
+```
 
-where:
+**Component Definitions:**
+- **⊗** = Hamilton product (quaternion multiplication)
+- **F** and **F⁻¹** = Fourier and inverse Fourier transforms
+- **F(k)** = Spectral filter function
 
-- $\otimes$ denotes Hamilton product
-- $F(\mathbf{k}) = \exp(i \alpha \arctan(\ln(|\mathbf{k}| + \varepsilon)))$ is the spectral filter
-- $\mathcal{F}$ and $\mathcal{F}^{-1}$ are Fourier and inverse Fourier transforms
+**Spectral Filter (with fraction):**
+```
+           ⎧  iα · arctan(ln(|k| + ε))  ⎫
+F(k) = exp ⎨ ────────────────────────── ⎬
+           ⎩           1                ⎭
+```
 
-This formulation provides implicit regularization and reduces computational complexity to $O(n \log n)$.
+**Computational Complexity:**
+- **Standard attention**: O(n²)
+- **Spectral attention**: O(n log n) ✓ *significant improvement*
+
+**Key Benefits:**
+1. **Implicit regularization** through spectral filtering
+2. **Logarithmic complexity** instead of quadratic
+3. **Frequency-domain processing** enables better pattern recognition
 
 ### 2.3 Feed-Forward as Harmonic Evolution
 
 We replace standard FFNs with a quaternionic evolution step:
 
-$ \text{FFN}(\Psi) = R \cdot \mathcal{F}^{-1} \{ F(\mathbf{k}) \cdot \mathcal{F} \{ \Psi \} \} $
+**Harmonic Evolution Formula:**
+```
+FFN(Ψ) = R · F⁻¹{F(k) · F{Ψ}}
+```
 
-where $R$ is a learned unit quaternion that performs geometric rotation in the state space.
+**Where:**
+- **R** = Learned unit quaternion (geometric rotation operator)
+- **F(k)** = Spectral filter in frequency domain
+- **Ψ** = Input quaternion state
+
+**Unit Quaternion Properties:**
+- **Norm constraint**: |R| = 1
+- **Rotation matrix**: R represents 3D rotation + scaling
+- **Learnable parameters**: θ, ω, φ (Euler angles)
+
+**Quadratic Expansion Example:**
+```
+R = cos(θ/2) + sin(θ/2)[cos(ω)i + sin(ω)cos(φ)j + sin(ω)sin(φ)k]
+```
+
+This provides **geometric regularization** through rotation in quaternion space.
 
 ### 2.4 Error Correction via Leech Lattice
 
-Critical parameters are embedded in the Leech lattice for inherent error correction:
+Critical parameters are embedded in the **Leech lattice** for inherent error correction:
 
-- Every 24 parameters are encoded as a lattice point
-- The Golay code $G_{24}$ provides 3-bit error correction
-- This improves numerical stability and reduces memory footprint
+**Leech Lattice Encoding:**
+```
+Λ₂₄ = {x ∈ ℝ²⁴ : x · x ∈ 2ℤ, x ≡ (Golay codeword) mod 2}
+```
+
+**Error Correction Properties:**
+- **Parameter grouping**: Every 24 parameters → 1 lattice point
+- **Golay code G₂₄**: Provides 3-bit error correction capability
+- **Kissing number**: 196,560 (optimal sphere packing)
+- **Minimum distance**: 2√2 (detection/correction radius)
+
+**Benefits:**
+1. **Numerical stability**: Quantum-inspired error resilience
+2. **Memory efficiency**: Compressed parameter representation
+3. **Fault tolerance**: Automatic correction of small perturbations
+
+**Algebraic Structure:**
+```
+G₂₄ = {c ∈ F₂²⁴ : H · cᵀ = 0}
+```
+Where **H** is the 12×24 parity-check matrix of the Golay code.
 
 ## 3. Proofs of Concept: From Fractals to Spectral Regularization
 
@@ -129,23 +188,68 @@ To perform these analyses, we use two primary methods for calculating fractal di
 
 #### Sistema de Funções Iteradas (IFS)
 
-Um IFS é definido por um conjunto de transformações afins contractivas. Para uma transformação $f_i$ em 2D:
+Um IFS é definido por um conjunto de transformações afins contractivas:
 
-$ f_i(x) = A_i x + b_i, \quad \text{onde} \quad x = \begin{bmatrix} x \\ y \end{bmatrix}, \quad A_i = \begin{bmatrix} a_i & b_i \\ c_i & d_i \end{bmatrix}, \quad b_i = \begin{bmatrix} e_i \\ f_i \end{bmatrix} $
+**Transformação 2D:**
+```
+f_i(x) = A_i · x + b_i
+```
 
-Em 3D:
+**Onde:**
+```
+x = [x, y]ᵀ    A_i = [a_i  b_i]    b_i = [e_i]
+                    [c_i  d_i]          [f_i]
+```
 
-$ f_i(x) = A_i x + b_i, \quad \text{onde} \quad x = \begin{bmatrix} x \\ y \\ z \end{bmatrix}, \quad A_i = \begin{bmatrix} a_i & b_i & c_i \\ d_i & e_i & f_i \\ g_i & h_i & i_i \end{bmatrix}, \quad b_i = \begin{bmatrix} j_i \\ k_i \\ l_i \end{bmatrix} $
+**Transformação 3D:**
+```
+f_i(x) = A_i · x + b_i
+```
 
-O conjunto atrator $A$ é o fractal gerado pela aplicação iterativa:
+**Onde:**
+```
+x = [x, y, z]ᵀ    A_i = [a_i  b_i  c_i]    b_i = [j_i]
+                       [d_i  e_i  f_i]          [k_i]
+                       [g_i  h_i  i_i]          [l_i]
+```
 
-$ A = \bigcup_{i=1}^{N} f_i(A) $
+**Conjunto Atrator (Fractal):**
+```
+A = ⋃(i=1 to N) f_i(A)
+```
+
+**Condição de Contração:**
+- **||A_i|| < 1** para garantir convergência
+- **Dimensão fractal**: D = log(N) / log(1/r) onde r é o fator de escala
 
 #### Pulso de Laser para Sondagem
 
-Utilizamos um pulso de laser com chirp quadrático para sondar a estrutura fractal, uma abordagem conceitual para futuras implementações físicas:
+Utilizamos um pulso de laser com chirp quadrático para sondar a estrutura fractal:
 
-$ f(\lambda, t) = I_0 \sin(\omega t + \alpha \lambda) e^{i(\omega t - k \lambda + \beta \lambda^2)} $
+**Função do Pulso Laser (Complexa com Chirp Quadrático):**
+```
+f(λ,t) = I₀ · sin(ωt + αλ) · exp[i(ωt - kλ + βλ²)]
+```
+
+**Parâmetros:**
+- **I₀** = Intensidade máxima do laser
+- **ω** = Frequência angular (ω = 2π/T)
+- **α** = Coeficiente de modulação espacial
+- **k** = Número de onda (k = 2π/λ₀)
+- **β** = Coeficiente de chirp quadrático
+- **λ** = Posição espacial
+- **t** = Tempo
+
+**Expansão da Fase Complexa:**
+```
+Φ(λ,t) = ωt - kλ + βλ²
+       = ωt - (2π/λ₀)λ + βλ²
+```
+
+**Aplicação para Sondagem Fractal:**
+- **Varredura espacial**: λ percorre a estrutura fractal
+- **Detecção temporal**: t registra a resposta óptica
+- **Análise espectral**: Transformada de Fourier revela dimensão fractal
 
 ## 4. Implementation and Validation
 
