@@ -427,6 +427,35 @@ def calculate_alpha_from_dimension(D: float, dimension_type: str, base_alpha: fl
     # Limites físicos
     return np.clip(alpha, 0.1, 3.0)
 
+def calculate_dimension_from_alpha(alpha: float, dimension_type: str, base_alpha: float = 1.0) -> float:
+    """
+    Função inversa: mapeia parâmetro α do filtro espectral para dimensão fractal D
+
+    Args:
+        alpha: Parâmetro α do filtro espectral
+        dimension_type: '1d', '2d', ou '3d'
+        base_alpha: Valor base de α
+
+    Returns:
+        Dimensão fractal D
+    """
+    # Dimensão euclidiana de referência
+    euclidean_dims = {'1d': 1.0, '2d': 2.0, '3d': 3.0}
+    d_euclidean = euclidean_dims[dimension_type]
+
+    # Fator de acoplamento (mesmo que na função direta)
+    lambda_coupling = 0.8
+
+    # Função inversa: D = D_euclidean + (α/base_alpha - 1) * D_euclidean / λ
+    D = d_euclidean + (alpha / base_alpha - 1) * d_euclidean / lambda_coupling
+
+    # Limites físicos razoáveis para dimensões fractais
+    min_dim = 0.0 if dimension_type == '1d' else (1.0 if dimension_type == '2d' else 2.0)
+    max_dim = 1.0 if dimension_type == '1d' else (2.0 if dimension_type == '2d' else 3.0)
+    max_dim += 1.0  # Permitir dimensões fractais acima da euclidiana
+
+    return np.clip(D, min_dim, max_dim)
+
 def generate_cantor_set(n_points: int, level: int = 10) -> np.ndarray:
     """
     Gera um conjunto de Cantor 1D usando IFS
@@ -457,6 +486,45 @@ class FractalAnalyzer:
     Analisador fractal corrigido com validação matemática
     """
 
+    def calculate_box_counting_dimension_1d(self, data, n_samples=10000):
+        """
+        Calcula dimensão fractal para dados 1D usando método de contagem de caixas
+        """
+        # Amostrar pontos aleatórios dos dados
+        if data.size > n_samples:
+            sampled_data = np.random.choice(data, n_samples, replace=False)
+        else:
+            sampled_data = data
+
+        # Normalizar dados
+        min_val, max_val = np.min(sampled_data), np.max(sampled_data)
+        if max_val - min_val == 0:
+            return 1.0  # Dimensão de ponto único
+
+        normalized_data = (sampled_data - min_val) / (max_val - min_val)
+
+        # Tentar diferentes tamanhos de caixa
+        box_sizes = np.logspace(-3, 0, 20, endpoint=False)
+        box_counts = []
+
+        for size in box_sizes:
+            # Discretizar em caixas
+            digitized = np.floor(normalized_data / size).astype(int)
+            unique_boxes = len(np.unique(digitized))
+            box_counts.append(unique_boxes)
+
+        # Ajuste linear em escala log-log
+        valid_indices = [i for i, count in enumerate(box_counts) if count > 0]
+        if len(valid_indices) < 2:
+            return 1.0  # Valor padrão se não for possível calcular
+
+        log_sizes = np.log(1 / np.array(box_sizes)[valid_indices])
+        log_counts = np.log(np.array(box_counts)[valid_indices])
+
+        # Calcular dimensão como inclinação da reta
+        slope, _ = np.polyfit(log_sizes, log_counts, 1)
+        return slope
+
     def calculate_box_counting_dimension(self, points: np.ndarray) -> float:
         """
         Calcula dimensão fractal usando método box-counting corrigido
@@ -477,7 +545,7 @@ class FractalAnalyzer:
         range_vals[range_vals == 0] = 1.0
         points_norm = (points - min_vals) / range_vals
 
-        # Escalas para box-counting
+        # Escalas para box-counting (usar range mais amplo)
         scales = np.logspace(-2.5, -0.1, 20)
         counts = []
         valid_scales = []
@@ -493,26 +561,39 @@ class FractalAnalyzer:
                 grid[indices] = True
                 count = np.sum(grid)
             else:
-                # 2D box counting
+                # 2D box counting - método tradicional correto
                 grid = np.zeros((box_size, box_size), dtype=bool)
-                indices = (points_norm * (box_size - 1)).astype(int)
-                indices = np.clip(indices, 0, box_size - 1)
-                grid[indices[:, 0], indices[:, 1]] = True
+
+                # Mapear pontos para índices de grade
+                x_indices = (points_norm[:, 0] * (box_size - 1)).astype(int)
+                y_indices = (points_norm[:, 1] * (box_size - 1)).astype(int)
+
+                # Clipar para evitar índices fora dos limites
+                x_indices = np.clip(x_indices, 0, box_size - 1)
+                y_indices = np.clip(y_indices, 0, box_size - 1)
+
+                # Marcar caixas ocupadas
+                grid[x_indices, y_indices] = True
                 count = np.sum(grid)
 
             if count > 0:
                 counts.append(count)
-                valid_scales.append(scale)
+                valid_scales.append(scale)  # Usar escala original
 
         if len(counts) < 3:
             return np.nan
 
-        # Regressão linear em escala log-log
-        log_scales = np.log(1.0 / np.array(valid_scales))
+        # Regressão linear em escala log-log (método correto)
+        log_scales = np.log(1.0 / np.array(valid_scales))  # log(1/ε)
         log_counts = np.log(counts)
 
-        # Ajuste robusto
-        coeffs = np.polyfit(log_scales, log_counts, 1)
+        # Filtrar pontos válidos para regressão
+        valid_idx = np.isfinite(log_scales) & np.isfinite(log_counts)
+        if np.sum(valid_idx) < 3:
+            return np.nan
+
+        # Ajuste linear: log(N) = D * log(1/ε) + const
+        coeffs = np.polyfit(log_scales[valid_idx], log_counts[valid_idx], 1)
         dimension = coeffs[0]  # Coeficiente angular é a dimensão
 
         return dimension
@@ -694,12 +775,16 @@ class CorrectedFractalAnalyzer:
                                alpha_laser: float = 0.1,
                                beta_chirp: float = 0.05) -> np.ndarray:
         """
-        Integrated laser probing with fractal-informed parameters
+        Integrated laser probing with fundamental physical equations
 
-        Corrected laser pulse equation:
-        f(λ,t) = I₀ * sin(ωt + α_laser*λ*D) * exp[i(ωt - kλ + β_chirp*λ²*D)]
+        Corrected laser pulse equation (fundamental physical form):
+        f(λ,t) = I₀ · sin(ωt + αλ) · exp[i(ωt - kλ + βλ²)]
 
-        Where D (fractal dimension) modulates both spatial phase and chirp
+        Where:
+        - Φ(λ,t) = ωt - kλ + βλ² = ωt - (2π/λ₀)λ + βλ²
+        - α = alpha_laser (spatial phase modulation)
+        - β = beta_chirp (quadratic chirp parameter)
+        - k = 2π/λ₀ (wave number)
         """
         if np.isnan(fractal_dim):
             fractal_dim = 2.0  # Default to Euclidean dimension
@@ -718,15 +803,18 @@ class CorrectedFractalAnalyzer:
 
         for i, t in enumerate(t_scan):
             for j, lam in enumerate(lambda_coords):
-                # Fractal-modulated spatial phase
-                spatial_phase = alpha_laser * lam * fractal_dim
+                # Spatial phase term: αλ (correct fundamental form)
+                spatial_phase = alpha_laser * lam
 
-                # Fractal-modulated quadratic chirp
-                chirp_term = beta_chirp * (lam**2) * fractal_dim
+                # Quadratic chirp term: βλ² (correct fundamental form)
+                chirp_term = beta_chirp * (lam**2)
 
-                # Complete laser pulse with fractal integration
+                # Complete laser pulse: f(λ,t) = I₀ · sin(ωt + αλ) · exp[i(ωt - kλ + βλ²)]
                 amplitude = I0 * np.sin(omega * t + spatial_phase)
-                phase = 1j * (omega * t - k * lam + chirp_term)
+
+                # Phase: Φ(λ,t) = ωt - kλ + βλ² = ωt - (2π/λ₀)λ + βλ²
+                phase_angle = omega * t - k * lam + chirp_term
+                phase = 1j * phase_angle
 
                 probe_response[i, j] = amplitude * np.exp(phase)
 
