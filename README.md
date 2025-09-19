@@ -186,70 +186,70 @@ To perform these analyses, we use two primary methods for calculating fractal di
 
 ### 3.4. Mathematical Foundations of Fractal Analysis
 
-#### Sistema de Funções Iteradas (IFS)
+#### Iterated Function Systems (IFS)
 
-Um IFS é definido por um conjunto de transformações afins contractivas:
+An IFS is defined by a set of contractive affine transformations:
 
-**Transformação 2D:**
+**2D Transformation:**
 ```
 f_i(x) = A_i · x + b_i
 ```
 
-**Onde:**
+**Where:**
 ```
 x = [x, y]ᵀ    A_i = [a_i  b_i]    b_i = [e_i]
                     [c_i  d_i]          [f_i]
 ```
 
-**Transformação 3D:**
+**3D Transformation:**
 ```
 f_i(x) = A_i · x + b_i
 ```
 
-**Onde:**
+**Where:**
 ```
 x = [x, y, z]ᵀ    A_i = [a_i  b_i  c_i]    b_i = [j_i]
                        [d_i  e_i  f_i]          [k_i]
                        [g_i  h_i  i_i]          [l_i]
 ```
 
-**Conjunto Atrator (Fractal):**
+**Attractor Set (Fractal):**
 ```
 A = ⋃(i=1 to N) f_i(A)
 ```
 
-**Condição de Contração:**
-- **||A_i|| < 1** para garantir convergência
-- **Dimensão fractal**: D = log(N) / log(1/r) onde r é o fator de escala
+**Contraction Condition:**
+- **||A_i|| < 1** to ensure convergence
+- **Fractal dimension**: D = log(N) / log(1/r) where r is the scaling factor
 
-#### Pulso de Laser para Sondagem
+#### Laser Pulse Probing
 
-Utilizamos um pulso de laser com chirp quadrático para sondar a estrutura fractal:
+We use a quadratic chirp laser pulse to probe the fractal structure:
 
-**Função do Pulso Laser (Complexa com Chirp Quadrático):**
+**Laser Pulse Function (Complex with Quadratic Chirp):**
 ```
 f(λ,t) = I₀ · sin(ωt + αλ) · exp[i(ωt - kλ + βλ²)]
 ```
 
-**Parâmetros:**
-- **I₀** = Intensidade máxima do laser
-- **ω** = Frequência angular (ω = 2π/T)
-- **α** = Coeficiente de modulação espacial
-- **k** = Número de onda (k = 2π/λ₀)
-- **β** = Coeficiente de chirp quadrático
-- **λ** = Posição espacial
-- **t** = Tempo
+**Parameters:**
+- **I₀** = Maximum laser intensity
+- **ω** = Angular frequency (ω = 2π/T)
+- **α** = Spatial modulation coefficient
+- **k** = Wave number (k = 2π/λ₀)
+- **β** = Quadratic chirp coefficient
+- **λ** = Spatial position
+- **t** = Time
 
-**Expansão da Fase Complexa:**
+**Complex Phase Expansion:**
 ```
 Φ(λ,t) = ωt - kλ + βλ²
        = ωt - (2π/λ₀)λ + βλ²
 ```
 
-**Aplicação para Sondagem Fractal:**
-- **Varredura espacial**: λ percorre a estrutura fractal
-- **Detecção temporal**: t registra a resposta óptica
-- **Análise espectral**: Transformada de Fourier revela dimensão fractal
+**Application for Fractal Probing:**
+- **Spatial scanning**: λ traverses the fractal structure
+- **Temporal detection**: t records the optical response
+- **Spectral analysis**: Fourier transform reveals fractal dimension
 
 ## 4. Implementation and Validation
 
