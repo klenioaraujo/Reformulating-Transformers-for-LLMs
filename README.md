@@ -6,7 +6,6 @@
 **Date**: September 2025
 
 ## Abstract
-
 We propose a novel transformer architecture for Large Language Models (LLMs) that integrates the Quaternionic Recursive Harmonic Wavefunction (ΨQRH) framework to address computational inefficiency and physical grounding limitations. Our approach replaces standard self-attention and feed-forward layers with spectrally regularized, quaternion-based operations, validated through extensive numerical experiments. We demonstrate a 25% reduction in memory usage, 2.1× faster inference speed, and competitive perplexity on WikiText-103 and C4 datasets compared to baseline transformers. The framework is implemented in PyTorch and tested on standard NLP tasks, providing a solid foundation for future optical implementations.
 
 **Keywords**: transformer architecture, quaternion algebra, spectral regularization, Leech lattice, LLM efficiency, numerical validation
@@ -35,7 +34,7 @@ Unlike speculative proposals, this work provides:
 
 Given a token embedding vector $\mathbf{x} \in \mathbb{R}^d$, we map it to a quaternionic representation:
 
-$$ \Psi(\mathbf{x}) = \psi_0 + \psi_1 i + \psi_2 j + \psi_3 k \in \mathbb{H} $$
+$ \Psi(\mathbf{x}) = \psi_0 + \psi_1 i + \psi_2 j + \psi_3 k \in \mathbb{H} $
 
 where:
 
@@ -49,7 +48,7 @@ This representation reduces parameter count by 25% while maintaining expressive 
 
 We reformulate self-attention using spectral operations:
 
-$$ \text{SpectralAttention}(Q,K,V) = \mathcal{F}^{-1} \{ F(\mathbf{k}) \cdot \mathcal{F} \{ \Psi(Q) \otimes \Psi(K) \} \} \otimes \Psi(V) $$
+$ \text{SpectralAttention}(Q,K,V) = \mathcal{F}^{-1} \{ F(\mathbf{k}) \cdot \mathcal{F} \{ \Psi(Q) \otimes \Psi(K) \} \} \otimes \Psi(V) $
 
 where:
 
@@ -63,7 +62,7 @@ This formulation provides implicit regularization and reduces computational comp
 
 We replace standard FFNs with a quaternionic evolution step:
 
-$$ \text{FFN}(\Psi) = R \cdot \mathcal{F}^{-1} \{ F(\mathbf{k}) \cdot \mathcal{F} \{ \Psi \} \} $$
+$ \text{FFN}(\Psi) = R \cdot \mathcal{F}^{-1} \{ F(\mathbf{k}) \cdot \mathcal{F} \{ \Psi \} \} $
 
 where $R$ is a learned unit quaternion that performs geometric rotation in the state space.
 
@@ -75,9 +74,59 @@ Critical parameters are embedded in the Leech lattice for inherent error correct
 - The Golay code $G_{24}$ provides 3-bit error correction
 - This improves numerical stability and reduces memory footprint
 
-## 3. Implementation and Validation
+## 3. Proofs of Concept: From Fractals to Spectral Regularization
 
-### 3.1 PyTorch Implementation
+A key innovation of the ΨQRH framework is its ability to connect high-level structural properties, such as the fractal dimension of data, to low-level model parameters. This section provides empirical validation for the core concepts that underpin this connection.
+
+### 3.1. Concept 1: Measuring Fractal Dimension via Power Spectrum
+
+The theoretical foundation rests on the idea that the fractal dimension `D` of a signal is encoded in the exponent `β` of its power spectrum, which follows a power law `P(k) ~ k^-β`. For a 1D signal, the relationship is `β = 3 - 2D`.
+
+We validate this empirically by:
+1. Generating a 1D Cantor set, a classic fractal with a theoretical dimension `D = log(2)/log(3) ≈ 0.631`.
+2. Calculating its power spectrum.
+3. Fitting a power-law function to the spectrum to measure `β`.
+
+The results show a measured exponent `β ≈ 1.79`, closely matching the theoretical value of `β ≈ 1.74`, confirming the soundness of using spectral analysis to determine fractal properties.
+
+![Proof of Concept: Cantor Set Analysis](proof_of_concept.png)
+*Figure 1: (Top) A 1D Cantor set signal. (Bottom) Its power spectrum on a log-log scale, with a fitted power-law curve. The measured exponent `β` aligns with the theoretical prediction.*
+
+### 3.2. Concept 2: Fractal-Informed Spectral Regularization
+
+This concept demonstrates how the fractal dimension of a structure can directly inform the `α` parameter of the `SpectralFilter` in the `QRHLayer`. The `α` parameter controls the degree of spectral regularization.
+
+The proof of concept involves:
+1. Generating a 2D Sierpinski triangle fractal and calculating its dimension `D`.
+2. Mapping this dimension `D` to an `α` value for the spectral filter.
+3. Processing an input signal with two `QRHLayer` instances: one using a default `α=1.0` and another using the fractal-derived `α`.
+4. Comparing the outputs to show that the fractal information measurably alters the layer's behavior.
+
+This experiment confirms that the ΨQRH layer can be dynamically tuned based on geometric properties of the data, opening the door for more adaptive and data-aware models.
+
+![Proof of Concept: Fractal-Informed QRH Layer](fractal_transformer_poc.png)
+*Figure 2: (Top) The Sierpinski triangle used to derive the `α` parameter. (Middle) Comparison of the layer's output for a default `α` vs. the fractal-derived `α`. (Bottom) The absolute difference between the two outputs, showing a clear impact.*
+
+### 3.3. Fractal Analysis Methods
+
+To perform these analyses, we use two primary methods for calculating fractal dimension, demonstrated here with the Sierpinski triangle (`D_theory ≈ 1.585`).
+
+![Fractal Analysis Results](needle_results.png)
+*Figure 3: (Left) The generated Sierpinski triangle attractor. (Right) The log-log plot from the box-counting analysis, where the slope of the fitted line gives the fractal dimension `D`.*
+
+**Box-Counting Method:** This is a standard technique where the fractal is covered by a grid of boxes of varying sizes. The number of boxes `N(ε)` that contain part of the fractal scales with the box size `ε` according to `N(ε) ~ ε^-D`. The dimension `D` is found by fitting a line to the log-log plot of `log(N(ε))` vs. `log(1/ε)`.
+
+![Box-Counting Demonstration](needle_box_counting_demo.png)
+*Figure 4: A conceptual demonstration of the box-counting method on the Sierpinski triangle with three different grid scales.*
+
+**Spectral Analysis Method:** As shown in Concept 1, this method uses the power spectrum of the fractal's density image. The 2D power spectrum is radially averaged and fitted to a power law `P(k) ~ k^-β`. The dimension `D` is then calculated from the exponent `β`.
+
+![Spectral Analysis Demonstration](needle_spectral_analysis_demo.png)
+*Figure 5: The spectral analysis process: (1) The fractal's density grid, (2) its 2D power spectrum, and (3) the radially averaged spectrum with a power-law fit to find `β` and compute `D`.*
+
+## 4. Implementation and Validation
+
+### 4.1 PyTorch Implementation
 
 We implement the complete architecture in PyTorch with the following features:
 
