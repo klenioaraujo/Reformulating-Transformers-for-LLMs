@@ -361,6 +361,162 @@ class ParallelQuartzArray:
         return coherence
 
 
+def calculate_beta_from_dimension(D: float, dimension_type: str) -> float:
+    """
+    Calcula β a partir da dimensão fractal D usando relações corretas
+
+    Args:
+        D: Dimensão fractal
+        dimension_type: '1d', '2d', ou '3d'
+
+    Returns:
+        Valor β correspondente
+    """
+    if dimension_type == '1d':
+        return 3 - 2 * D
+    elif dimension_type == '2d':
+        return 5 - 2 * D
+    elif dimension_type == '3d':
+        return 7 - 2 * D
+    else:
+        raise ValueError(f"Tipo de dimensão inválido: {dimension_type}")
+
+def calculate_dimension_from_beta(beta: float, dimension_type: str) -> float:
+    """
+    Calcula dimensão fractal D a partir de β
+
+    Args:
+        beta: Valor β do espectro de potência
+        dimension_type: '1d', '2d', ou '3d'
+
+    Returns:
+        Dimensão fractal D
+    """
+    if dimension_type == '1d':
+        return (3 - beta) / 2
+    elif dimension_type == '2d':
+        return (5 - beta) / 2
+    elif dimension_type == '3d':
+        return (7 - beta) / 2
+    else:
+        raise ValueError(f"Tipo de dimensão inválido: {dimension_type}")
+
+def calculate_alpha_from_dimension(D: float, dimension_type: str, base_alpha: float = 1.0) -> float:
+    """
+    Mapeia dimensão fractal D para parâmetro α do filtro espectral
+
+    Args:
+        D: Dimensão fractal
+        dimension_type: '1d', '2d', ou '3d'
+        base_alpha: Valor base de α
+
+    Returns:
+        Parâmetro α mapeado
+    """
+    # Dimensão euclidiana de referência
+    euclidean_dims = {'1d': 1.0, '2d': 2.0, '3d': 3.0}
+    d_euclidean = euclidean_dims[dimension_type]
+
+    # Fator de acoplamento
+    lambda_coupling = 0.8
+
+    # Mapeamento: α = base_alpha * (1 + λ * (D - D_euclidean) / D_euclidean)
+    complexity_ratio = (D - d_euclidean) / d_euclidean
+    alpha = base_alpha * (1 + lambda_coupling * complexity_ratio)
+
+    # Limites físicos
+    return np.clip(alpha, 0.1, 3.0)
+
+def generate_cantor_set(n_points: int, level: int = 10) -> np.ndarray:
+    """
+    Gera um conjunto de Cantor 1D usando IFS
+
+    Args:
+        n_points: Número de pontos a gerar
+        level: Número de iterações
+
+    Returns:
+        Array de pontos do conjunto de Cantor
+    """
+    points = np.zeros((n_points, 2))  # 2D para compatibilidade
+
+    for i in range(n_points):
+        x = 0.0
+        for j in range(level):
+            r = np.random.rand()
+            if r < 0.5:
+                x = x / 3  # Primeiro terço
+            else:
+                x = x / 3 + 2/3  # Último terço
+        points[i] = [x, 0]  # y=0 para conjunto 1D
+
+    return points
+
+class FractalAnalyzer:
+    """
+    Analisador fractal corrigido com validação matemática
+    """
+
+    def calculate_box_counting_dimension(self, points: np.ndarray) -> float:
+        """
+        Calcula dimensão fractal usando método box-counting corrigido
+
+        Args:
+            points: Array de pontos [N, 2] ou [N, 1]
+
+        Returns:
+            Dimensão fractal calculada
+        """
+        if points.ndim == 1:
+            points = points.reshape(-1, 1)
+
+        # Normalizar pontos para [0, 1]
+        min_vals = np.min(points, axis=0)
+        max_vals = np.max(points, axis=0)
+        range_vals = max_vals - min_vals
+        range_vals[range_vals == 0] = 1.0
+        points_norm = (points - min_vals) / range_vals
+
+        # Escalas para box-counting
+        scales = np.logspace(-2.5, -0.1, 20)
+        counts = []
+        valid_scales = []
+
+        for scale in scales:
+            box_size = max(2, int(1.0 / scale))
+
+            if points.shape[1] == 1:
+                # 1D box counting
+                grid = np.zeros(box_size, dtype=bool)
+                indices = (points_norm[:, 0] * (box_size - 1)).astype(int)
+                indices = np.clip(indices, 0, box_size - 1)
+                grid[indices] = True
+                count = np.sum(grid)
+            else:
+                # 2D box counting
+                grid = np.zeros((box_size, box_size), dtype=bool)
+                indices = (points_norm * (box_size - 1)).astype(int)
+                indices = np.clip(indices, 0, box_size - 1)
+                grid[indices[:, 0], indices[:, 1]] = True
+                count = np.sum(grid)
+
+            if count > 0:
+                counts.append(count)
+                valid_scales.append(scale)
+
+        if len(counts) < 3:
+            return np.nan
+
+        # Regressão linear em escala log-log
+        log_scales = np.log(1.0 / np.array(valid_scales))
+        log_counts = np.log(counts)
+
+        # Ajuste robusto
+        coeffs = np.polyfit(log_scales, log_counts, 1)
+        dimension = coeffs[0]  # Coeficiente angular é a dimensão
+
+        return dimension
+
 class CorrectedFractalAnalyzer:
     """
     Corrected fractal dimension analyzer with proper multidimensional equations
