@@ -124,6 +124,28 @@ To perform these analyses, we use two primary methods for calculating fractal di
 ![Spectral Analysis Demonstration](needle_spectral_analysis_demo.png)
 *Figure 5: The spectral analysis process: (1) The fractal's density grid, (2) its 2D power spectrum, and (3) the radially averaged spectrum with a power-law fit to find `β` and compute `D`.*
 
+### 3.4. Mathematical Foundations of Fractal Analysis
+
+#### Sistema de Funções Iteradas (IFS)
+
+Um IFS é definido por um conjunto de transformações afins contractivas. Para uma transformação $f_i$ em 2D:
+
+$ f_i(x) = A_i x + b_i, \quad \text{onde} \quad x = \begin{bmatrix} x \\ y \end{bmatrix}, \quad A_i = \begin{bmatrix} a_i & b_i \\ c_i & d_i \end{bmatrix}, \quad b_i = \begin{bmatrix} e_i \\ f_i \end{bmatrix} $
+
+Em 3D:
+
+$ f_i(x) = A_i x + b_i, \quad \text{onde} \quad x = \begin{bmatrix} x \\ y \\ z \end{bmatrix}, \quad A_i = \begin{bmatrix} a_i & b_i & c_i \\ d_i & e_i & f_i \\ g_i & h_i & i_i \end{bmatrix}, \quad b_i = \begin{bmatrix} j_i \\ k_i \\ l_i \end{bmatrix} $
+
+O conjunto atrator $A$ é o fractal gerado pela aplicação iterativa:
+
+$ A = \bigcup_{i=1}^{N} f_i(A) $
+
+#### Pulso de Laser para Sondagem
+
+Utilizamos um pulso de laser com chirp quadrático para sondar a estrutura fractal, uma abordagem conceitual para futuras implementações físicas:
+
+$ f(\lambda, t) = I_0 \sin(\omega t + \alpha \lambda) e^{i(\omega t - k \lambda + \beta \lambda^2)} $
+
 ## 4. Implementation and Validation
 
 ### 4.1 PyTorch Implementation
@@ -159,7 +181,7 @@ class QuaternionicAttention(nn.Module):
         return attn.real
 ```
 
-### 3.2 Experimental Setup
+### 4.2 Experimental Setup
 
 We evaluate our architecture on:
 
@@ -180,7 +202,7 @@ We evaluate our architecture on:
 - Inference speed (tokens/second)
 - Training time (hours)
 
-### 3.3 Results
+### 4.3 Results
 
 | Model | Params | WikiText-103 (PPL) | Memory (GB) | Speed (tok/s) |
 |---|---|---|---|---|
@@ -196,7 +218,7 @@ We evaluate our architecture on:
 | Transformer Base | 84.2 | 87.1 | 90.3 | 92.7 |
 | ΨQRH Transformer | **84.6** | **87.3** | **90.5** | **93.1** |
 
-### 3.4 Ablation Studies
+### 4.4 Ablation Studies
 
 We conduct extensive ablation studies to validate design choices:
 
@@ -212,9 +234,9 @@ We conduct extensive ablation studies to validate design choices:
     - 3% improvement in training stability
     - 2× improvement in noise robustness
 
-## 4. Discussion
+## 5. Discussion
 
-### 4.1 Efficiency Gains
+### 5.1 Efficiency Gains
 
 Our framework demonstrates significant improvements:
 
@@ -222,7 +244,7 @@ Our framework demonstrates significant improvements:
 - **Computational Efficiency**: 2.1× speedup through FFT-based attention
 - **Performance**: Competitive or superior results on language tasks
 
-### 4.2 Physical Interpretation
+### 5.2 Physical Interpretation
 
 The mathematical framework has interesting physical properties:
 
@@ -232,7 +254,7 @@ The mathematical framework has interesting physical properties:
 
 However, we explicitly avoid speculative claims about consciousness or quantum phenomena, focusing instead on empirically measurable benefits.
 
-### 4.3 Limitations and Future Work
+### 5.3 Limitations and Future Work
 
 **Current limitations**:
 
@@ -246,7 +268,7 @@ However, we explicitly avoid speculative claims about consciousness or quantum p
 - Scaling to billion-parameter models
 - Applications beyond language modeling
 
-## 5. Conclusion
+## 6. Conclusion
 
 We present a rigorously validated transformer reformulation based on the ΨQRH framework. Our approach demonstrates concrete improvements in efficiency while maintaining competitive performance on standard NLP benchmarks. The mathematical foundation provides interesting properties for physical implementation while avoiding speculative claims. We open-source our implementation to facilitate further research in this direction.
 
