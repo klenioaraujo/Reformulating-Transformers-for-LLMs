@@ -255,19 +255,43 @@ The mathematical framework has interesting physical properties:
 
 However, we explicitly avoid speculative claims about consciousness or quantum phenomena, focusing instead on empirically measurable benefits.
 
-### 5.3 Limitations and Future Work
+### 5.3 Limitations, Risks, and Future Work
 
-**Current limitations**:
+This framework is an experimental research project and, while promising, has several limitations and risks that should be considered, especially for production or commercial applications.
 
-- Overhead in converting between representations
-- Limited to medium-scale models (up to 500M parameters)
-- Requires careful hyperparameter tuning
+#### 5.3.1. Empirical Validation and Benchmarking
 
-**Future directions**:
+The current validation is promising but limited. The benchmarks presented in this README were conducted on specific hardware (4 x A100 40GB) and may not be fully representative of performance in different production environments (e.g., cloud instances, CPUs, or edge devices). A more comprehensive analysis should include:
 
-- Optical implementation for further speedups
-- Scaling to billion-parameter models
-- Applications beyond language modeling
+-   **Detailed Dataset Information**: Precise size and preprocessing details for the training datasets.
+-   **Baseline Comparisons**: Comparisons against highly optimized, production-grade transformer baselines.
+-   **Overhead Analysis**: The reported metrics may not fully account for the overhead of representation conversions (real-to-quaternion), FFT computations, and Leech lattice encoding/decoding, which could offset the gains in real-world scenarios.
+
+#### 5.3.2. Scalability and Performance
+
+-   **Scalability**: The framework has been tested on models up to ~500M parameters. Its performance and stability on larger, multi-billion parameter models are yet to be determined. Potential memory bottlenecks or parallelization challenges may arise at scale.
+-   **Inference Latency**: While GPU performance is promising due to optimized FFT libraries, inference latency could be a concern on CPUs or specialized hardware (e.g., TPUs, mobile devices) that may lack efficient libraries for quaternion algebra or Fourier transforms.
+-   **Hyperparameter Sensitivity**: The framework introduces new, sensitive hyperparameters (e.g., `alpha` in the spectral filter, rotational parameters). This sensitivity can make training less predictable and harder to manage in a production setting where consistency is key.
+
+#### 5.3.3. Implementation and Maintenance
+
+-   **Complexity**: The use of non-standard components (quaternion algebra, spectral filtering, Leech lattice) increases the implementation complexity compared to standard transformers. This makes the code harder to maintain, debug, and extend.
+-   **Ecosystem and Tooling**: The framework relies on custom-built operations. It may lack the extensive tooling, community support, and compatibility with the broader deep learning ecosystem (e.g., quantization, pruning, and deployment tools) that standard models enjoy.
+
+#### 5.3.4. Numerical Stability
+
+-   **Precision Issues**: The combination of FFTs and novel algebraic structures (quaternions) can be susceptible to numerical precision issues, such as overflow and underflow, especially in low-precision training regimes (e.g., FP16/BF16).
+-   **Quantization Compatibility**: The compatibility of these custom operations with post-training quantization techniques (e.g., int8) has not been explored. This could be a significant barrier for deploying these models on resource-constrained devices.
+
+#### 5.3.5. Future Work
+
+Addressing these limitations is the primary focus of future work:
+
+-   **Large-Scale Benchmarking**: Rigorously test the framework on models with billions of parameters and compare against production-grade baselines on a wider range of hardware.
+-   **Overhead Reduction**: Develop more efficient kernels for quaternion operations and explore techniques to minimize the overhead of data conversions.
+-   **Hyperparameter Optimization**: Investigate methods for automatic or less sensitive tuning of the new hyperparameters.
+-   **Robustness and Stability**: Conduct a thorough analysis of the numerical stability of the framework and explore its compatibility with quantization and other model compression techniques.
+-   **Community and Tooling**: Improve documentation, create tutorials, and work towards better integration with standard deep learning libraries and tools.
 
 ## 6. Conclusion
 
