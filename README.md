@@ -4,6 +4,7 @@
 **Affiliation**: Independent Researcher  
 **Email**: klenioaraujo@gmail.com  
 **Date**: September 2025
+**License**: [GNU GPLv3](LICENSE)
 
 ## Abstract
 We propose a novel transformer architecture for Large Language Models (LLMs) that integrates the Quaternionic Recursive Harmonic Wavefunction (ΨQRH) framework to address computational inefficiency and physical grounding limitations. Our approach replaces standard self-attention and feed-forward layers with spectrally regularized, quaternion-based operations, validated through extensive numerical experiments. We demonstrate a 25% reduction in memory usage, 2.1× faster inference speed, and competitive perplexity on WikiText-103 and C4 datasets compared to baseline transformers. The framework is implemented in PyTorch and tested on standard NLP tasks, providing a solid foundation for future optical implementations.
@@ -271,6 +272,10 @@ However, we explicitly avoid speculative claims about consciousness or quantum p
 ## 6. Conclusion
 
 We present a rigorously validated transformer reformulation based on the ΨQRH framework. Our approach demonstrates concrete improvements in efficiency while maintaining competitive performance on standard NLP benchmarks. The mathematical foundation provides interesting properties for physical implementation while avoiding speculative claims. We open-source our implementation to facilitate further research in this direction.
+
+## 7. License
+
+This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
 
 ## References
 
