@@ -59,6 +59,7 @@ class QRHConfig:
     window_type: str = 'hann'
     fft_cache_size: int = 10
     device: str = 'cpu'
+    enable_warnings: bool = True
 
 class QRHLayer(nn.Module):
     """
@@ -144,8 +145,8 @@ class QRHLayer(nn.Module):
 
             return k_mesh, k_mag
 
-    def _validate_input(self, x: torch.Tensor) -> None:
-        """Comprehensive input validation to ensure layer robustness."""
+    def _validate_input(self, x: torch.Tensor) -> torch.Tensor:
+        """Comprehensive input validation to ensure layer robustness with NaN handling."""
         # Check for tensor dimensions and feature size
         if x.dim() != 3:
             raise QRHDimensionError(f"Expected 3D tensor, but got {x.dim()}D")
@@ -153,13 +154,26 @@ class QRHLayer(nn.Module):
         if x.size(-1) != expected_features:
             raise QRHDimensionError(f"Expected {expected_features} features for the last dimension, but got {x.size(-1)}")
 
-        # Check for numerical stability
-        if not torch.isfinite(x).all():
-            raise ValueError("Input tensor contains NaN or Inf values.")
+        # Check for numerical stability with graceful NaN handling
+        finite_mask = torch.isfinite(x)
+        if not finite_mask.all():
+            if not finite_mask.any():
+                # All values are NaN/Inf - return zeros
+                warnings.warn("Input tensor contains only NaN/Inf values. Returning zero tensor.")
+                return torch.zeros_like(x)
+            else:
+                # Some values are NaN/Inf - replace with zeros
+                x_clean = x.clone()
+                x_clean[~finite_mask] = 0.0
+                if self.config.enable_warnings:
+                    warnings.warn(f"Input tensor contains {(~finite_mask).sum().item()} NaN/Inf values. Replacing with zeros.")
+                return x_clean
 
         # Warn about untested devices
         if x.device.type not in ['cpu', 'cuda', 'mps', 'xla']:
             warnings.warn(f"Unsupported device type: '{x.device.type}'. The layer may work but has not been tested on this device.")
+
+        return x
 
     def _preprocess_input(self, x: torch.Tensor) -> torch.Tensor:
         # Tudo aqui usa device de x
@@ -270,18 +284,18 @@ class QRHLayer(nn.Module):
     def _forward_impl(self, x: torch.Tensor) -> torch.Tensor:
         """
         Core implementation of the forward pass, executed within an autocast context.
-        
+
         Args:
             x: Input tensor [B, T, 4*D].
         Returns:
             Output tensor with the same shape and device as input.
         """
-        self._validate_input(x)
-        Ψ = self._preprocess_input(x)
+        x_validated = self._validate_input(x)
+        Ψ = self._preprocess_input(x_validated)
         Ψ_filtered = self._apply_spectral_filtering(Ψ)
         Ψ_rotated = self._apply_quaternion_rotations(Ψ_filtered)
-        # Pass original 'x' for residual connection
-        return self._postprocess_output(Ψ_rotated, x)
+        # Pass validated 'x' for residual connection
+        return self._postprocess_output(Ψ_rotated, x_validated)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
