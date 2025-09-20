@@ -42,3 +42,22 @@ class QuaternionOperations:
             sin_theta_2 * sin_omega * cos_phi,
             sin_theta_2 * sin_omega * sin_phi
         ], dim=-1)
+
+    @staticmethod
+    def create_unit_quaternion_batch(theta: torch.Tensor,
+                                     omega: torch.Tensor,
+                                     phi: torch.Tensor) -> torch.Tensor:
+        """Creates a batch of unit quaternions from angle tensors."""
+        cos_theta_2 = torch.cos(theta / 2)
+        sin_theta_2 = torch.sin(theta / 2)
+        cos_omega = torch.cos(omega)
+        sin_omega = torch.sin(omega)
+        cos_phi = torch.cos(phi)
+        sin_phi = torch.sin(phi)
+
+        return torch.stack([
+            cos_theta_2,
+            sin_theta_2 * cos_omega,
+            sin_theta_2 * sin_omega * cos_phi,
+            sin_theta_2 * sin_omega * sin_phi
+        ], dim=-1)

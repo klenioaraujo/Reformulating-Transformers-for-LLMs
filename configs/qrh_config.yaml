@@ -1,0 +1,15 @@
+qrh_layer:
+  embed_dim: 64
+  alpha: 1.0
+  theta_left: 0.1
+  omega_left: 0.05
+  phi_left: 0.02
+  theta_right: 0.08
+  omega_right: 0.03
+  phi_right: 0.015
+  use_learned_rotation: true
+  spatial_dims: null
+  use_windowing: true
+  window_type: 'hann'
+  fft_cache_size: 10
+  device: 'cpu' # Mude para 'cuda' se uma GPU estiver disponível

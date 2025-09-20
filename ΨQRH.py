@@ -1,39 +1,73 @@
 import torch
+import yaml
+import sys
+from typing import Optional
 
 # Import the classes from the new modules to maintain the public signature
 from quaternion_operations import QuaternionOperations
 from spectral_filter import SpectralFilter
-from qrh_layer import QRHLayer
+from qrh_layer import QRHLayer, QRHConfig
 from gate_controller import GateController
 from negentropy_transformer_block import NegentropyTransformerBlock
 
-# The main execution block for usage examples and tests
-if __name__ == "__main__":
-    # Configuration
-    embed_dim = 16
-    batch_size = 2
-    seq_len = 8
 
-    # Input data
-    x = torch.randn(batch_size, seq_len, 4 * embed_dim)
+class QRHFactory:
+    @staticmethod
+    def create_qrh_layer(config_path: str, device: Optional[str] = None) -> QRHLayer:
+        with open(config_path) as f:
+            config_dict = yaml.safe_load(f)
+        config = QRHConfig(**config_dict['qrh_layer'])
+        if device:
+            config.device = device
+        layer = QRHLayer(config)
+        return layer.to(config.device)
 
-    # Layer with learnable rotation
-    layer = QRHLayer(embed_dim, use_learned_rotation=True)
 
-    # Forward test
+def example_yaml_usage(config_path: str = "configs/qrh_config.yaml"):
+    """Example: Loading config from YAML and running the layer."""
+    print(f"--- Running YAML-based Usage Example from '{config_path}' ---")
+    
+    # 1. Load config from YAML file
+    try:
+        with open(config_path) as f:
+            config_dict = yaml.safe_load(f)['qrh_layer']
+    except (FileNotFoundError, KeyError) as e:
+        print(f"Error: Could not load or parse '{config_path}'. {e}")
+        return
+
+    # 2. Create QRHConfig from dictionary
+    config = QRHConfig(**config_dict)
+
+    # 3. Handle device selection
+    device = config.device
+    if device == "cuda" and not torch.cuda.is_available():
+        print("CUDA not available, falling back to CPU.")
+        device = "cpu"
+    elif device == "mps" and not torch.backends.mps.is_available():
+        print("MPS not available, falling back to CPU.")
+        device = "cpu"
+
+    # 4. Initialize layer and move to device
+    layer = QRHLayer(config).to(device)
+    
+    # 5. Create dummy data and run forward pass
+    x = torch.randn(2, 32, 4 * config.embed_dim, device=device)
     output = layer(x)
 
-    print(f"Input shape: {x.shape}")
-    print(f"Output shape: {output.shape}")
-    print(f"Output mean: {output.mean().item():.6f}")
-    print(f"Rotation parameters - theta_left: {layer.theta_left.item():.4f}, "
-          f"omega_left: {layer.omega_left.item():.4f}, phi_left: {layer.phi_left.item():.4f}")
-    print(f"Rotation parameters - theta_right: {layer.theta_right.item():.4f}, "
-          f"omega_right: {layer.omega_right.item():.4f}, phi_right: {layer.phi_right.item():.4f}")
+    print(f"Successfully ran layer configured from YAML on device: {output.device}")
+    print(f"Input shape: {x.shape}, Output shape: {output.shape}")
+    print("----------------------------------------------------------\n")
+    return output
 
-    # Backward test
-    loss = output.sum()
-    loss.backward()
 
-    print("Gradients computed successfully!")
-    print("Layer implementation is working correctly.")
+# The main execution block for usage examples and tests
+if __name__ == "__main__":
+    # You can optionally pass a config file path as a command-line argument
+    config_file = sys.argv[1] if len(sys.argv) > 1 else "configs/qrh_config.yaml"
+
+    # Test QRHFactory
+    print("--- Testing QRHFactory ---")
+    layer = QRHFactory.create_qrh_layer(config_file, device='cuda' if torch.cuda.is_available() else 'cpu')
+    print(f"QRHFactory created layer on device: {layer.config.device}")
+
+    example_yaml_usage(config_path=config_file)
