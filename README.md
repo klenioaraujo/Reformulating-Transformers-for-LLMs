@@ -39,26 +39,17 @@ The ΨQRH framework is built upon rigorous mathematical foundations. Below are t
 
 **Quaternion Multiplication (Hamilton Product):**
 
-```math
-q₁ * q₂ = (w₁w₂ - x₁x₂ - y₁y₂ - z₁z₂) +
-          (w₁x₂ + x₁w₂ + y₁z₂ - z₁y₂)i +
-          (w₁y₂ - x₁z₂ + y₁w₂ + z₁x₂)j +
-          (w₁z₂ + x₁y₂ - y₁x₂ + z₁w₂)k
-```
+$$q₁ * q₂ = (w₁w₂ - x₁x₂ - y₁y₂ - z₁z₂) + (w₁x₂ + x₁w₂ + y₁z₂ - z₁y₂)i + (w₁y₂ - x₁z₂ + y₁w₂ + z₁x₂)j + (w₁z₂ + x₁y₂ - y₁x₂ + z₁w₂)k$$
 
 **Unit Quaternion Creation:**
 
-```math
-q = cos(θ/2) + sin(θ/2)[cos(ω)i + sin(ω)cos(φ)j + sin(ω)sin(φ)k]
-```
+$$q = \cos(\theta/2) + \sin(\theta/2)[\cos(\omega)i + \sin(\omega)\cos(\phi)j + \sin(\omega)\sin(\phi)k]$$
 
 #### 2.2 4D Unitary Transformation
 
 **Complete 4D Rotation (SO(4) Group):**
 
-```math
-Ψ' = q_left * Ψ * q_right†
-```
+$$\Psi' = q_{left} * \Psi * q_{right}^\dagger$$
 
 Where:
 - `q_left`, `q_right` ∈ SU(2) are independent unit quaternions
@@ -69,15 +60,11 @@ Where:
 
 **Logarithmic Phase Filter:**
 
-```math
-F(k) = exp(iα * arctan(ln(|k| + ε)))
-```
+$$F(k) = \exp(i\alpha \cdot \arctan(\ln(|k| + \varepsilon)))$$
 
 **Alternative Stabilized Filter (GELU-based):**
 
-```math
-F(k) = exp(iα * GELU(normalized(ln(|k| + ε))))
-```
+$$F(k) = \exp(i\alpha \cdot \text{GELU}(\text{normalized}(\ln(|k| + \varepsilon))))$$
 
 Where:
 - `α` ∈ [0.1, 3.0] is the spectral filtering parameter
@@ -88,9 +75,7 @@ Where:
 
 **Complete QRH Evolution:**
 
-```math
-Ψ_QRH = R_left · F⁻¹{F(k) · F{Ψ}} · R_right
-```
+$$\Psi_{QRH} = R_{left} \cdot \mathcal{F}^{-1}\{F(k) \cdot \mathcal{F}\{\Psi\}\} \cdot R_{right}$$
 
 Where:
 - `F{}` and `F⁻¹{}` are Fourier and inverse Fourier transforms
@@ -101,9 +86,7 @@ Where:
 
 **Laser Pulse Function with Quadratic Chirp:**
 
-```math
-f(λ,t) = I₀ sin(ωt + αλ) e^(i(ωt - kλ + βλ²))
-```
+$$f(\lambda,t) = I_0 \sin(\omega t + \alpha\lambda) e^{i(\omega t - k\lambda + \beta\lambda^2)}$$
 
 Where:
 - `I₀` = Maximum laser intensity
@@ -118,9 +101,7 @@ Where:
 
 **Box-Counting Dimension:**
 
-```math
-D = -lim_{ε→0} (ln N(ε))/(ln ε)
-```
+$$D = -\lim_{\varepsilon \to 0} \frac{\ln N(\varepsilon)}{\ln \varepsilon}$$
 
 **Multidimensional β-D Relations:**
 - **1D:** `β = 3 - 2D`
@@ -129,9 +110,7 @@ D = -lim_{ε→0} (ln N(ε))/(ln ε)
 
 **Fractal-to-Filter Mapping:**
 
-```math
-α(D) = α₀(1 + λ(D - D_euclidean)/D_euclidean)
-```
+$$\alpha(D) = \alpha_0\left(1 + \lambda\frac{D - D_{euclidean}}{D_{euclidean}}\right)$$
 
 Bounded: α ∈ [0.1, 3.0]
 
@@ -139,15 +118,11 @@ Bounded: α ∈ [0.1, 3.0]
 
 **Leech Lattice Definition:**
 
-```math
-Λ₂₄ = {x ∈ ℝ²⁴ : x · x ∈ 2ℤ, x ≡ (Golay_codeword) mod 2}
-```
+$$\Lambda_{24} = \{x \in \mathbb{R}^{24} : x \cdot x \in 2\mathbb{Z}, x \equiv (\text{Golay\_codeword}) \mod 2\}$$
 
 **Golay Code G₂₄:**
 
-```math
-G₂₄ = {c ∈ F₂²⁴ : H · cᵀ = 0}
-```
+$$G_{24} = \{c \in \mathbb{F}_2^{24} : H \cdot c^T = 0\}$$
 
 Where H is the 12×24 parity-check matrix.
 
@@ -155,21 +130,15 @@ Where H is the 12×24 parity-check matrix.
 
 **Orthogonality Error:**
 
-```math
-E_orth = ||input||_2 - ||output||_2|
-```
+$$E_{orth} = |\|\text{input}\|_2 - \|\text{output}\|_2|$$
 
 **Energy Conservation Ratio:**
 
-```math
-R_energy = (E_in - E_out)/(E_in + ε)
-```
+$$R_{energy} = \frac{E_{in} - E_{out}}{E_{in} + \varepsilon}$$
 
 **Rotation Drift Angle:**
 
-```math
-θ_drift = √(θ_L² + ω_L² + φ_L² + θ_R² + ω_R² + φ_R²)
-```
+$$\theta_{drift} = \sqrt{\theta_L^2 + \omega_L^2 + \phi_L^2 + \theta_R^2 + \omega_R^2 + \phi_R^2}$$
 
 ### 2.9 Theoretical Framework
 
@@ -178,9 +147,7 @@ R_energy = (E_in - E_out)/(E_in + ε)
 Given a token embedding vector **x** ∈ ℝ^d, we map it to a quaternionic representation:
 
 **Quaternion Mapping Formula:**
-```
-Ψ(x) = ψ₀ + ψ₁i + ψ₂j + ψ₃k ∈ ℍ
-```
+$$\Psi(x) = \psi_0 + \psi_1 i + \psi_2 j + \psi_3 k \in \mathbb{H}$$
 
 Where the components are defined as:
 - **ψ₀** = Re(MLP(**x**))  *(real component)*
@@ -199,9 +166,7 @@ This representation reduces parameter count by 25% while maintaining expressive 
 We reformulate self-attention using spectral operations in the frequency domain:
 
 **Spectral Attention Formula:**
-```
-SpectralAttention(Q,K,V) = F⁻¹{F(k) · F{Ψ(Q) ⊗ Ψ(K)}} ⊗ Ψ(V)
-```
+$$\text{SpectralAttention}(Q,K,V) = \mathcal{F}^{-1}\{F(k) \cdot \mathcal{F}\{\Psi(Q) \otimes \Psi(K)\}\} \otimes \Psi(V)$$
 
 **Component Definitions:**
 - **⊗** = Hamilton product (quaternion multiplication)
@@ -209,11 +174,7 @@ SpectralAttention(Q,K,V) = F⁻¹{F(k) · F{Ψ(Q) ⊗ Ψ(K)}} ⊗ Ψ(V)
 - **F(k)** = Spectral filter function
 
 **Spectral Filter (with fraction):**
-```
-           ⎧  iα · arctan(ln(|k| + ε))  ⎫
-F(k) = exp ⎨ ────────────────────────── ⎬
-           ⎩           1                ⎭
-```
+$$F(k) = \exp\left(i\alpha \cdot \arctan(\ln(|k| + \varepsilon))\right)$$
 
 **Computational Complexity:**
 - **Standard attention**: O(n²)
@@ -229,9 +190,7 @@ F(k) = exp ⎨ ─────────────────────�
 We replace standard FFNs with a quaternionic evolution step:
 
 **Harmonic Evolution Formula:**
-```
-FFN(Ψ) = R · F⁻¹{F(k) · F{Ψ}}
-```
+$$\text{FFN}(\Psi) = R \cdot \mathcal{F}^{-1}\{F(k) \cdot \mathcal{F}\{\Psi\}\}$$
 
 **Where:**
 - **R** = Learned unit quaternion (geometric rotation operator)
@@ -244,9 +203,7 @@ FFN(Ψ) = R · F⁻¹{F(k) · F{Ψ}}
 - **Learnable parameters**: θ, ω, φ (Euler angles)
 
 **Quadratic Expansion Example:**
-```
-R = cos(θ/2) + sin(θ/2)[cos(ω)i + sin(ω)cos(φ)j + sin(ω)sin(φ)k]
-```
+$$R = \cos(\theta/2) + \sin(\theta/2)[\cos(\omega)i + \sin(\omega)\cos(\phi)j + \sin(\omega)\sin(\phi)k]$$
 
 This provides **geometric regularization** through rotation in quaternion space.
 
@@ -255,9 +212,7 @@ This provides **geometric regularization** through rotation in quaternion space.
 Critical parameters are embedded in the **Leech lattice** for inherent error correction:
 
 **Leech Lattice Encoding:**
-```
-Λ₂₄ = {x ∈ ℝ²⁴ : x · x ∈ 2ℤ, x ≡ (Golay codeword) mod 2}
-```
+$$\Lambda_{24} = \{x \in \mathbb{R}^{24} : x \cdot x \in 2\mathbb{Z}, x \equiv (\text{Golay codeword}) \mod 2\}$$
 
 **Error Correction Properties:**
 - **Parameter grouping**: Every 24 parameters → 1 lattice point
@@ -271,9 +226,7 @@ Critical parameters are embedded in the **Leech lattice** for inherent error cor
 3. **Fault tolerance**: Automatic correction of small perturbations
 
 **Algebraic Structure:**
-```
-G₂₄ = {c ∈ F₂²⁴ : H · cᵀ = 0}
-```
+$$G_{24} = \{c \in \mathbb{F}_2^{24} : H \cdot c^T = 0\}$$
 Where **H** is the 12×24 parity-check matrix of the Golay code.
 
 ## 3. Proofs of Concept: From Fractals to Spectral Regularization
@@ -333,32 +286,19 @@ To perform these analyses, we use two primary methods for calculating fractal di
 An IFS is defined by a set of contractive affine transformations:
 
 **2D Transformation:**
-```
-f_i(x) = A_i · x + b_i
-```
+$$f_i(x) = A_i \cdot x + b_i$$
 
 **Where:**
-```
-x = [x, y]ᵀ    A_i = [a_i  b_i]    b_i = [e_i]
-                    [c_i  d_i]          [f_i]
-```
+$$x = \begin{bmatrix} x \\ y \end{bmatrix}, \quad A_i = \begin{bmatrix} a_i & b_i \\ c_i & d_i \end{bmatrix}, \quad b_i = \begin{bmatrix} e_i \\ f_i \end{bmatrix}$$
 
 **3D Transformation:**
-```
-f_i(x) = A_i · x + b_i
-```
+$$f_i(x) = A_i \cdot x + b_i$$
 
 **Where:**
-```
-x = [x, y, z]ᵀ    A_i = [a_i  b_i  c_i]    b_i = [j_i]
-                       [d_i  e_i  f_i]          [k_i]
-                       [g_i  h_i  i_i]          [l_i]
-```
+$$x = \begin{bmatrix} x \\ y \\ z \end{bmatrix}, \quad A_i = \begin{bmatrix} a_i & b_i & c_i \\ d_i & e_i & f_i \\ g_i & h_i & i_i \end{bmatrix}, \quad b_i = \begin{bmatrix} j_i \\ k_i \\ l_i \end{bmatrix}$$
 
 **Attractor Set (Fractal):**
-```
-A = ⋃(i=1 to N) f_i(A)
-```
+$$A = \bigcup_{i=1}^{N} f_i(A)$$
 
 **Contraction Condition:**
 - **||A_i|| < 1** to ensure convergence
@@ -369,9 +309,7 @@ A = ⋃(i=1 to N) f_i(A)
 We use a quadratic chirp laser pulse to probe the fractal structure:
 
 **Laser Pulse Function (Complex with Quadratic Chirp):**
-```
-f(λ,t) = I₀ · sin(ωt + αλ) · exp[i(ωt - kλ + βλ²)]
-```
+$$f(\lambda,t) = I_0 \cdot \sin(\omega t + \alpha\lambda) \cdot \exp[i(\omega t - k\lambda + \beta\lambda^2)]$$
 
 **Parameters:**
 - **I₀** = Maximum laser intensity
@@ -383,10 +321,7 @@ f(λ,t) = I₀ · sin(ωt + αλ) · exp[i(ωt - kλ + βλ²)]
 - **t** = Time
 
 **Complex Phase Expansion:**
-```
-Φ(λ,t) = ωt - kλ + βλ²
-       = ωt - (2π/λ₀)λ + βλ²
-```
+$$\Phi(\lambda,t) = \omega t - k\lambda + \beta\lambda^2 = \omega t - \frac{2\pi}{\lambda_0}\lambda + \beta\lambda^2$$
 
 **Application for Fractal Probing:**
 - **Spatial scanning**: λ traverses the fractal structure
@@ -702,9 +637,7 @@ The **enhanced validation results** (100% enhanced validation + 80% robust stati
 We have successfully integrated the **Padilha Wave Equation** into the ΨQRH framework, representing a significant advancement in physical-mathematical grounding:
 
 **Padilha Wave Equation:**
-```
-f(λ,t) = I₀ sin(ωt + αλ) e^(i(ωt - kλ + βλ²))
-```
+$$f(\lambda,t) = I_0 \sin(\omega t + \alpha\lambda) e^{i(\omega t - k\lambda + \beta\lambda^2)}$$
 
 **Where:**
 - **I₀** = Maximum laser intensity
@@ -762,12 +695,11 @@ To ensure the high success rates are not false positives, we implemented compreh
 #### 8.6.4 Fractal-Wave Parameter Mapping
 
 **Enhanced Mathematical Framework:**
-```
-D → α mapping: α(D) = α₀(1 + λ(D - D_euclidean)/D_euclidean)
-D → β mapping: β(D) = [(2n + 1) - 2D] × scaling_factor
-
-Physical bounds: α ∈ [0.1, 3.0], β ∈ [0.01, 0.2]
-```
+$$\begin{align}
+D \to \alpha \text{ mapping}: & \quad \alpha(D) = \alpha_0\left(1 + \lambda\frac{D - D_{euclidean}}{D_{euclidean}}\right) \\
+D \to \beta \text{ mapping}: & \quad \beta(D) = [(2n + 1) - 2D] \times \text{scaling\_factor} \\
+\text{Physical bounds}: & \quad \alpha \in [0.1, 3.0], \; \beta \in [0.01, 0.2]
+\end{align}$$
 
 **Validated Test Cases:**
 - **Cantor Set** (D ≈ 0.631): α = 0.738, β = 0.0165
@@ -919,35 +851,25 @@ The **4D Unitary Layer** represents a significant enhancement to the ΨQRH frame
 
 The 4D Unitary Layer operates in the **Special Orthogonal Group SO(4)**, which naturally decomposes into:
 
-```
-SO(4) ≅ (SU(2) × SU(2)) / Z₂
-```
+$$SO(4) \cong \frac{SU(2) \times SU(2)}{\mathbb{Z}_2}$$
 
 Where each SU(2) factor corresponds to left and right quaternion multiplications:
 
 **Left Quaternion Rotation:**
-```
-q_left = cos(θ_L/2) + sin(θ_L/2)[cos(ω_L)i + sin(ω_L)cos(φ_L)j + sin(ω_L)sin(φ_L)k]
-```
+$$q_{left} = \cos(\theta_L/2) + \sin(\theta_L/2)[\cos(\omega_L)i + \sin(\omega_L)\cos(\phi_L)j + \sin(\omega_L)\sin(\phi_L)k]$$
 
 **Right Quaternion Rotation:**
-```
-q_right = cos(θ_R/2) + sin(θ_R/2)[cos(ω_R)i + sin(ω_R)cos(φ_R)j + sin(ω_R)sin(φ_R)k]
-```
+$$q_{right} = \cos(\theta_R/2) + \sin(\theta_R/2)[\cos(\omega_R)i + \sin(\omega_R)\cos(\phi_R)j + \sin(\omega_R)\sin(\phi_R)k]$$
 
 **4D Rotation Formula:**
-```
-v' = q_left * v * q_right†
-```
+$$v' = q_{left} * v * q_{right}^\dagger$$
 
 #### Spectral Filtering in Quaternion Space
 
 The layer applies spectral regularization using a logarithmic phase filter:
 
 **Filter Transfer Function:**
-```
-H(k) = exp(i * α * log(|k| + ε))
-```
+$$H(k) = \exp(i \cdot \alpha \cdot \log(|k| + \varepsilon))$$
 
 Where:
 - **k** = frequency domain representation
@@ -1050,13 +972,11 @@ def map_fractal_to_alpha(fractal_dim, dim_type='2d'):
 The layer implements an intelligent gating mechanism:
 
 **Receipt Calculation:**
-```python
-receipts = {
-    'orthogonal_error': compute_orthogonality_error(input, output),
-    'energy_ratio': compute_energy_conservation(input, output),
-    'drift_angle': compute_rotation_drift(rotation_params)
-}
-```
+$$\text{receipts} = \begin{cases}
+\text{orthogonal\_error} &= \text{compute\_orthogonality\_error}(\text{input}, \text{output}) \\
+\text{energy\_ratio} &= \text{compute\_energy\_conservation}(\text{input}, \text{output}) \\
+\text{drift\_angle} &= \text{compute\_rotation\_drift}(\text{rotation\_params})
+\end{cases}$$
 
 **Gate Decisions:**
 - **ABSTAIN**: High orthogonal error (> threshold)
