@@ -169,22 +169,103 @@ class QRHLayer(nn.Module):
         return V.view(*x.shape[:-1], 4, self.config.embed_dim).permute(0, 1, 3, 2)
 
     def _apply_spectral_filtering(self, Ψ: torch.Tensor) -> torch.Tensor:
-        # Placeholder: This will be implemented in the next steps
-        print("Warning: _apply_spectral_filtering is a placeholder and not yet implemented.")
-        return Ψ
+        """
+        Applies spectral filtering in frequency domain:
+        Ψ_filtered = F^{-1} { F(k) · F { Ψ } }
 
-    def _apply_quaternion_rotations(self, Ψ_filtered: torch.Tensor) -> torch.Tensor:
-        # Placeholder: This will be implemented in the next steps
-        print("Warning: _apply_quaternion_rotations is a placeholder and not yet implemented.")
+        Args:
+            Ψ: Input tensor [B, T, D, 4] (batch, seq_len, embed_dim, quaternion_components)
+        Returns:
+            Filtered tensor with same shape
+        """
+        batch_size, seq_len, embed_dim, quat_dim = Ψ.shape
+
+        # Apply windowing if enabled
+        Ψ_windowed = self.spectral_filter.apply_window(Ψ, seq_len)
+
+        # Forward FFT along sequence dimension - MUST be complex
+        Ψ_fft = fft.fft(Ψ_windowed, dim=1)
+        assert Ψ_fft.dtype in [torch.complex64, torch.complex128], f"FFT must be complex, got {Ψ_fft.dtype}"
+
+        # Compute wave vector magnitudes
+        k, k_mag = self._compute_frequencies(seq_len, Ψ.device)
+
+        # Apply spectral filter F(k) - MUST return complex tensor
+        filter_response = self.spectral_filter(k_mag)
+        assert filter_response.dtype in [torch.complex64, torch.complex128], f"Filter must be complex, got {filter_response.dtype}"
+
+        # Expand filter to match tensor dimensions [1, T, 1, 1]
+        filter_expanded = filter_response.view(1, seq_len, 1, 1)
+
+        # Apply filter in frequency domain - complex × complex multiplication
+        Ψ_filtered_fft = Ψ_fft * filter_expanded
+
+        # CRITICAL: Verify that phase rotation is actually applied
+        assert Ψ_filtered_fft.dtype in [torch.complex64, torch.complex128], "Filtered FFT must be complex!"
+        assert not torch.allclose(Ψ_filtered_fft.imag, torch.zeros_like(Ψ_filtered_fft.imag), atol=1e-10), \
+            "Imaginary part is zero — filter may not be applying phase rotation!"
+
+        # Inverse FFT to return to time domain - take real part only after IFFT
+        Ψ_filtered = fft.ifft(Ψ_filtered_fft, dim=1).real
+
         return Ψ_filtered
 
+    def _apply_quaternion_rotations(self, Ψ_filtered: torch.Tensor) -> torch.Tensor:
+        """
+        Applies quaternion rotations: R_left · Ψ_filtered · R_right
+
+        Args:
+            Ψ_filtered: Filtered tensor [B, T, D, 4] (quaternion components in last dim)
+        Returns:
+            Rotated tensor with same shape
+        """
+        # Get rotation quaternions
+        q_left, q_right = self.get_rotation_quaternions()
+
+        batch_size, seq_len, embed_dim, quat_dim = Ψ_filtered.shape
+
+        # Reshape for quaternion operations: [B*T*D, 4]
+        Ψ_flat = Ψ_filtered.reshape(-1, 4)
+
+        # Apply left rotation: q_left * Ψ
+        # Expand q_left to match batch dimensions
+        q_left_expanded = q_left.unsqueeze(0).expand(Ψ_flat.size(0), -1)
+        Ψ_left_rotated = QuaternionOperations.multiply(q_left_expanded, Ψ_flat)
+
+        # Apply right rotation: (q_left * Ψ) * q_right
+        # Expand q_right to match batch dimensions
+        q_right_expanded = q_right.unsqueeze(0).expand(Ψ_flat.size(0), -1)
+        Ψ_rotated_flat = QuaternionOperations.multiply(Ψ_left_rotated, q_right_expanded)
+
+        # Reshape back to original dimensions
+        Ψ_rotated = Ψ_rotated_flat.view(batch_size, seq_len, embed_dim, quat_dim)
+
+        return Ψ_rotated
+
     def _postprocess_output(self, Ψ_rotated: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
-        # Placeholder: This will be implemented in the next steps
-        print("Warning: _postprocess_output is a placeholder and not yet implemented.")
-        batch_size, seq_len, _, _ = Ψ_rotated.shape
-        Ψ_final = Ψ_rotated.permute(0, 1, 3, 2).reshape(batch_size, seq_len, self.total_dim)
-        # Placeholder for final projection + residual
-        return Ψ_final + x
+        """
+        Postprocesses the rotated quaternion output and applies residual connection.
+
+        Args:
+            Ψ_rotated: Rotated tensor [B, T, D, 4]
+            x: Original input tensor [B, T, 4*D] for residual connection
+        Returns:
+            Final output tensor [B, T, 4*D]
+        """
+        batch_size, seq_len, embed_dim, quat_dim = Ψ_rotated.shape
+
+        # Reshape from [B, T, D, 4] to [B, T, 4*D]
+        Ψ_reshaped = Ψ_rotated.permute(0, 1, 3, 2).reshape(batch_size, seq_len, self.total_dim)
+
+        # Apply output projection
+        Ψ_projected = torch.einsum('bij,jk->bik', Ψ_reshaped, self.out_proj.weight)
+        if self.out_proj.bias is not None:
+            Ψ_projected = Ψ_projected + self.out_proj.bias
+
+        # Apply residual connection
+        output = Ψ_projected + x
+
+        return output
 
     def _forward_impl(self, x: torch.Tensor) -> torch.Tensor:
         """
