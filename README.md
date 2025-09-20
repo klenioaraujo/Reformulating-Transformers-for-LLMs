@@ -29,9 +29,151 @@ Unlike speculative proposals, this work provides:
 - Empirical validation on language modeling tasks
 - Detailed complexity analysis
 
-## 2. Theoretical Framework
+## 2. Mathematical Framework
 
-### 2.1 Quaternionic Representation of Token Embeddings
+### Core Mathematical Equations
+
+The ΨQRH framework is built upon rigorous mathematical foundations. Below are the key equations that define the system, formatted for GitHub display:
+
+#### 2.1 Quaternion Operations
+
+**Quaternion Multiplication (Hamilton Product):**
+
+```math
+q₁ * q₂ = (w₁w₂ - x₁x₂ - y₁y₂ - z₁z₂) +
+          (w₁x₂ + x₁w₂ + y₁z₂ - z₁y₂)i +
+          (w₁y₂ - x₁z₂ + y₁w₂ + z₁x₂)j +
+          (w₁z₂ + x₁y₂ - y₁x₂ + z₁w₂)k
+```
+
+**Unit Quaternion Creation:**
+
+```math
+q = cos(θ/2) + sin(θ/2)[cos(ω)i + sin(ω)cos(φ)j + sin(ω)sin(φ)k]
+```
+
+#### 2.2 4D Unitary Transformation
+
+**Complete 4D Rotation (SO(4) Group):**
+
+```math
+Ψ' = q_left * Ψ * q_right†
+```
+
+Where:
+- `q_left`, `q_right` ∈ SU(2) are independent unit quaternions
+- `†` denotes quaternion conjugate
+- SO(4) ≅ (SU(2) × SU(2))/Z₂
+
+#### 2.3 Spectral Filter Function
+
+**Logarithmic Phase Filter:**
+
+```math
+F(k) = exp(iα * arctan(ln(|k| + ε)))
+```
+
+**Alternative Stabilized Filter (GELU-based):**
+
+```math
+F(k) = exp(iα * GELU(normalized(ln(|k| + ε))))
+```
+
+Where:
+- `α` ∈ [0.1, 3.0] is the spectral filtering parameter
+- `ε = 10⁻¹⁰` for numerical stability
+- `k` is the frequency domain variable
+
+#### 2.4 Core QRH Transform
+
+**Complete QRH Evolution:**
+
+```math
+Ψ_QRH = R_left · F⁻¹{F(k) · F{Ψ}} · R_right
+```
+
+Where:
+- `F{}` and `F⁻¹{}` are Fourier and inverse Fourier transforms
+- `F(k)` is the spectral filter function
+- `R_left, R_right` are quaternion rotation operators
+
+#### 2.5 Padilha Wave Equation Integration
+
+**Laser Pulse Function with Quadratic Chirp:**
+
+```math
+f(λ,t) = I₀ sin(ωt + αλ) e^(i(ωt - kλ + βλ²))
+```
+
+Where:
+- `I₀` = Maximum laser intensity
+- `ω` = Angular frequency (ω = 2π/T)
+- `α` = Spatial modulation coefficient (mapped from fractal dimension)
+- `k` = Wave number (k = 2π/λ₀)
+- `β` = Quadratic chirp coefficient
+- `λ` = Spatial position
+- `t` = Time
+
+#### 2.6 Fractal Dimension Relationships
+
+**Box-Counting Dimension:**
+
+```math
+D = -lim_{ε→0} (ln N(ε))/(ln ε)
+```
+
+**Multidimensional β-D Relations:**
+- **1D:** `β = 3 - 2D`
+- **2D:** `β = 5 - 2D`
+- **3D:** `β = 7 - 2D`
+
+**Fractal-to-Filter Mapping:**
+
+```math
+α(D) = α₀(1 + λ(D - D_euclidean)/D_euclidean)
+```
+
+Bounded: α ∈ [0.1, 3.0]
+
+#### 2.7 Leech Lattice Error Correction
+
+**Leech Lattice Definition:**
+
+```math
+Λ₂₄ = {x ∈ ℝ²⁴ : x · x ∈ 2ℤ, x ≡ (Golay_codeword) mod 2}
+```
+
+**Golay Code G₂₄:**
+
+```math
+G₂₄ = {c ∈ F₂²⁴ : H · cᵀ = 0}
+```
+
+Where H is the 12×24 parity-check matrix.
+
+#### 2.8 Gate Controller Receipts
+
+**Orthogonality Error:**
+
+```math
+E_orth = ||input||_2 - ||output||_2|
+```
+
+**Energy Conservation Ratio:**
+
+```math
+R_energy = (E_in - E_out)/(E_in + ε)
+```
+
+**Rotation Drift Angle:**
+
+```math
+θ_drift = √(θ_L² + ω_L² + φ_L² + θ_R² + ω_R² + φ_R²)
+```
+
+### 2.9 Theoretical Framework
+
+#### 2.9.1 Quaternionic Representation of Token Embeddings
 
 Given a token embedding vector **x** ∈ ℝ^d, we map it to a quaternionic representation:
 
@@ -52,7 +194,7 @@ Where the components are defined as:
 
 This representation reduces parameter count by 25% while maintaining expressive power through non-commutative operations.
 
-### 2.2 Spectral Attention Mechanism
+#### 2.9.2 Spectral Attention Mechanism
 
 We reformulate self-attention using spectral operations in the frequency domain:
 
@@ -82,7 +224,7 @@ F(k) = exp ⎨ ─────────────────────�
 2. **Logarithmic complexity** instead of quadratic
 3. **Frequency-domain processing** enables better pattern recognition
 
-### 2.3 Feed-Forward as Harmonic Evolution
+#### 2.9.3 Feed-Forward as Harmonic Evolution
 
 We replace standard FFNs with a quaternionic evolution step:
 
@@ -108,7 +250,7 @@ R = cos(θ/2) + sin(θ/2)[cos(ω)i + sin(ω)cos(φ)j + sin(ω)sin(φ)k]
 
 This provides **geometric regularization** through rotation in quaternion space.
 
-### 2.4 Error Correction via Leech Lattice
+#### 2.9.4 Error Correction via Leech Lattice
 
 Critical parameters are embedded in the **Leech lattice** for inherent error correction:
 
