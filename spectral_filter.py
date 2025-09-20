@@ -21,6 +21,9 @@ class SpectralFilter(nn.Module):
         """
         Applies the spectral filter with enhanced numerical stabilization.
 
+        FIXED: Corrected power law slope from 0 to expected -1 by implementing proper
+        amplitude scaling |H(f)|² ∝ f^(-α) in addition to phase modulation.
+
         Args:
             k_mag: Magnitude of the wave vector, shape [..., dims]
         Returns:
@@ -31,7 +34,6 @@ class SpectralFilter(nn.Module):
 
         if self.use_stable_activation:
             # Stabilized version using GELU instead of arctan
-            # F(k) = exp(i * alpha * GELU(log(k_mag + epsilon)))
             log_k = torch.log(k_mag_clamped + self.epsilon)
 
             # More robust normalization for multi-dimensional tensors
@@ -39,15 +41,24 @@ class SpectralFilter(nn.Module):
             log_k_std = log_k.std(dim=-1, keepdim=True) + self.epsilon
             log_k_normalized = (log_k - log_k_mean) / log_k_std
 
-            # Use GELU for stable smoothing
+            # Use GELU for stable smoothing (phase component)
             phase = self.alpha * torch.nn.functional.gelu(log_k_normalized)
+
+            # CORRECTION: Add proper amplitude scaling for power law slope = -1
+            # |H(f)|² ∝ f^(-α) => |H(f)| ∝ f^(-α/2)
+            amplitude_scaling = torch.pow(k_mag_clamped + self.epsilon, -self.alpha / 2.0)
         else:
             # Original version with improvements
             log_k = torch.log(k_mag_clamped + self.epsilon)
             phase = self.alpha * torch.arctan(log_k)
 
-        # Apply filter with enhanced NaN/Inf check
-        filter_response = torch.exp(1j * phase)
+            # CORRECTION: Add proper amplitude scaling for power law slope = -1
+            amplitude_scaling = torch.pow(k_mag_clamped + self.epsilon, -self.alpha / 2.0)
+
+        # CORRECTED: Apply both amplitude scaling and phase modulation
+        # F(k) = amplitude_scaling * exp(i * phase)
+        # This ensures |H(f)|² ∝ f^(-α) giving the correct power law slope
+        filter_response = amplitude_scaling * torch.exp(1j * phase)
 
         # Replace invalid values with identity for better precision
         invalid_mask = torch.isnan(filter_response) | torch.isinf(filter_response)

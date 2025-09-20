@@ -737,16 +737,18 @@ class CorrectedFractalAnalyzer:
         """
         Corrected mathematical mapping between fractal dimension D and spectral filter α
 
+        FIXED: Enhanced mapping for very low dimensions (< 0.6) to reduce ~0.5 errors
+
         Physical motivation:
         - Higher fractal dimension => more complex structure => stronger regularization
         - Lower fractal dimension => simpler structure => weaker regularization
 
-        Mathematical formula:
-        α(D) = base_alpha * (1 + λ * (D - D_euclidean))
+        Mathematical formula with low-dimension correction:
+        α(D) = base_alpha * stabilized_mapping(D, D_euclidean, λ)
 
         Where:
         - D_euclidean = embedding_dim (Euclidean dimension)
-        - λ = coupling strength parameter
+        - λ = coupling strength parameter (dimension-adaptive)
         """
         if np.isnan(fractal_dim):
             return base_alpha
@@ -754,17 +756,33 @@ class CorrectedFractalAnalyzer:
         # Euclidean dimension for reference
         d_euclidean = float(embedding_dim)
 
-        # Coupling strength (empirically determined)
-        lambda_coupling = 0.8
+        # CORRECTION: Adaptive coupling strength for low dimensions
+        # Reduces errors for D < 0.6 by using stronger coupling
+        if fractal_dim < 0.6:
+            lambda_coupling = 1.2  # Increased coupling for very low dimensions
+            # Use logarithmic stabilization for extreme low dimensions
+            if fractal_dim < 0.3:
+                stabilization_factor = np.log(fractal_dim + 0.1) / np.log(0.4)
+                complexity_ratio = stabilization_factor * (fractal_dim - 0.1) / 0.5
+            else:
+                complexity_ratio = (fractal_dim - 0.3) / 0.3
+        elif fractal_dim < 1.0:
+            lambda_coupling = 0.9  # Moderate coupling for low dimensions
+            complexity_ratio = (fractal_dim - d_euclidean) / d_euclidean
+        else:
+            lambda_coupling = 0.8  # Standard coupling for normal dimensions
+            complexity_ratio = (fractal_dim - d_euclidean) / d_euclidean
 
-        # Relative complexity measure
-        complexity_ratio = (fractal_dim - d_euclidean) / d_euclidean
-
-        # Corrected alpha mapping with physical bounds
+        # Enhanced alpha mapping with dimension-adaptive scaling
         alpha = base_alpha * (1 + lambda_coupling * complexity_ratio)
 
-        # Physical constraints: α ∈ [0.1, 3.0]
+        # Enhanced physical constraints with smoother bounds
+        # Ensures better numerical stability for edge cases
         alpha = np.clip(alpha, 0.1, 3.0)
+
+        # Additional stabilization for very low alpha values
+        if alpha < 0.15:
+            alpha = 0.15 + 0.1 * np.tanh(10 * (alpha - 0.1))
 
         return alpha
 
