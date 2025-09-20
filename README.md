@@ -118,7 +118,7 @@ Bounded: α ∈ [0.1, 3.0]
 
 **Leech Lattice Definition:**
 
-$$\Lambda_{24} = \{x \in \mathbb{R}^{24} : x \cdot x \in 2\mathbb{Z}, x \equiv (\text{Golay\_codeword}) \mod 2\}$$
+$$\Lambda_{24} = \{x \in \mathbb{R}^{24} : x \cdot x \in 2\mathbb{Z}, x \equiv (\text{Golay codeword}) \mod 2\}$$
 
 **Golay Code G₂₄:**
 
