@@ -1,0 +1,107 @@
+config_used:
+  fractal_integration:
+    adaptation:
+      alpha_smoothing: 0.9
+      analysis_frequency: 100
+      enabled: true
+    alpha_mapping:
+      dim_type: 1d
+      scaling_factor: 1.0
+    box_counting:
+      grid_size: 256
+      max_box_size: 1.0
+      min_box_size: 0.001
+      n_samples: 10000
+      n_scales: 20
+    default_method: box_counting
+    spectral:
+      max_frequency: 128
+      min_frequency: 1
+      power_law_fit_method: curve_fit
+    validation:
+      test_cases:
+      - name: cantor_set
+        theoretical_dim: 0.63093
+        tolerance: 0.05
+      - name: sierpinski_triangle
+        theoretical_dim: 1.58496
+        tolerance: 0.1
+      - name: uniform_2d
+        theoretical_dim: 2.0
+        tolerance: 0.2
+      tolerance:
+        alpha_mapping: 0.1
+        dimensional: 1e-10
+        fractal_analysis: 0.1
+  logging:
+    file: fractal_integration.log
+    format: '%(asctime)s - %(levelname)s - %(message)s'
+    level: INFO
+detailed_results:
+  Component Integration:
+    execution_time_ms: 125.82921981811523
+    passed: true
+  Configuration Compliance:
+    execution_time_ms: 3.148317337036133
+    passed: !!python/object/apply:numpy._core.multiarray.scalar
+    - !!python/object/apply:numpy.dtype
+      args:
+      - b1
+      - false
+      - true
+      state: !!python/tuple
+      - 3
+      - '|'
+      - null
+      - null
+      - null
+      - -1
+      - -1
+      - 0
+    - !!binary |
+      AA==
+  Edge Cases & Robustness:
+    execution_time_ms: 35.91752052307129
+    passed: !!python/object/apply:torch._utils._rebuild_tensor_v2
+    - !!python/object/apply:torch.storage._load_from_bytes
+      - !!binary |
+        gAKKCmz8nEb5IGqoUBkugAJN6QMugAJ9cQAoWBAAAABwcm90b2NvbF92ZXJzaW9ucQFN6QNYDQAA
+        AGxpdHRsZV9lbmRpYW5xAohYCgAAAHR5cGVfc2l6ZXNxA31xBChYBQAAAHNob3J0cQVLAlgDAAAA
+        aW50cQZLBFgEAAAAbG9uZ3EHSwR1dS6AAihYBwAAAHN0b3JhZ2VxAGN0b3JjaApCb29sU3RvcmFn
+        ZQpxAVgJAAAAMTc1MDcwNTYwcQJYAwAAAGNwdXEDSwFOdHEEUS6AAl1xAFgJAAAAMTc1MDcwNTYw
+        cQFhLgEAAAAAAAAAAQ==
+    - 0
+    - !!python/tuple []
+    - !!python/tuple []
+    - false
+    - !!python/object/apply:collections.OrderedDict
+      - []
+  Mathematical Consistency:
+    execution_time_ms: 3.6649703979492188
+    passed: !!python/object/apply:torch._utils._rebuild_tensor_v2
+    - !!python/object/apply:torch.storage._load_from_bytes
+      - !!binary |
+        gAKKCmz8nEb5IGqoUBkugAJN6QMugAJ9cQAoWBAAAABwcm90b2NvbF92ZXJzaW9ucQFN6QNYDQAA
+        AGxpdHRsZV9lbmRpYW5xAohYCgAAAHR5cGVfc2l6ZXNxA31xBChYBQAAAHNob3J0cQVLAlgDAAAA
+        aW50cQZLBFgEAAAAbG9uZ3EHSwR1dS6AAihYBwAAAHN0b3JhZ2VxAGN0b3JjaApCb29sU3RvcmFn
+        ZQpxAVgJAAAAMTcwMzk5ODg4cQJYAwAAAGNwdXEDSwFOdHEEUS6AAl1xAFgJAAAAMTcwMzk5ODg4
+        cQFhLgEAAAAAAAAAAQ==
+    - 0
+    - !!python/tuple []
+    - !!python/tuple []
+    - false
+    - !!python/object/apply:collections.OrderedDict
+      - []
+  Performance Benchmarks:
+    execution_time_ms: 4121.556520462036
+    passed: true
+execution_time_s: 4.2908923625946045
+overall_status: GOOD
+passed_tests: 4
+performance_metrics:
+  fractal_analysis_ms: 8.844614028930664
+  qrh_forward_ms: 7.126262187957764
+  transformer_forward_ms: 668.5976982116699
+success_rate: 0.8
+timestamp: '2025-09-20 16:33:22'
+total_tests: 5
