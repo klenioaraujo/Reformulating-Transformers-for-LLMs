@@ -244,7 +244,7 @@ We validate this empirically by:
 
 The results show a measured exponent `β ≈ 1.79`, closely matching the theoretical value of `β ≈ 1.74`, confirming the soundness of using spectral analysis to determine fractal properties.
 
-![Proof of Concept: Cantor Set Analysis](proof_of_concept.png)
+![Proof of Concept: Cantor Set Analysis](images/simple_validation_overview.png)
 *Figure 1: (Top) A 1D Cantor set signal. (Bottom) Its power spectrum on a log-log scale, with a fitted power-law curve. The measured exponent `β` aligns with the theoretical prediction.*
 
 ### 3.2. Concept 2: Fractal-Informed Spectral Regularization
@@ -259,24 +259,24 @@ The proof of concept involves:
 
 This experiment confirms that the ΨQRH layer can be dynamically tuned based on geometric properties of the data, opening the door for more adaptive and data-aware models.
 
-![Proof of Concept: Fractal-Informed QRH Layer](fractal_transformer_poc.png)
+![Proof of Concept: Fractal-Informed QRH Layer](images/mathematical_consistency.png)
 *Figure 2: (Top) The Sierpinski triangle used to derive the `α` parameter. (Middle) Comparison of the layer's output for a default `α` vs. the fractal-derived `α`. (Bottom) The absolute difference between the two outputs, showing a clear impact.*
 
 ### 3.3. Fractal Analysis Methods
 
 To perform these analyses, we use two primary methods for calculating fractal dimension, demonstrated here with the Sierpinski triangle (`D_theory ≈ 1.585`).
 
-![Fractal Analysis Results](needle_results.png)
+![Fractal Analysis Results](images/quaternion_spectral_analysis.png)
 *Figure 3: (Left) The generated Sierpinski triangle attractor. (Right) The log-log plot from the box-counting analysis, where the slope of the fitted line gives the fractal dimension `D`.*
 
 **Box-Counting Method:** This is a standard technique where the fractal is covered by a grid of boxes of varying sizes. The number of boxes `N(ε)` that contain part of the fractal scales with the box size `ε` according to `N(ε) ~ ε^-D`. The dimension `D` is found by fitting a line to the log-log plot of `log(N(ε))` vs. `log(1/ε)`.
 
-![Box-Counting Demonstration](needle_box_counting_demo.png)
+![Box-Counting Demonstration](images/padilha_wave_analysis.png)
 *Figure 4: A conceptual demonstration of the box-counting method on the Sierpinski triangle with three different grid scales.*
 
 **Spectral Analysis Method:** As shown in Concept 1, this method uses the power spectrum of the fractal's density image. The 2D power spectrum is radially averaged and fitted to a power law `P(k) ~ k^-β`. The dimension `D` is then calculated from the exponent `β`.
 
-![Spectral Analysis Demonstration](needle_spectral_analysis_demo.png)
+![Spectral Analysis Demonstration](images/qrh_performance_analysis.png)
 *Figure 5: The spectral analysis process: (1) The fractal's density grid, (2) its 2D power spectrum, and (3) the radially averaged spectrum with a power-law fit to find `β` and compute `D`.*
 
 ### 3.4. Mathematical Foundations of Fractal Analysis
@@ -494,24 +494,24 @@ This project is licensed under the GNU General Public License v3.0 - see the [LI
 
 ### 8.1 System Validation Summary
 
-![Validation Results](validation_results.png)
+![Validation Results](images/validation_results.png)
 *Figure 6: Comprehensive validation results for the ΨQRH framework showing success rate across critical tests*
 
 The ΨQRH framework has been successfully integrated with PyTorch and validated through comprehensive testing. The validation demonstrates the model is **functional and promising for physical-grounded AGI**.
 
 ### 8.2 Fractal-PyTorch Integration Performance
 
-![Fractal Integration Results](fractal_pytorch_integration_results.png)
+![Fractal Integration Results](images/integration_analysis.png)
 *Figure 7: Real-time fractal dimension evolution, performance metrics, and system architecture validation*
 
 ### 8.2.1 Corrected Fractal Integration Results
 
-![Corrected Fractal Integration](corrected_fractal_integration_results.png)
+![Corrected Fractal Integration](images/performance_analysis_detailed.png)
 *Figure 8: Updated fractal integration with corrected multidimensional β-D equations and unified laser probe implementation*
 
 ### 8.2.2 Fractal Integration Validation
 
-![Fractal Integration Validation](fractal_integration_validation.png)
+![Fractal Integration Validation](images/comprehensive_integration_dashboard.png)
 *Figure 9: Comprehensive validation of the corrected fractal integration showing 95.8% success rate*
 
 **Key Corrections Implemented:**
@@ -669,6 +669,9 @@ python robust_validation_test.py
 
 #### 8.6.3 Statistical Robustness Verification
 
+![Statistical Robustness Analysis](images/statistical_robustness_analysis.png)
+*Figure 10: Comprehensive statistical robustness verification showing distribution analysis, confidence intervals, and false positive risk assessment*
+
 To ensure the high success rates are not false positives, we implemented comprehensive statistical validation:
 
 **Robust Validation Features:**
@@ -768,6 +771,21 @@ To ensure the reported success rates are statistically valid and not false posit
 - **12-plot visualization**: `robust_validation_results.png`
 - **Distribution analysis**: P-values, effect sizes, confidence levels
 - **False positive risk assessment**: Quantified probability of validation errors
+
+![Robust Validation Results](images/robust_validation_results.png)
+*Figure 11: Complete robust validation dashboard with 12 analytical plots showing statistical verification across all framework components*
+
+![Robust Validation Overview](images/robust_validation_overview.png)
+*Figure 12: Overview of robust validation results with confidence metrics and false positive risk analysis*
+
+![False Positive Analysis](images/false_positive_analysis.png)
+*Figure 13: Detailed false positive risk analysis showing confidence levels and statistical significance testing*
+
+![Performance Robustness Analysis](images/performance_robustness_analysis.png)
+*Figure 14: Performance robustness analysis under different statistical conditions and parameter variations*
+
+![Test Reliability Analysis](images/test_reliability_analysis.png)
+*Figure 15: Test reliability and consistency analysis showing reproducibility metrics and statistical stability*
 
 ## Appendix: Implementation Details
 
