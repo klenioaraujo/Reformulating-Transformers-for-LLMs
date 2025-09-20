@@ -38,11 +38,13 @@ class NegentropyTransformerBlock(nn.Module):
         self.norm2 = nn.LayerNorm(d_model)
 
         # 4D Quaternion layer
-        self.qrh_layer = QRHLayer(
+        from qrh_layer import QRHConfig
+        config = QRHConfig(
             embed_dim=qrh_embed_dim,
             alpha=alpha,
             use_learned_rotation=use_learned_rotation
         )
+        self.qrh_layer = QRHLayer(config)
 
         # Feed-forward network
         self.linear1 = nn.Linear(d_model, dim_feedforward)

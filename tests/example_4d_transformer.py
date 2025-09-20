@@ -214,11 +214,13 @@ class SequenceClassifierWith4D(nn.Module):
         self.pos_encoding = PositionalEncoding(d_model, max_seq_len)
 
         # 4D Unitary processing layer
-        self.qrh_layer = QRHLayer(
+        from qrh_layer import QRHConfig
+        config = QRHConfig(
             embed_dim=qrh_embed_dim,
             alpha=1.0,
             use_learned_rotation=True
         )
+        self.qrh_layer = QRHLayer(config)
 
         # Projection layers
         self.input_proj = nn.Linear(d_model, 4 * qrh_embed_dim)
@@ -272,7 +274,9 @@ def demonstrate_basic_usage():
     print("=" * 60)
 
     # Create a simple 4D layer
-    layer = QRHLayer(embed_dim=32, use_learned_rotation=True)
+    from qrh_layer import QRHConfig
+    config = QRHConfig(embed_dim=32, use_learned_rotation=True)
+    layer = QRHLayer(config)
 
     # Sample input
     batch_size, seq_len = 2, 16
@@ -298,10 +302,9 @@ def demonstrate_basic_usage():
         'phi_right': layer.phi_right
     })
 
-    print("
-Gate receipts:")
+    print("Gate receipts:")
     for key, value in receipts.items():
-        print(".6f")
+        print(f"{key}: {value:.6f}")
 
     decision = gate.decide_gate(receipts)
     print(f"\nGate decision: {decision}")
@@ -348,8 +351,7 @@ def demonstrate_transformer_integration():
 
     # Show 4D statistics
     stats = unitary_transformer.get_4d_statistics()
-    print("
-4D Layer Statistics:")
+    print("4D Layer Statistics:")
     print(f"Number of layers: {stats['num_layers']}")
     if stats['spectral_filter_params']:
         print(f"Spectral alpha values: {[p['alpha'] for p in stats['spectral_filter_params']]}")
@@ -387,8 +389,7 @@ def demonstrate_sequence_classification():
 
     # Show probability distributions
     probs = F.softmax(logits, dim=1)
-    print("
-Class probabilities:")
+    print("Class probabilities:")
     for i in range(min(4, logits.shape[0])):
         print(f"  Sample {i}: {probs[i].numpy()}")
 

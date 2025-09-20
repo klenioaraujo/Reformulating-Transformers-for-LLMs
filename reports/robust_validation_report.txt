@@ -2,10 +2,10 @@
 RELATÓRIO DE VALIDAÇÃO ROBUSTA ΨQRH
 ==================================================
 
-Taxa de Sucesso Robusta: 80.0%
-Confiança Estatística Média: 0.992
-Risco de Falso-Positivo: 0.008
-Status: ROBUSTLY EXCELLENT
+Taxa de Sucesso Robusta: 40.0%
+Confiança Estatística Média: 0.993
+Risco de Falso-Positivo: 0.007
+Status: PARTIALLY ROBUST
 
 Robust Quaternion Operations:
   Aprovado: True
@@ -22,23 +22,23 @@ Failed robust_fractal_dimension_validation:
   Amostra: 0
 
 Spectral Filter Unitarity:
-  Aprovado: True
-  P-valor: 0.900000
-  Effect Size: 0.000000
-  Confiança: 0.990000
+  Aprovado: False
+  P-valor: 0.000000
+  Effect Size: 1.669349
+  Confiança: 1.000000
   Amostra: 100
 
 Robust Padilha Wave Equation:
   Aprovado: True
   P-valor: 0.000000
-  Effect Size: 0.002455
+  Effect Size: 0.001682
   Confiança: 1.000000
   Amostra: 50
 
 Robust End-to-End Integration:
-  Aprovado: True
-  P-valor: 0.000000
-  Effect Size: 0.000000
-  Confiança: 1.000000
+  Aprovado: False
+  P-valor: 1.000000
+  Effect Size: 1.000000
+  Confiança: 0.000000
   Amostra: 20
 

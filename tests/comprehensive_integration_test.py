@@ -3,12 +3,12 @@
 Comprehensive Integration Test Suite for ΨQRH Framework
 =======================================================
 
-Suite completa de testes de integração que valida:
-1. Todos os componentes individuais
-2. Integração entre componentes
-3. Performance e estabilidade
-4. Conformidade com configuração
-5. Casos edge e robustez
+Complete integration test suite that validates:
+1. All individual components
+2. Integration between components
+3. Performance and stability
+4. Configuration compliance
+5. Edge cases and robustness
 """
 
 import torch
@@ -24,14 +24,14 @@ from typing import Dict, List, Tuple, Any
 from pathlib import Path
 import os
 
-# Configurar logging
+# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
     filename="comprehensive_integration_test.log"
 )
 
-# Suprimir warnings para logs mais limpos
+# Suppress warnings for cleaner logs
 warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", category=FutureWarning)
 
@@ -43,6 +43,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(BASE_DIR)
 
 from ΨQRH import QRHLayer, QuaternionOperations, SpectralFilter
+from qrh_layer import QRHConfig
 from fractal_pytorch_integration import AdaptiveFractalQRHLayer, FractalTransformer
 from needle_fractal_dimension import FractalGenerator
 from quartz_light_prototype import (
@@ -55,32 +56,32 @@ from quartz_light_prototype import (
 
 class ComprehensiveIntegrationTester:
     def __init__(self, config_path="fractal_config.yaml"):
-        """Inicializa o testador com configurações"""
+        """Initialize the tester with configurations"""
         self.config_path = config_path
         self.config = self.load_config()
         self.test_results = {}
         self.performance_metrics = {}
         self.start_time = time.time()
 
-        logging.info("=== INÍCIO DOS TESTES DE INTEGRAÇÃO COMPLETA ===")
+        logging.info("=== START OF COMPREHENSIVE INTEGRATION TESTS ===")
         print("=== COMPREHENSIVE INTEGRATION TEST SUITE ===")
         print(f"Config: {config_path}")
         print("=" * 60)
 
     def load_config(self) -> Dict[str, Any]:
-        """Carrega configuração do arquivo YAML"""
+        """Load configuration from YAML file"""
         try:
             config_file = os.path.join(BASE_DIR, "configs", self.config_path)
             with open(config_file, 'r') as f:
                 config = yaml.safe_load(f)
-            logging.info(f"Configuração carregada: {config_file}")
+            logging.info(f"Configuration loaded: {config_file}")
             return config
         except Exception as e:
-            logging.error(f"Erro ao carregar config: {e}")
+            logging.error(f"Error loading config: {e}")
             return self.get_default_config()
 
     def get_default_config(self) -> Dict[str, Any]:
-        """Configuração padrão caso o arquivo não exista"""
+        """Default configuration in case the file doesn't exist"""
         return {
             'fractal_integration': {
                 'default_method': 'box_counting',
@@ -106,20 +107,20 @@ class ComprehensiveIntegrationTester:
         }
 
     def test_configuration_compliance(self) -> bool:
-        """Testa conformidade com a configuração carregada"""
+        """Test compliance with the loaded configuration"""
         print("=== Configuration Compliance Test ===")
-        logging.info("Testando conformidade com configuração")
+        logging.info("Testing configuration compliance")
 
         try:
-            # Verificar estrutura da configuração
+            # Check configuration structure
             required_keys = ['fractal_integration']
             for key in required_keys:
-                assert key in self.config, f"Chave obrigatória {key} não encontrada"
+                assert key in self.config, f"Required key {key} not found"
 
-            # Testar configurações de tolerância
+            # Test tolerance configurations
             tolerance_config = self.config['fractal_integration']['validation']['tolerance']
 
-            # Testar mapeamento dimensional com tolerâncias da config
+            # Test dimensional mapping with config tolerances
             test_dims = [0.5, 1.0, 1.5, 2.0, 2.7]
             dimensional_errors = []
 
@@ -135,12 +136,12 @@ class ComprehensiveIntegrationTester:
             dimensional_ok = max_dimensional_error < dimensional_threshold
 
             print(f"  Dimensional tolerance: {max_dimensional_error:.2e} < {dimensional_threshold:.2e} ✓" if dimensional_ok else f"  Dimensional tolerance: FAIL")
-            logging.info(f"Teste de tolerância dimensional: {'APROVADO' if dimensional_ok else 'REPROVADO'}")
+            logging.info(f"Dimensional tolerance test: {'PASSED' if dimensional_ok else 'FAILED'}")
 
-            # Testar configurações de análise fractal
+            # Test fractal analysis configurations
             analyzer = FractalAnalyzer()
 
-            # Dados de teste
+            # Test data
             uniform_data = np.random.uniform(0, 1, (1000, 2))
             fractal_dim = analyzer.calculate_box_counting_dimension(uniform_data)
             fractal_error = abs(fractal_dim - 2.0)
@@ -148,7 +149,7 @@ class ComprehensiveIntegrationTester:
             fractal_ok = fractal_error < fractal_threshold
 
             print(f"  Fractal analysis tolerance: {fractal_error:.3f} < {fractal_threshold:.3f} ✓" if fractal_ok else f"  Fractal analysis tolerance: FAIL")
-            logging.info(f"Teste de análise fractal: {'APROVADO' if fractal_ok else 'REPROVADO'}")
+            logging.info(f"Fractal analysis test: {'PASSED' if fractal_ok else 'FAILED'}")
 
             success = dimensional_ok and fractal_ok
             print(f"  Configuration compliance: {'✓ PASS' if success else '✗ FAIL'}")
@@ -156,30 +157,30 @@ class ComprehensiveIntegrationTester:
             return success
 
         except Exception as e:
-            logging.error(f"Erro no teste de configuração: {e}")
+            logging.error(f"Configuration test error: {e}")
             print(f"  Configuration compliance: ✗ FAIL - {e}")
             return False
 
     def test_component_integration(self) -> bool:
-        """Testa integração entre componentes principais"""
+        """Test integration between main components"""
         print("\n=== Component Integration Test ===")
-        logging.info("Testando integração entre componentes")
+        logging.info("Testing component integration")
 
         try:
             # Test 1: Fractal Analysis → Alpha Calculation → Spectral Filter
             analyzer = FractalAnalyzer()
 
-            # Gerar dados fractais conhecidos
+            # Generate known fractal data
             cantor_data = self.generate_cantor_set(10000)
             fractal_dim = analyzer.calculate_box_counting_dimension_1d(cantor_data)
 
-            # Calcular alpha baseado na dimensão
+            # Calculate alpha based on dimension
             alpha = calculate_alpha_from_dimension(fractal_dim, '1d')
 
-            # Criar filtro com alpha calculado
+            # Create filter with calculated alpha
             spectral_filter = SpectralFilter(alpha=alpha)
 
-            # Testar filtro
+            # Test filter
             test_freqs = torch.linspace(1, 10, 100)
             filtered_output = spectral_filter(test_freqs)
 
@@ -192,18 +193,18 @@ class ComprehensiveIntegrationTester:
 
             # Test 2: QRH Layer → Fractal Analysis
             embed_dim = 16
-            qrh_layer = QRHLayer(embed_dim=embed_dim, alpha=alpha)
+            qrh_layer = QRHLayer(QRHConfig(embed_dim=embed_dim, alpha=alpha))
 
-            # Input de teste
+            # Test input
             batch_size, seq_len = 4, 32
             x = torch.randn(batch_size, seq_len, 4 * embed_dim)
 
             # Forward pass
             output = qrh_layer(x)
 
-            # Análise fractal da saída
+            # Fractal analysis of output
             output_np = output.detach().cpu().numpy()
-            # Usar a primeira componente para análise fractal
+            # Use the first component for fractal analysis
             output_flat = output_np.reshape(-1, output_np.shape[-1])[:, 0]  # Primeira componente
             output_dim = analyzer.calculate_box_counting_dimension_1d(output_flat)
 
@@ -228,7 +229,7 @@ class ComprehensiveIntegrationTester:
             input_ids = torch.randint(0, 1000, (batch_size, seq_len))
             logits = model(input_ids)
 
-            # Verificar análise fractal do modelo
+            # Check model fractal analysis
             fractal_analysis = model.get_fractal_analysis()
 
             transformer_ok = (
@@ -242,26 +243,26 @@ class ComprehensiveIntegrationTester:
                 print(f"    Model fractal dim: {fractal_analysis['mean_fractal_dim']:.3f}")
 
             overall_integration = filter_stable and reasonable_alpha and qrh_integration_ok and transformer_ok
-            logging.info(f"Integração de componentes: {'APROVADO' if overall_integration else 'REPROVADO'}")
+            logging.info(f"Component integration: {'PASSED' if overall_integration else 'FAILED'}")
 
             return overall_integration
 
         except Exception as e:
-            logging.error(f"Erro na integração de componentes: {e}")
+            logging.error(f"Component integration error: {e}")
             print(f"  Component integration: ✗ FAIL - {e}")
             return False
 
     def test_performance_benchmarks(self) -> bool:
-        """Testa benchmarks de performance"""
+        """Test performance benchmarks"""
         print("\n=== Performance Benchmark Test ===")
-        logging.info("Testando benchmarks de performance")
+        logging.info("Testing performance benchmarks")
 
         try:
             performance_results = {}
 
             # Benchmark 1: QRH Layer Forward Pass
             embed_dim = 64
-            layer = QRHLayer(embed_dim=embed_dim, alpha=1.5)
+            layer = QRHLayer(QRHConfig(embed_dim=embed_dim, alpha=1.5))
             x = torch.randn(8, 128, 4 * embed_dim)
 
             # Warmup
@@ -319,25 +320,25 @@ class ComprehensiveIntegrationTester:
                 print(f"  {metric}: {value:.2f}ms {'✓' if passed else '✗'} (threshold: {threshold}ms)")
 
             self.performance_metrics = performance_results
-            logging.info(f"Benchmarks de performance: {performance_results}")
+            logging.info(f"Performance benchmarks: {performance_results}")
 
             return performance_ok
 
         except Exception as e:
-            logging.error(f"Erro nos benchmarks: {e}")
+            logging.error(f"Benchmark error: {e}")
             print(f"  Performance benchmarks: ✗ FAIL - {e}")
             return False
 
     def test_edge_cases_robustness(self) -> bool:
-        """Testa casos extremos e robustez"""
+        """Test edge cases and robustness"""
         print("\n=== Edge Cases & Robustness Test ===")
-        logging.info("Testando casos extremos e robustez")
+        logging.info("Testing edge cases and robustness")
 
         edge_case_results = []
 
         try:
             # Edge Case 1: Zero/Empty inputs
-            layer = QRHLayer(embed_dim=8, alpha=1.0)
+            layer = QRHLayer(QRHConfig(embed_dim=8, alpha=1.0))
             zero_input = torch.zeros(1, 10, 32)
             zero_output = layer(zero_input)
             zero_case_ok = torch.isfinite(zero_output).all()
@@ -391,7 +392,7 @@ class ComprehensiveIntegrationTester:
                 nan_input[0, 0, 0] = float('nan')
 
                 # Test with nan detection/handling
-                nan_safe_layer = QRHLayer(embed_dim=8, alpha=1.0)
+                nan_safe_layer = QRHLayer(QRHConfig(embed_dim=8, alpha=1.0))
                 with torch.no_grad():
                     nan_output = nan_safe_layer(nan_input)
                     # Check if NaNs propagated (expected) or were handled
@@ -403,19 +404,19 @@ class ComprehensiveIntegrationTester:
             print(f"  NaN resilience: {'✓' if nan_case_ok else '✗'}")
 
             overall_robustness = sum(edge_case_results) >= len(edge_case_results) * 0.8  # 80% pass rate
-            logging.info(f"Robustez casos extremos: {'APROVADO' if overall_robustness else 'REPROVADO'}")
+            logging.info(f"Edge case robustness: {'PASSED' if overall_robustness else 'FAILED'}")
 
             return overall_robustness
 
         except Exception as e:
-            logging.error(f"Erro nos testes de robustez: {e}")
+            logging.error(f"Robustness test error: {e}")
             print(f"  Edge cases robustness: ✗ FAIL - {e}")
             return False
 
     def test_mathematical_consistency(self) -> bool:
-        """Testa consistência matemática das operações"""
+        """Test mathematical consistency of operations"""
         print("\n=== Mathematical Consistency Test ===")
-        logging.info("Testando consistência matemática")
+        logging.info("Testing mathematical consistency")
 
         try:
             consistency_results = []
@@ -492,7 +493,7 @@ class ComprehensiveIntegrationTester:
             print(f"  Spectral filter power law: {'✓' if spectral_ok else '✗'} (slope: {slope:.3f}, expected: {expected_slope:.3f})")
 
             # Test 4: Energy conservation in QRH layers
-            layer = QRHLayer(embed_dim=16, alpha=1.0)
+            layer = QRHLayer(QRHConfig(embed_dim=16, alpha=1.0))
             x = torch.randn(4, 32, 64)
             x = x / torch.norm(x, dim=-1, keepdim=True)  # Normalize input
 
@@ -508,17 +509,17 @@ class ComprehensiveIntegrationTester:
             print(f"  Energy conservation: {'✓' if energy_conservation_ok else '✗'} (ratio: {energy_ratio:.3f})")
 
             overall_consistency = sum(consistency_results) >= len(consistency_results) * 0.75  # 75% pass rate
-            logging.info(f"Consistência matemática: {'APROVADO' if overall_consistency else 'REPROVADO'}")
+            logging.info(f"Mathematical consistency: {'PASSED' if overall_consistency else 'FAILED'}")
 
             return overall_consistency
 
         except Exception as e:
-            logging.error(f"Erro na consistência matemática: {e}")
+            logging.error(f"Mathematical consistency error: {e}")
             print(f"  Mathematical consistency: ✗ FAIL - {e}")
             return False
 
     def generate_cantor_set(self, n_points: int, level: int = 10) -> np.ndarray:
-        """Gera conjunto de Cantor para testes"""
+        """Generate Cantor set for testing"""
         points = np.zeros(n_points)
         for i in range(n_points):
             x = 0.0
@@ -532,10 +533,10 @@ class ComprehensiveIntegrationTester:
         return points
 
     def run_comprehensive_tests(self) -> Dict[str, Any]:
-        """Executa todos os testes e gera relatório completo"""
-        print("Iniciando suite completa de testes...\n")
+        """Execute all tests and generate complete report"""
+        print("Starting comprehensive test suite...\n")
 
-        # Executar todos os testes
+        # Execute all tests
         test_functions = [
             ("Configuration Compliance", self.test_configuration_compliance),
             ("Component Integration", self.test_component_integration),
@@ -554,20 +555,20 @@ class ComprehensiveIntegrationTester:
                     'passed': result,
                     'execution_time_ms': test_time * 1000
                 }
-                logging.info(f"{test_name}: {'APROVADO' if result else 'REPROVADO'} ({test_time:.3f}s)")
+                logging.info(f"{test_name}: {'PASSED' if result else 'FAILED'} ({test_time:.3f}s)")
             except Exception as e:
                 results[test_name] = {
                     'passed': False,
                     'execution_time_ms': 0,
                     'error': str(e)
                 }
-                logging.error(f"{test_name}: ERRO - {e}")
+                logging.error(f"{test_name}: ERROR - {e}")
 
         self.test_results = results
         return self.generate_final_report()
 
     def generate_final_report(self) -> Dict[str, Any]:
-        """Gera relatório final detalhado"""
+        """Generate detailed final report"""
         total_time = time.time() - self.start_time
 
         print("\n" + "=" * 60)
@@ -578,7 +579,7 @@ class ComprehensiveIntegrationTester:
         total_tests = len(self.test_results)
         success_rate = passed_tests / total_tests if total_tests > 0 else 0
 
-        # Determinar status geral
+        # Determine overall status
         if success_rate >= 0.9:
             overall_status = "EXCELLENT"
             status_emoji = "🎉"
@@ -616,7 +617,7 @@ class ComprehensiveIntegrationTester:
                 print(f"  {metric}: {value:.2f}ms")
             print()
 
-        # Recomendações baseadas nos resultados
+        # Recommendations based on results
         print("Recommendations:")
         if overall_status == "EXCELLENT":
             print("  🎯 Framework ready for production use")
@@ -631,7 +632,7 @@ class ComprehensiveIntegrationTester:
             print("  🛠️  Significant development work required")
             print("  🔄 Re-run tests after fixes")
 
-        # Salvar relatório detalhado
+        # Save detailed report
         report = {
             'timestamp': time.strftime('%Y-%m-%d %H:%M:%S'),
             'total_tests': total_tests,
@@ -644,14 +645,14 @@ class ComprehensiveIntegrationTester:
             'config_used': self.config
         }
 
-        # Salvar em arquivo
+        # Save to file
         report_file = os.path.join(BASE_DIR, "configs", "comprehensive_integration_report.yaml")
         with open(report_file, 'w') as f:
             yaml.dump(report, f, default_flow_style=False)
 
         print(f"\nDetailed report saved: {report_file}")
-        logging.info(f"Relatório completo salvo: {report_file}")
-        logging.info(f"STATUS FINAL: {overall_status} ({success_rate:.1%} aprovação)")
+        logging.info(f"Complete report saved: {report_file}")
+        logging.info(f"FINAL STATUS: {overall_status} ({success_rate:.1%} approval)")
 
         return report
 
@@ -842,7 +843,7 @@ class ComprehensiveIntegrationTester:
         memory_usage = []
 
         for embed_dim in embed_dims:
-            layer = QRHLayer(embed_dim=embed_dim, alpha=1.0)
+            layer = QRHLayer(QRHConfig(embed_dim=embed_dim, alpha=1.0))
             x = torch.randn(1, 64, 4 * embed_dim)
 
             # Time multiple runs for accuracy
@@ -951,7 +952,7 @@ class ComprehensiveIntegrationTester:
         time_points = np.linspace(0, 1, 50)
         stability_metric = []
 
-        layer = QRHLayer(embed_dim=16, alpha=1.0)
+        layer = QRHLayer(QRHConfig(embed_dim=16, alpha=1.0))
         for t in time_points:
             # Create time-varying input
             x = torch.randn(1, 32, 64) * (1 + 0.1 * np.sin(2 * np.pi * t))
@@ -1183,7 +1184,7 @@ class ComprehensiveIntegrationTester:
         plt.close()
 
 def main():
-    """Função principal para executar os testes"""
+    """Main function to execute the tests"""
     tester = ComprehensiveIntegrationTester()
     final_report = tester.run_comprehensive_tests()
 

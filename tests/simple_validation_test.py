@@ -15,7 +15,7 @@ from typing import Dict, List, Tuple
 import time
 import logging
 
-# Configurar logging
+# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
@@ -31,6 +31,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(BASE_DIR)
 
 from ΨQRH import QRHLayer, QuaternionOperations, SpectralFilter
+from qrh_layer import QRHConfig
 from fractal_pytorch_integration import AdaptiveFractalQRHLayer, FractalTransformer
 from needle_fractal_dimension import FractalGenerator
 from quartz_light_prototype import (
@@ -43,7 +44,7 @@ from quartz_light_prototype import (
 
 def generate_cantor_set(n_points, level=10):
     """
-    Gera um conjunto de Cantor 1D
+    Generate a 1D Cantor set
     """
     points = np.zeros(n_points)
     for i in range(n_points):
@@ -109,7 +110,8 @@ def validate_qrh_layer():
     embed_dim = 16
     batch_size = 2
     seq_len = 32
-    layer = QRHLayer(embed_dim=embed_dim, alpha=1.0)
+    config = QRHConfig(embed_dim=embed_dim, alpha=1.0)
+    layer = QRHLayer(config)
     x = torch.randn(batch_size, seq_len, 4 * embed_dim)
 
     start_time = time.time()
@@ -158,24 +160,24 @@ def padilha_wave_equation(lam: np.ndarray, t: np.ndarray,
     # Termo de amplitude real
     amplitude = I0 * np.sin(omega * t + alpha * lam)
     
-    # Termo de fase complexa: i(ωt - kλ + βλ²)
+    # Complex phase term: i(ωt - kλ + βλ²)
     phase = 1j * (omega * t - k * lam + beta * lam**2)
     
-    # Equação completa de Padilha
+    # Complete Padilha equation
     return amplitude * np.exp(phase)
 
 def validate_padilha_wave_integration():
-    """Valida a integração da Equação de Ondas de Padilha com análise fractal"""
+    """Validate the integration of Padilha Wave Equation with fractal analysis"""
     logging.info("=== Padilha Wave Equation Integration Validation ===")
     print("=== Padilha Wave Equation Integration Validation ===")
     
-    # Parâmetros da simulação
+    # Simulation parameters
     spatial_points = np.linspace(0, 1, 100)
     temporal_points = np.linspace(0, 1, 50)
     lam_grid, t_grid = np.meshgrid(spatial_points, temporal_points)
     
-    # Teste 1: Validação matemática da equação
-    print("  Teste 1: Validação matemática da Equação de Padilha")
+    # Test 1: Mathematical validation of the equation
+    print("  Test 1: Mathematical validation of Padilha Equation")
     test_params = [
         {"omega": 2*np.pi, "alpha": 0.1, "beta": 0.05},
         {"omega": 4*np.pi, "alpha": 0.2, "beta": 0.1},
@@ -186,24 +188,24 @@ def validate_padilha_wave_integration():
     for i, params in enumerate(test_params):
         wave_field = padilha_wave_equation(lam_grid, t_grid, **params)
         
-        # Verificar propriedades matemáticas
+        # Check mathematical properties
         max_amplitude = np.max(np.abs(wave_field))
         phase_continuity = np.mean(np.diff(np.angle(wave_field.flatten())))
         
-        # Teste de estabilidade numérica
+        # Numerical stability test
         is_stable = np.all(np.isfinite(wave_field)) and max_amplitude < 100
         is_continuous = abs(phase_continuity) < np.pi
         
         equation_tests.append(is_stable and is_continuous)
-        logging.info(f"    Parâmetros {i+1}: Estável={is_stable}, Contínuo={is_continuous}")
-        print(f"    Parâmetros {i+1}: Estável={is_stable}, Contínuo={is_continuous}")
+        logging.info(f"    Parameters {i+1}: Stable={is_stable}, Continuous={is_continuous}")
+        print(f"    Parameters {i+1}: Stable={is_stable}, Continuous={is_continuous}")
     
     equation_success = all(equation_tests)
     
-    # Teste 2: Integração com análise fractal
-    print("  Teste 2: Integração Padilha-Fractal")
+    # Test 2: Integration with fractal analysis
+    print("  Test 2: Padilha-Fractal Integration")
     
-    # Gerar fractais com diferentes dimensões
+    # Generate fractals with different dimensions
     sierpinski_gen = FractalGenerator()
     s = 0.5
     transforms = [[s,0,0,s,0,0], [s,0,0,s,0.5,0], [s,0,0,s,0.25,0.5]]
@@ -275,7 +277,8 @@ def validate_padilha_wave_integration():
     print("  Teste 3: Integração QRH-Padilha")
     
     embed_dim = 16
-    qrh_layer = QRHLayer(embed_dim=embed_dim, alpha=alpha_fractal)
+    config = QRHConfig(embed_dim=embed_dim, alpha=alpha_fractal)
+    qrh_layer = QRHLayer(config)
     
     # Criar entrada baseada na equação de Padilha
     padilha_input = torch.from_numpy(
@@ -509,7 +512,8 @@ def validate_physical_grounding():
     print("=== Physical Grounding Validation ===")
 
     embed_dim = 8
-    layer = QRHLayer(embed_dim=embed_dim, alpha=1.5)
+    config = QRHConfig(embed_dim=embed_dim, alpha=1.5)
+    layer = QRHLayer(config)
     x = torch.randn(1, 16, 4 * embed_dim)
     x = x / torch.norm(x, dim=-1, keepdim=True)
 
@@ -1011,7 +1015,8 @@ def generate_detailed_visualizations(summary):
     memory_usage = []
 
     for embed_dim in embed_dims:
-        layer = QRHLayer(embed_dim=embed_dim, alpha=1.0)
+        config = QRHConfig(embed_dim=embed_dim, alpha=1.0)
+        layer = QRHLayer(config)
         x = torch.randn(1, 32, 4 * embed_dim)
 
         start_time = time.time()
@@ -1039,7 +1044,8 @@ def generate_detailed_visualizations(summary):
 
     # Energy conservation analysis
     embed_dim = 16
-    layer = QRHLayer(embed_dim=embed_dim, alpha=1.0)
+    config = QRHConfig(embed_dim=embed_dim, alpha=1.0)
+    layer = QRHLayer(config)
 
     energy_ratios = []
     input_norms = []
@@ -1067,7 +1073,8 @@ def generate_detailed_visualizations(summary):
     axes[1,0].grid(True, alpha=0.3)
 
     # Gradient flow analysis
-    layer = QRHLayer(embed_dim=16, alpha=1.0, use_learned_rotation=True)
+    config = QRHConfig(embed_dim=16, alpha=1.0, use_learned_rotation=True)
+    layer = QRHLayer(config)
     x = torch.randn(1, 32, 64, requires_grad=True)
 
     output = layer(x)
@@ -1163,7 +1170,8 @@ if __name__ == "__main__":
 
     print("\n4. Integrando com QRH Layer...")
     embed_dim = 16
-    qrh_layer = QRHLayer(embed_dim=embed_dim, alpha=alpha_padilha)
+    config = QRHConfig(embed_dim=embed_dim, alpha=alpha_padilha)
+    qrh_layer = QRHLayer(config)
     
     # Converter campo de Padilha para entrada QRH
     padilha_real = np.real(padilha_field[:32, :64].flatten())

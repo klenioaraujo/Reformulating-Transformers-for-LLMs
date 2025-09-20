@@ -121,21 +121,36 @@ class QuartzOpticalProcessor:
         total_delta = delta_natural + delta_eo
 
         # Ensure scalar values
-        if hasattr(total_delta, 'item') and total_delta.numel() == 1:
-            total_delta = total_delta.item()
-        elif hasattr(total_delta, '__len__'):
+        if hasattr(total_delta, 'item'):
+            if hasattr(total_delta, 'numel') and total_delta.numel() == 1:
+                total_delta = total_delta.item()
+            elif hasattr(total_delta, 'size') and total_delta.size == 1:
+                total_delta = total_delta.item()
+        elif hasattr(total_delta, '__len__') and len(total_delta) == 1:
+            total_delta = float(total_delta[0])
+        elif np.isscalar(total_delta):
             total_delta = float(total_delta)
 
-        if hasattr(theta, 'item') and hasattr(theta, 'numel') and theta.numel() == 1:
-            theta = theta.item()
-        elif hasattr(theta, '__len__'):
+        if hasattr(theta, 'item'):
+            if hasattr(theta, 'numel') and theta.numel() == 1:
+                theta = theta.item()
+            elif hasattr(theta, 'size') and theta.size == 1:
+                theta = theta.item()
+        elif hasattr(theta, '__len__') and len(theta) == 1:
+            theta = float(theta[0])
+        elif np.isscalar(theta):
             theta = float(theta)
 
         # Jones matrix for wave plate
-        cos_theta = np.cos(theta)
-        sin_theta = np.sin(theta)
-        cos_delta = np.cos(total_delta / 2)
-        sin_delta = np.sin(total_delta / 2)
+        cos_theta = float(np.cos(theta))
+        sin_theta = float(np.sin(theta))
+
+        # Ensure total_delta is scalar for trigonometric functions
+        if hasattr(total_delta, '__len__') and len(total_delta) > 0:
+            total_delta = float(total_delta.flat[0])
+
+        cos_delta = float(np.cos(total_delta / 2))
+        sin_delta = float(np.sin(total_delta / 2))
 
         # Rotation matrices
         R = np.array([[cos_theta, -sin_theta],
@@ -363,14 +378,14 @@ class ParallelQuartzArray:
 
 def calculate_beta_from_dimension(D: float, dimension_type: str) -> float:
     """
-    Calcula β a partir da dimensão fractal D usando relações corretas
+    Calculates β from fractal dimension D using correct relations
 
     Args:
-        D: Dimensão fractal
-        dimension_type: '1d', '2d', ou '3d'
+        D: Fractal dimension
+        dimension_type: '1d', '2d', or '3d'
 
     Returns:
-        Valor β correspondente
+        Corresponding β value
     """
     if dimension_type == '1d':
         return 3 - 2 * D
@@ -379,18 +394,18 @@ def calculate_beta_from_dimension(D: float, dimension_type: str) -> float:
     elif dimension_type == '3d':
         return 7 - 2 * D
     else:
-        raise ValueError(f"Tipo de dimensão inválido: {dimension_type}")
+        raise ValueError(f"Invalid dimension type: {dimension_type}")
 
 def calculate_dimension_from_beta(beta: float, dimension_type: str) -> float:
     """
-    Calcula dimensão fractal D a partir de β
+    Calculates fractal dimension D from β
 
     Args:
-        beta: Valor β do espectro de potência
-        dimension_type: '1d', '2d', ou '3d'
+        beta: β value from power spectrum
+        dimension_type: '1d', '2d', or '3d'
 
     Returns:
-        Dimensão fractal D
+        Fractal dimension D
     """
     if dimension_type == '1d':
         return (3 - beta) / 2
@@ -399,7 +414,7 @@ def calculate_dimension_from_beta(beta: float, dimension_type: str) -> float:
     elif dimension_type == '3d':
         return (7 - beta) / 2
     else:
-        raise ValueError(f"Tipo de dimensão inválido: {dimension_type}")
+        raise ValueError(f"Invalid dimension type: {dimension_type}")
 
 def calculate_alpha_from_dimension(D: float, dimension_type: str, base_alpha: float = 1.0) -> float:
     """

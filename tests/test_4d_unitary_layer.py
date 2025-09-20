@@ -20,6 +20,7 @@ from ΨQRH import (
     QuaternionOperations, SpectralFilter, QRHLayer,
     GateController, NegentropyTransformerBlock
 )
+from qrh_layer import QRHConfig
 
 
 def run_simple_tests():
@@ -45,7 +46,7 @@ def run_simple_tests():
 
     # Test 3: QRH Layer
     print("✓ Testing QRH Layer...")
-    layer = QRHLayer(embed_dim=8, use_learned_rotation=True)
+    layer = QRHLayer(QRHConfig(embed_dim=8, use_learned_rotation=True))
     x = torch.randn(2, 16, 32)  # 4 * 8 = 32
     output = layer(x)
     assert output.shape == x.shape, "QRH layer shape mismatch"
@@ -371,7 +372,7 @@ class TestPerformance(unittest.TestCase):
         for embed_dim in embed_dims:
             for seq_len in seq_lengths:
                 with self.subTest(embed_dim=embed_dim, seq_len=seq_len):
-                    layer = QRHLayer(embed_dim=embed_dim)
+                    layer = QRHLayer(QRHConfig(embed_dim=embed_dim))
                     x = torch.randn(1, seq_len, 4 * embed_dim)
 
                     # Measure memory usage
@@ -385,7 +386,7 @@ class TestPerformance(unittest.TestCase):
 
     def test_inference_speed(self):
         """Test inference speed"""
-        layer = QRHLayer(embed_dim=64)
+        layer = QRHLayer(QRHConfig(embed_dim=64))
         x = torch.randn(4, 128, 256)  # Realistic size
 
         # Warm up
@@ -413,7 +414,7 @@ class TestNumericalStability(unittest.TestCase):
         embed_dim = 32
         seq_len = 1024  # Very long sequence
 
-        layer = QRHLayer(embed_dim=embed_dim)
+        layer = QRHLayer(QRHConfig(embed_dim=embed_dim))
         x = torch.randn(1, seq_len, 4 * embed_dim)
 
         # Should not crash or produce NaN
@@ -426,7 +427,7 @@ class TestNumericalStability(unittest.TestCase):
 
     def test_extreme_input_values(self):
         """Test handling of extreme input values"""
-        layer = QRHLayer(embed_dim=16)
+        layer = QRHLayer(QRHConfig(embed_dim=16))
 
         # Very small inputs
         x_small = torch.tensor(1e-6).expand(1, 8, 64)
@@ -460,7 +461,7 @@ def create_4d_layer_performance_plots():
     energy_ratios = []
 
     for alpha in alphas:
-        layer = QRHLayer(embed_dim=16, alpha=alpha)
+        layer = QRHLayer(QRHConfig(embed_dim=16, alpha=alpha))
         x = torch.randn(1, 32, 64)
 
         input_energy = torch.norm(x).item()
@@ -481,7 +482,7 @@ def create_4d_layer_performance_plots():
     axes[0,0].grid(True, alpha=0.3)
 
     # Test 2: Spectral response analysis
-    layer = QRHLayer(embed_dim=16, alpha=1.0)
+    layer = QRHLayer(QRHConfig(embed_dim=16, alpha=1.0))
     frequencies = np.logspace(-2, 2, 100)
 
     # Test spectral filter response
@@ -512,7 +513,7 @@ def create_4d_layer_performance_plots():
 
     for i, embed_dim in enumerate(embed_dims):
         for j, seq_len in enumerate(seq_lens):
-            layer = QRHLayer(embed_dim=embed_dim, alpha=1.0)
+            layer = QRHLayer(QRHConfig(embed_dim=embed_dim, alpha=1.0))
             x = torch.randn(1, seq_len, 4 * embed_dim)
 
             # Time multiple runs
@@ -543,7 +544,7 @@ def create_4d_layer_performance_plots():
     plt.colorbar(im, ax=axes[1,0])
 
     # Test 4: Gradient flow analysis
-    layer = QRHLayer(embed_dim=16, alpha=1.0, use_learned_rotation=True)
+    layer = QRHLayer(QRHConfig(embed_dim=16, alpha=1.0, use_learned_rotation=True))
     x = torch.randn(1, 32, 64, requires_grad=True)
 
     output = layer(x)
@@ -572,7 +573,7 @@ def create_4d_layer_performance_plots():
     perturbation_levels = np.logspace(-4, -1, 20)
     output_variations = []
 
-    layer = QRHLayer(embed_dim=16, alpha=1.0)
+    layer = QRHLayer(QRHConfig(embed_dim=16, alpha=1.0))
     x_base = torch.randn(1, 32, 64)
 
     with torch.no_grad():
@@ -748,7 +749,7 @@ def create_integration_analysis_plots():
 
     # Test 1: Component interaction timing
     embed_dim = 16
-    layer = QRHLayer(embed_dim=embed_dim, alpha=1.0)
+    layer = QRHLayer(QRHConfig(embed_dim=embed_dim, alpha=1.0))
     x = torch.randn(1, 32, 4 * embed_dim)
 
     # Break down timing by operation
@@ -785,7 +786,7 @@ def create_integration_analysis_plots():
     }
 
     for embed_dim in embed_dims_mem:
-        layer = QRHLayer(embed_dim=embed_dim, alpha=1.0)
+        layer = QRHLayer(QRHConfig(embed_dim=embed_dim, alpha=1.0))
 
         # Parameter memory
         param_memory = sum(p.numel() for p in layer.parameters()) * 4 / 1024  # KB
@@ -818,7 +819,7 @@ def create_integration_analysis_plots():
     axes[0,1].set_yscale('log')
 
     # Test 3: Error propagation through pipeline
-    layer = QRHLayer(embed_dim=16, alpha=1.0)
+    layer = QRHLayer(QRHConfig(embed_dim=16, alpha=1.0))
 
     # Inject errors at different stages and measure propagation
     error_levels = np.logspace(-4, -1, 20)
@@ -848,7 +849,7 @@ def create_integration_analysis_plots():
 
     # Test 4: Component synergy analysis
     # Test how components work together vs individually
-    layer_full = QRHLayer(embed_dim=16, alpha=1.0)
+    layer_full = QRHLayer(QRHConfig(embed_dim=16, alpha=1.0))
     x = torch.randn(1, 32, 64)
 
     # Full pipeline

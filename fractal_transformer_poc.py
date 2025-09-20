@@ -6,10 +6,10 @@ import matplotlib.pyplot as plt
 import math
 
 # =============================================================================
-# PARTE 1: CÓDIGO ADAPTADO DE ΨQRH.py E needle_fractal_dimension.py
+# PART 1: CODE ADAPTED FROM ΨQRH.py AND needle_fractal_dimension.py
 # =============================================================================
 
-# --- Classes de ΨQRH.py ---
+# --- Classes from ΨQRH.py ---
 class QuaternionOperations:
     @staticmethod
     def multiply(q1: torch.Tensor, q2: torch.Tensor) -> torch.Tensor:
@@ -76,7 +76,7 @@ class QRHLayer(nn.Module):
         Ψ_final = rotated.view(batch_size, seq_len, self.total_dim)
         return self.out_proj(Ψ_final) + x
 
-# --- Classe de needle_fractal_dimension.py (versão simplificada) ---
+# --- Class from needle_fractal_dimension.py (simplified version) ---
 class FractalGenerator:
     def __init__(self):
         self.transforms = []
@@ -119,97 +119,97 @@ class FractalGenerator:
         return coeffs[0]
 
 # =============================================================================
-# PARTE 2: PROVA DE CONCEITO DA INTEGRAÇÃO FRACTAL-LLM
+# PART 2: PROOF OF CONCEPT FOR FRACTAL-LLM INTEGRATION
 # =============================================================================
 
 def map_dimension_to_alpha(D, D_min=1.0, D_max=2.0, alpha_min=0.5, alpha_max=2.5):
-    """Mapeia a dimensão fractal D para o parâmetro alpha."""
-    if np.isnan(D): return 1.0 # Retorna alpha padrão se D não for calculado
-    # Mapeamento linear: (D - D_min) / (D_max - D_min) = (alpha - alpha_min) / (alpha_max - alpha_min)
+    """Maps the fractal dimension D to the alpha parameter."""
+    if np.isnan(D): return 1.0 # Returns default alpha if D is not calculated
+    # Linear mapping: (D - D_min) / (D_max - D_min) = (alpha - alpha_min) / (alpha_max - alpha_min)
     alpha = alpha_min + (D - D_min) * (alpha_max - alpha_min) / (D_max - D_min)
     return np.clip(alpha, alpha_min, alpha_max)
 
 def main():
-    """Função principal que executa a prova de conceito."""
+    """Main function that executes the proof of concept."""
     plt.style.use('seaborn-v0_8-paper')
 
-    # --- ETAPA 1: Gerar fractal e obter sua dimensão ---
-    print("1. Gerando fractal (Triângulo de Sierpinski) e calculando sua dimensão...")
+    # --- STEP 1: Generate fractal and obtain its dimension ---
+    print("1. Generating fractal (Sierpinski Triangle) and calculating its dimension...")
     sierpinski = FractalGenerator()
     s = 0.5
     transforms = [[s,0,0,s,0,0], [s,0,0,s,0.5,0], [s,0,0,s,0.25,0.5]]
     for t in transforms: sierpinski.add_transform(t)
     fractal_points = sierpinski.generate()
     D_fractal = sierpinski.calculate_box_dimension()
-    D_teorico = np.log(3)/np.log(2)
+    D_theoretical = np.log(3)/np.log(2)
 
-    # --- ETAPA 2: Mapear dimensão para o parâmetro alpha ---
+    # --- STEP 2: Map dimension to alpha parameter ---
     alpha_fractal = map_dimension_to_alpha(D_fractal)
     alpha_default = 1.0
-    print(f"   - Dimensão Teórica (D): {D_teorico:.4f}")
-    print(f"   - Dimensão Calculada (D): {D_fractal:.4f}")
-    print("2. Mapeando dimensão para o parâmetro alpha do filtro espectral...")
-    print(f"   - Alpha Padrão: {alpha_default}")
-    print(f"   - Alpha Derivado do Fractal: {alpha_fractal:.4f}")
+    print(f"   - Theoretical Dimension (D): {D_theoretical:.4f}")
+    print(f"   - Calculated Dimension (D): {D_fractal:.4f}")
+    print("2. Mapping dimension to spectral filter alpha parameter...")
+    print(f"   - Default Alpha: {alpha_default}")
+    print(f"   - Fractal-Derived Alpha: {alpha_fractal:.4f}")
 
-    # --- ETAPA 3: Configurar camadas e processar dados ---
-    print("3. Configurando camadas QRH e processando dados de exemplo...")
+    # --- STEP 3: Configure layers and process data ---
+    print("3. Configuring QRH layers and processing example data...")
     embed_dim = 32
     seq_len = 64
     batch_size = 1
     
-    # Camada com alpha padrão
+    # Layer with default alpha
     layer_default = QRHLayer(embed_dim=embed_dim, alpha=alpha_default)
-    # Camada com alpha derivado do fractal
+    # Layer with fractal-derived alpha
     layer_fractal = QRHLayer(embed_dim=embed_dim, alpha=alpha_fractal)
 
-    # Dados de entrada (simulando um estado de LLM)
+    # Input data (simulating an LLM state)
     input_tensor = torch.randn(batch_size, seq_len, 4 * embed_dim)
 
-    # Processar dados
+    # Process data
     output_default = layer_default(input_tensor)
     output_fractal = layer_fractal(input_tensor)
 
-    # --- ETAPA 4: Analisar e visualizar o impacto ---
-    print("4. Analisando e visualizando o impacto da integração...")
+    # --- STEP 4: Analyze and visualize the impact ---
+    print("4. Analyzing and visualizing the integration impact...")
     mse_diff = torch.mean((output_default - output_fractal)**2).item()
-    print(f"   - Diferença (MSE) entre as saídas: {mse_diff:.6f}")
+    print(f"   - Difference (MSE) between outputs: {mse_diff:.6f}")
 
-    # Visualização
+    # Visualization
     fig, axes = plt.subplots(3, 1, figsize=(12, 15))
-    fig.suptitle('Prova de Conceito: Integração Fractal-LLM (Camada QRH)', fontsize=18)
+    fig.suptitle('Proof of Concept: Fractal-LLM Integration (QRH Layer)', fontsize=18)
 
-    # Gráfico 1: Fractal e sua Dimensão
+    # Plot 1: Fractal and its Dimension
     ax1 = axes[0]
     ax1.scatter(fractal_points[:, 0], fractal_points[:, 1], s=0.5, c='k', alpha=0.5)
-    ax1.set_title(f'1. Fractal Gerador (Sierpinski) | Dimensão Calculada D ≈ {D_fractal:.3f}')
+    ax1.set_title(f'1. Generator Fractal (Sierpinski) | Calculated Dimension D ≈ {D_fractal:.3f}')
     ax1.set_xlabel('X')
     ax1.set_ylabel('Y')
     ax1.set_aspect('equal')
 
-    # Gráfico 2: Saídas das Camadas
+    # Plot 2: Layer Outputs
     ax2 = axes[1]
-    ax2.plot(output_default.detach().numpy().flatten()[::4*embed_dim], label='Saída Padrão (α=1.0)', alpha=0.8)
-    ax2.plot(output_fractal.detach().numpy().flatten()[::4*embed_dim], label=f'Saída Fractal (α={alpha_fractal:.3f})', linestyle='--', alpha=0.8)
-    ax2.set_title('2. Comparação das Saídas das Camadas QRH (um componente)')
-    ax2.set_xlabel('Posição na Sequência')
-    ax2.set_ylabel('Valor de Ativação')
+    ax2.plot(output_default.detach().numpy().flatten()[::4*embed_dim], label='Default Output (α=1.0)', alpha=0.8)
+    ax2.plot(output_fractal.detach().numpy().flatten()[::4*embed_dim], label=f'Fractal Output (α={alpha_fractal:.3f})', linestyle='--', alpha=0.8)
+    ax2.set_title('2. Comparison of QRH Layer Outputs (one component)')
+    ax2.set_xlabel('Position in Sequence')
+    ax2.set_ylabel('Activation Value')
     ax2.legend()
     ax2.grid(True, linestyle='--', alpha=0.6)
 
-    # Gráfico 3: Diferença Absoluta
+    # Plot 3: Absolute Difference
     ax3 = axes[2]
     diff = (output_default - output_fractal).abs().detach().numpy().flatten()[::4*embed_dim]
-    ax3.plot(diff, color='red', label=f'Diferença Absoluta | MSE: {mse_diff:.6f}')
-    ax3.set_title('3. Diferença Absoluta entre as Saídas')
-    ax3.set_xlabel('Posição na Sequência')
-    ax3.set_ylabel('Diferença Absoluta')
+    ax3.plot(diff, color='red', label=f'Absolute Difference | MSE: {mse_diff:.6f}')
+    ax3.set_title('3. Absolute Difference between Outputs')
+    ax3.set_xlabel('Position in Sequence')
+    ax3.set_ylabel('Absolute Difference')
     ax3.legend()
     ax3.grid(True, linestyle='--', alpha=0.6)
 
     plt.tight_layout(rect=[0, 0.03, 1, 0.95])
     plt.savefig('fractal_transformer_poc.png')
-    print("\nGráfico da prova de conceito salvo como 'fractal_transformer_poc.png'")
+    print("\nProof of concept plot saved as 'fractal_transformer_poc.png'")
 
 if __name__ == "__main__":
     main()

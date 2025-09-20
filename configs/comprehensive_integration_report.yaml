@@ -39,10 +39,10 @@ config_used:
     level: INFO
 detailed_results:
   Component Integration:
-    execution_time_ms: 60.77837944030762
-    passed: false
+    execution_time_ms: 92.96584129333496
+    passed: true
   Configuration Compliance:
-    execution_time_ms: 5.789518356323242
+    execution_time_ms: 2.8781890869140625
     passed: !!python/object/apply:numpy._core.multiarray.scalar
     - !!python/object/apply:numpy.dtype
       args:
@@ -61,18 +61,47 @@ detailed_results:
     - !!binary |
       AA==
   Edge Cases & Robustness:
-    execution_time_ms: 0.06461143493652344
-    passed: false
+    execution_time_ms: 66.53714179992676
+    passed: !!python/object/apply:torch._utils._rebuild_tensor_v2
+    - !!python/object/apply:torch.storage._load_from_bytes
+      - !!binary |
+        gAKKCmz8nEb5IGqoUBkugAJN6QMugAJ9cQAoWBAAAABwcm90b2NvbF92ZXJzaW9ucQFN6QNYDQAA
+        AGxpdHRsZV9lbmRpYW5xAohYCgAAAHR5cGVfc2l6ZXNxA31xBChYBQAAAHNob3J0cQVLAlgDAAAA
+        aW50cQZLBFgEAAAAbG9uZ3EHSwR1dS6AAihYBwAAAHN0b3JhZ2VxAGN0b3JjaApCb29sU3RvcmFn
+        ZQpxAVgJAAAAOTE5Mzk3NzQ0cQJYAwAAAGNwdXEDSwFOdHEEUS6AAl1xAFgJAAAAOTE5Mzk3NzQ0
+        cQFhLgEAAAAAAAAAAQ==
+    - 0
+    - !!python/tuple []
+    - !!python/tuple []
+    - false
+    - !!python/object/apply:collections.OrderedDict
+      - []
   Mathematical Consistency:
-    execution_time_ms: 2.1829605102539062
-    passed: false
+    execution_time_ms: 8.639097213745117
+    passed: !!python/object/apply:torch._utils._rebuild_tensor_v2
+    - !!python/object/apply:torch.storage._load_from_bytes
+      - !!binary |
+        gAKKCmz8nEb5IGqoUBkugAJN6QMugAJ9cQAoWBAAAABwcm90b2NvbF92ZXJzaW9ucQFN6QNYDQAA
+        AGxpdHRsZV9lbmRpYW5xAohYCgAAAHR5cGVfc2l6ZXNxA31xBChYBQAAAHNob3J0cQVLAlgDAAAA
+        aW50cQZLBFgEAAAAbG9uZ3EHSwR1dS6AAihYBwAAAHN0b3JhZ2VxAGN0b3JjaApCb29sU3RvcmFn
+        ZQpxAVgJAAAAOTE1MDU2MTYwcQJYAwAAAGNwdXEDSwFOdHEEUS6AAl1xAFgJAAAAOTE1MDU2MTYw
+        cQFhLgEAAAAAAAAAAQ==
+    - 0
+    - !!python/tuple []
+    - !!python/tuple []
+    - false
+    - !!python/object/apply:collections.OrderedDict
+      - []
   Performance Benchmarks:
-    execution_time_ms: 0.08082389831542969
-    passed: false
-execution_time_s: 0.06928563117980957
-overall_status: NEEDS_WORK
-passed_tests: 0
-performance_metrics: {}
-success_rate: 0.0
-timestamp: '2025-09-20 21:59:01'
+    execution_time_ms: 5946.9194412231445
+    passed: true
+execution_time_s: 6.1192803382873535
+overall_status: GOOD
+passed_tests: 4
+performance_metrics:
+  fractal_analysis_ms: 26.281118392944336
+  qrh_forward_ms: 15.106396675109863
+  transformer_forward_ms: 936.4011287689209
+success_rate: 0.8
+timestamp: '2025-09-20 23:09:17'
 total_tests: 5

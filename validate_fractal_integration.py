@@ -16,67 +16,68 @@ import time
 
 # Import existing modules
 from ΨQRH import QRHLayer, QuaternionOperations, SpectralFilter
+from qrh_layer import QRHConfig
 from fractal_pytorch_integration import AdaptiveFractalQRHLayer, FractalTransformer
 from needle_fractal_dimension import FractalGenerator
 
-# Definições das funções corrigidas para integração fractal
+# Definitions of corrected functions for fractal integration
 def calculate_beta_from_dimension(D, dim_type='2d'):
     """
-    Calcula o expoente espectral β a partir da dimensão fractal D
-    
+    Calculates the spectral exponent β from the fractal dimension D
+
     Parameters:
-    D (float): Dimensão fractal
-    dim_type (str): '1d', '2d', ou '3d'
-    
+    D (float): Fractal dimension
+    dim_type (str): '1d', '2d', or '3d'
+
     Returns:
-    float: Expoente espectral β
+    float: Spectral exponent β
     """
     if dim_type == '1d':
         return 3 - 2*D
     elif dim_type == '2d':
-        return 5 - 2*D  # Correção para 2D
+        return 5 - 2*D  # Correction for 2D
     elif dim_type == '3d':
-        return 7 - 2*D  # Correção para 3D
+        return 7 - 2*D  # Correction for 3D
     else:
-        raise ValueError("dim_type deve ser '1d', '2d', ou '3d'")
+        raise ValueError("dim_type must be '1d', '2d', or '3d'")
 
 def calculate_dimension_from_beta(beta, dim_type='2d'):
     """
-    Calcula a dimensão fractal D a partir do expoente espectral β
-    
+    Calculates the fractal dimension D from the spectral exponent β
+
     Parameters:
-    beta (float): Expoente espectral
-    dim_type (str): '1d', '2d', ou '3d'
-    
+    beta (float): Spectral exponent
+    dim_type (str): '1d', '2d', or '3d'
+
     Returns:
-    float: Dimensão fractal D
+    float: Fractal dimension D
     """
     if dim_type == '1d':
         return (3 - beta) / 2
     elif dim_type == '2d':
-        return (5 - beta) / 2  # Correção para 2D
+        return (5 - beta) / 2  # Correction for 2D
     elif dim_type == '3d':
-        return (7 - beta) / 2  # Correção para 3D
+        return (7 - beta) / 2  # Correction for 3D
     else:
-        raise ValueError("dim_type deve ser '1d', '2d', ou '3d'")
+        raise ValueError("dim_type must be '1d', '2d', or '3d'")
 
 def calculate_alpha_from_dimension(D, dim_type='2d', scaling_factor=1.0):
     """
-    Calcula o parâmetro α do filtro espectral a partir da dimensão fractal D
-    
+    Calculates the spectral filter parameter α from the fractal dimension D
+
     Parameters:
-    D (float): Dimensão fractal
-    dim_type (str): '1d', '2d', ou '3d'
-    scaling_factor (float): Fator de escala para ajuste fino
-    
+    D (float): Fractal dimension
+    dim_type (str): '1d', '2d', or '3d'
+    scaling_factor (float): Scaling factor for fine tuning
+
     Returns:
-    float: Parâmetro α para o filtro espectral
+    float: Parameter α for the spectral filter
     """
-    # Calcula β primeiro
+    # Calculate β first
     beta = calculate_beta_from_dimension(D, dim_type)
     
-    # Mapeia β para α usando uma relação logarítmica
-    # α = scaling_factor * log(1 + β) preserva a não-linearidade
+    # Map β to α using a logarithmic relation
+    # α = scaling_factor * log(1 + β) preserves non-linearity
     alpha = scaling_factor * np.log1p(beta)
     
     return alpha
@@ -87,33 +88,33 @@ class FractalAnalyzer:
     
     def analyze_quaternion_data(self, quaternion_data):
         """
-        Analisa dados quaternionicos e calcula a dimensão fractal
-        
+        Analyzes quaternion data and calculates the fractal dimension
+
         Parameters:
-        quaternion_data (torch.Tensor): Dados quaternionicos
-        
+        quaternion_data (torch.Tensor): Quaternion data
+
         Returns:
-        float: Dimensão fractal estimada
+        float: Estimated fractal dimension
         """
-        # Converter para numpy para análise
+        # Convert to numpy for analysis
         if torch.is_tensor(quaternion_data):
             data = quaternion_data.detach().cpu().numpy()
         else:
             data = quaternion_data
         
-        # Usar a parte real para análise fractal (simplificação)
-        real_data = data[..., 0]  # Componente real do quaternion
+        # Use real part for fractal analysis (simplification)
+        real_data = data[..., 0]  # Real component of quaternion
         
-        # Calcular dimensão fractal usando método de contagem de caixas
+        # Calculate fractal dimension using box counting method
         dimension = self.calculate_box_counting_dimension(real_data)
         
         return dimension
     
     def calculate_box_counting_dimension(self, data, n_samples=10000):
         """
-        Calcula dimensão fractal usando método de contagem de caixas
+        Calculates fractal dimension using box counting method
         """
-        # Amostrar pontos aleatórios dos dados
+        # Sample random points from data
         if data.size > n_samples:
             flat_data = data.flatten()
             sampled_indices = np.random.choice(flat_data.size, n_samples, replace=False)
@@ -121,77 +122,77 @@ class FractalAnalyzer:
         else:
             sampled_data = data.flatten()
         
-        # Normalizar dados
+        # Normalize data
         min_val, max_val = np.min(sampled_data), np.max(sampled_data)
         if max_val - min_val == 0:
-            return 1.0  # Dimensão de ponto único
+            return 1.0  # Single point dimension
         
         normalized_data = (sampled_data - min_val) / (max_val - min_val)
         
-        # Tentar diferentes tamanhos de caixa
+        # Try different box sizes
         box_sizes = np.logspace(-3, 0, 20, endpoint=False)
         box_counts = []
         
         for size in box_sizes:
-            # Discretizar em caixas
+            # Discretize into boxes
             digitized = np.floor(normalized_data / size).astype(int)
             unique_boxes = len(np.unique(digitized))
             box_counts.append(unique_boxes)
         
-        # Ajuste linear em escala log-log
+        # Linear fit on log-log scale
         valid_indices = [i for i, count in enumerate(box_counts) if count > 0]
         if len(valid_indices) < 2:
-            return 1.0  # Valor padrão se não for possível calcular
+            return 1.0  # Default value if cannot calculate
         
         log_sizes = np.log(1 / np.array(box_sizes)[valid_indices])
         log_counts = np.log(np.array(box_counts)[valid_indices])
         
-        # Calcular dimensão como inclinação da reta
+        # Calculate dimension as slope of line
         slope, _ = np.polyfit(log_sizes, log_counts, 1)
         return slope
 
     def calculate_box_counting_dimension_1d(self, data, n_samples=10000):
         """
-        Calcula dimensão fractal para dados 1D usando método de contagem de caixas
+        Calculates fractal dimension for 1D data using box counting method
         """
-        # Amostrar pontos aleatórios dos dados
+        # Sample random points from data
         if data.size > n_samples:
             sampled_data = np.random.choice(data, n_samples, replace=False)
         else:
             sampled_data = data
 
-        # Normalizar dados
+        # Normalize data
         min_val, max_val = np.min(sampled_data), np.max(sampled_data)
         if max_val - min_val == 0:
-            return 1.0  # Dimensão de ponto único
+            return 1.0  # Single point dimension
 
         normalized_data = (sampled_data - min_val) / (max_val - min_val)
 
-        # Tentar diferentes tamanhos de caixa
+        # Try different box sizes
         box_sizes = np.logspace(-3, 0, 20, endpoint=False)
         box_counts = []
 
         for size in box_sizes:
-            # Discretizar em caixas
+            # Discretize into boxes
             digitized = np.floor(normalized_data / size).astype(int)
             unique_boxes = len(np.unique(digitized))
             box_counts.append(unique_boxes)
 
-        # Ajuste linear em escala log-log
+        # Linear fit on log-log scale
         valid_indices = [i for i, count in enumerate(box_counts) if count > 0]
         if len(valid_indices) < 2:
-            return 1.0  # Valor padrão se não for possível calcular
+            return 1.0  # Default value if cannot calculate
 
         log_sizes = np.log(1 / np.array(box_sizes)[valid_indices])
         log_counts = np.log(np.array(box_counts)[valid_indices])
 
-        # Calcular dimensão como inclinação da reta
+        # Calculate dimension as slope of line
         slope, _ = np.polyfit(log_sizes, log_counts, 1)
         return slope
 
 def generate_cantor_set(n_points, level=10):
     """
-    Gera um conjunto de Cantor 1D
+    Generates a 1D Cantor set
     """
     points = np.zeros(n_points)
     for i in range(n_points):
@@ -199,9 +200,9 @@ def generate_cantor_set(n_points, level=10):
         for j in range(level):
             r = np.random.rand()
             if r < 0.5:
-                x = x / 3  # Primeiro terço
+                x = x / 3  # First third
             else:
-                x = x / 3 + 2/3  # Último terço
+                x = x / 3 + 2/3  # Last third
         points[i] = x
     
     return points
@@ -262,7 +263,7 @@ def validate_qrh_layer():
     batch_size = 2
     seq_len = 32
 
-    layer = QRHLayer(embed_dim=embed_dim, alpha=1.0)
+    layer = QRHLayer(QRHConfig(embed_dim=embed_dim, alpha=1.0))
 
     # Test forward pass
     x = torch.randn(batch_size, seq_len, 4 * embed_dim)
@@ -291,49 +292,49 @@ def validate_qrh_layer():
 
 def validate_fractal_integration():
     """
-    Valida a integração fractal corrigida
+    Validates the corrected fractal integration
     """
     print("=== Fractal Integration Validation ===")
-    print("Validando correções de integração fractal...")
+    print("Validating fractal integration corrections...")
 
-    # Testar relações dimensionais para 1D e 2D
-    test_dimensions_1d = [0.5, 0.63, 0.9]  # Incluindo a dimensão do Cantor
+    # Test dimensional relationships for 1D and 2D
+    test_dimensions_1d = [0.5, 0.63, 0.9]  # Including Cantor dimension
     test_dimensions_2d = [1.0, 1.5, 2.0]
 
-    # Testar para 1D
-    print("Relações para 1D:")
+    # Test for 1D
+    print("Relations for 1D:")
     for D in test_dimensions_1d:
         beta_1d = calculate_beta_from_dimension(D, '1d')
         D_recovered = calculate_dimension_from_beta(beta_1d, '1d')
-        print(f"D={D:.3f} → β={beta_1d:.3f} → D={D_recovered:.3f} (erro: {abs(D-D_recovered):.3f})")
+        print(f"D={D:.3f} → β={beta_1d:.3f} → D={D_recovered:.3f} (error: {abs(D-D_recovered):.3f})")
 
-    # Testar para 2D
-    print("Relações para 2D:")
+    # Test for 2D
+    print("Relations for 2D:")
     for D in test_dimensions_2d:
         beta_2d = calculate_beta_from_dimension(D, '2d')
         D_recovered = calculate_dimension_from_beta(beta_2d, '2d')
-        print(f"D={D:.1f} → β={beta_2d:.3f} → D={D_recovered:.3f} (erro: {abs(D-D_recovered):.3f})")
+        print(f"D={D:.1f} → β={beta_2d:.3f} → D={D_recovered:.3f} (error: {abs(D-D_recovered):.3f})")
 
-    # Testar mapeamento D → α para 2D
+    # Test D → α mapping for 2D
     for D in test_dimensions_2d:
         alpha = calculate_alpha_from_dimension(D, '2d')
         print(f"D={D:.1f} → α={alpha:.3f}")
 
-    # Testar analisador fractal
+    # Test fractal analyzer
     analyzer = FractalAnalyzer()
 
-    # Dados de teste 2D com dimensão conhecida (plano uniforme -> D=2.0)
+    # 2D test data with known dimension (uniform plane -> D=2.0)
     uniform_data_2d = np.random.rand(1000, 1000)
     fractal_dim_uniform = analyzer.calculate_box_counting_dimension(uniform_data_2d)
-    print(f"Dados uniformes 2D - D_fractal: {fractal_dim_uniform:.3f} (esperado ~2.0)")
+    print(f"Uniform 2D data - D_fractal: {fractal_dim_uniform:.3f} (expected ~2.0)")
 
-    # Gerar fractal de Cantor 1D para teste
+    # Generate 1D Cantor fractal for testing
     cantor_set = generate_cantor_set(100000, level=10)
     fractal_dim_cantor = analyzer.calculate_box_counting_dimension_1d(cantor_set)
     theoretical_dim_cantor = np.log(2)/np.log(3)
-    print(f"Conjunto de Cantor 1D - D_calculado: {fractal_dim_cantor:.3f}, D_teórico: {theoretical_dim_cantor:.3f}")
+    print(f"Cantor set 1D - D_calculated: {fractal_dim_cantor:.3f}, D_theoretical: {theoretical_dim_cantor:.3f}")
 
-    print("Validação concluída!")
+    print("Validation completed!")
 
     # Determine success based on corrected integration
     beta_d_errors_1d = []
@@ -415,7 +416,7 @@ def validate_physical_grounding():
 
     # Test quaternion-based state evolution
     embed_dim = 8
-    layer = QRHLayer(embed_dim=embed_dim, alpha=1.5)
+    layer = QRHLayer(QRHConfig(embed_dim=embed_dim, alpha=1.5))
 
     # Create physically meaningful input (normalized)
     x = torch.randn(1, 16, 4 * embed_dim)
@@ -435,13 +436,13 @@ def validate_physical_grounding():
 
     # Test reversibility (approximate)
     # In a real physical system, operations should be approximately reversible
-    layer_inverse = QRHLayer(embed_dim=embed_dim, alpha=-1.5)  # Reverse alpha
+    layer_inverse = QRHLayer(QRHConfig(embed_dim=embed_dim, alpha=-1.5))  # Reverse alpha
 
     with torch.no_grad():
         # Copy but reverse parameters
         for p_inv, p_orig in zip(layer_inverse.parameters(), layer.parameters()):
             p_inv.data = p_orig.data.clone()
-        layer_inverse.alpha = -layer.alpha
+        layer_inverse.spectral_filter.alpha = -layer.spectral_filter.alpha
 
     reversed_output = layer_inverse(output.detach())
     reconstruction_error = torch.norm(reversed_output - x) / torch.norm(x)
