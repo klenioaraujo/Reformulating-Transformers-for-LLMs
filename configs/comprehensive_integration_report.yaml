@@ -39,21 +39,21 @@ config_used:
     level: INFO
 detailed_results:
   Component Integration:
-    execution_time_ms: 73.20833206176758
+    execution_time_ms: 89.61749076843262
     passed: true
   Configuration Compliance:
-    execution_time_ms: 2.0389556884765625
+    execution_time_ms: 1.7735958099365234
     passed: true
   Edge Cases & Robustness:
-    execution_time_ms: 58.11786651611328
+    execution_time_ms: 71.43545150756836
     passed: !!python/object/apply:torch._utils._rebuild_tensor_v2
     - !!python/object/apply:torch.storage._load_from_bytes
       - !!binary |
         gAKKCmz8nEb5IGqoUBkugAJN6QMugAJ9cQAoWBAAAABwcm90b2NvbF92ZXJzaW9ucQFN6QNYDQAA
         AGxpdHRsZV9lbmRpYW5xAohYCgAAAHR5cGVfc2l6ZXNxA31xBChYBQAAAHNob3J0cQVLAlgDAAAA
         aW50cQZLBFgEAAAAbG9uZ3EHSwR1dS6AAihYBwAAAHN0b3JhZ2VxAGN0b3JjaApCb29sU3RvcmFn
-        ZQpxAVgKAAAAMTEyMjMxNTgwOHECWAMAAABjcHVxA0sBTnRxBFEugAJdcQBYCgAAADExMjIzMTU4
-        MDhxAWEuAQAAAAAAAAAB
+        ZQpxAVgJAAAAMjI4MTM4NTI4cQJYAwAAAGNwdXEDSwFOdHEEUS6AAl1xAFgJAAAAMjI4MTM4NTI4
+        cQFhLgEAAAAAAAAAAQ==
     - 0
     - !!python/tuple []
     - !!python/tuple []
@@ -61,15 +61,15 @@ detailed_results:
     - !!python/object/apply:collections.OrderedDict
       - []
   Mathematical Consistency:
-    execution_time_ms: 6.3610076904296875
+    execution_time_ms: 6.419897079467773
     passed: !!python/object/apply:torch._utils._rebuild_tensor_v2
     - !!python/object/apply:torch.storage._load_from_bytes
       - !!binary |
         gAKKCmz8nEb5IGqoUBkugAJN6QMugAJ9cQAoWBAAAABwcm90b2NvbF92ZXJzaW9ucQFN6QNYDQAA
         AGxpdHRsZV9lbmRpYW5xAohYCgAAAHR5cGVfc2l6ZXNxA31xBChYBQAAAHNob3J0cQVLAlgDAAAA
         aW50cQZLBFgEAAAAbG9uZ3EHSwR1dS6AAihYBwAAAHN0b3JhZ2VxAGN0b3JjaApCb29sU3RvcmFn
-        ZQpxAVgKAAAAMTEyNTY2MjkyOHECWAMAAABjcHVxA0sBTnRxBFEugAJdcQBYCgAAADExMjU2NjI5
-        MjhxAWEuAQAAAAAAAAAB
+        ZQpxAVgJAAAAMjMyOTA4OTc2cQJYAwAAAGNwdXEDSwFOdHEEUS6AAl1xAFgJAAAAMjMyOTA4OTc2
+        cQFhLgEAAAAAAAAAAQ==
     - 0
     - !!python/tuple []
     - !!python/tuple []
@@ -77,15 +77,15 @@ detailed_results:
     - !!python/object/apply:collections.OrderedDict
       - []
   Performance Benchmarks:
-    execution_time_ms: 5415.395259857178
+    execution_time_ms: 6507.474184036255
     passed: true
-execution_time_s: 5.5566699504852295
+execution_time_s: 6.67766547203064
 overall_status: EXCELLENT
 passed_tests: 5
 performance_metrics:
-  fractal_analysis_ms: 254.2126178741455
-  qrh_forward_ms: 13.020572662353516
-  transformer_forward_ms: 825.3645896911621
+  fractal_analysis_ms: 23.46181869506836
+  qrh_forward_ms: 15.279176235198975
+  transformer_forward_ms: 1051.1541366577148
 success_rate: 1.0
-timestamp: '2025-09-20 23:38:23'
+timestamp: '2025-09-21 15:24:27'
 total_tests: 5
