@@ -296,13 +296,13 @@ An IFS is defined by a set of contractive affine transformations:
 $$f_i(x) = A_i \cdot x + b_i$$
 
 **Where:**
-$$x = \begin{bmatrix} x \ y \end{bmatrix}, \quad A_i = \begin{bmatrix} a_i & b_i \ c_i & d_i \end{bmatrix}, \quad b_i = \begin{bmatrix} e_i \ f_i \end{bmatrix}$$
+$$x = \begin{bmatrix} x \\ y \end{bmatrix}, \quad A_i = \begin{bmatrix} a_i & b_i \\ c_i & d_i \end{bmatrix}, \quad b_i = \begin{bmatrix} e_i \\ f_i \end{bmatrix}$$
 
 **3D Transformation:**
 $$f_i(x) = A_i \cdot x + b_i$$
 
 **Where:**
-$$x = \begin{bmatrix} x \ y \ z \end{bmatrix}, \quad A_i = \begin{bmatrix} a_i & b_i & c_i \ d_i & e_i & f_i \ g_i & h_i & i_i \end{bmatrix}, \quad b_i = \begin{bmatrix} j_i \ k_i \ l_i \end{bmatrix}$$
+$$x = \begin{bmatrix} x \\ y \\ z \end{bmatrix}, \quad A_i = \begin{bmatrix} a_i & b_i & c_i \\ d_i & e_i & f_i \\ g_i & h_i & i_i \end{bmatrix}, \quad b_i = \begin{bmatrix} j_i \\ k_i \\ l_i \end{bmatrix}$$
 
 **Attractor Set (Fractal):**
 $$A = \bigcup_{i=1}^{N} f_i(A)$$
