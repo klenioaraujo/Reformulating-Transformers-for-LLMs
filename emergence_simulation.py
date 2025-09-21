@@ -1,101 +1,79 @@
 
-import torch
 import random
 import numpy as np
+from models.insect_specimens.dna import AraneaeDNA
 from models.insect_specimens.araneae import Araneae_PsiQRH
 
-def simulate_emergence():
+def run_emergent_simulation():
     """
-    A simulation demonstrating emergent reproductive behavior in a dynamic
-    population of spider agents, driven by ΨQRH wave communication.
+    Orchestrates a full genetic algorithm simulation where agents evolve.
+    Their behavior, survival, and reproduction emerge from their DNA, which
+    defines their personal QRHLayer, fractal signature, and 4D rotation.
     """
-    print("-" * 80)
-    print("ΨQRH SPIDER POPULATION SIMULATION (REPRODUCTION, WAVE COMMUNICATION & CHAOS)")
-    print("-" * 80)
+    print("=" * 80)
+    print("      ΨQRH AGENT-BASED EVOLUTIONARY SIMULATION (GENETIC ALGORITHM)      ")
+    print("=" * 80)
 
-    # 1. Environment Setup
-    environment = {
-        "locations": {
-            "sheltered_branch": {"prey_traffic": 0.7, "wind_exposure": 0.2, "anchor_points": 3},
-            "exposed_leaf": {"prey_traffic": 0.9, "wind_exposure": 0.8, "anchor_points": 1},
-        },
-        "chaos_factor": 0.1 # Initial environmental chaos
-    }
+    # --- 1. Initial Population (Genesis) ---
+    population_size = 6
+    population = [Araneae_PsiQRH(dna=AraneaeDNA()) for _ in range(population_size)]
+    print(f"\n--- Initial Population (Generation 0) ---")
+    for agent in population:
+        print(f"  - Agent {id(agent)} created. Gender: {agent.gender}, DNA Alpha: {agent.config.alpha:.2f}")
 
-    # 2. Initial Population
-    spider_population = [Araneae_PsiQRH(maturity_age=3) for _ in range(3)]
-    # Ensure at least one male and one female for reproduction demonstration
-    guaranteed_female = Araneae_PsiQRH(maturity_age=3)
-    guaranteed_female.gender = 'female'
-    spider_population.append(guaranteed_female)
-    random.shuffle(spider_population)
+    # --- 2. Simulation Loop (Evolution over Time) ---
+    num_generations = 15
+    for gen in range(num_generations):
+        print(f"\n{'-'*30} Generation {gen + 1} {'-'*30}")
+        print(f"Population: {len(population)}")
 
-    print(f"Initial population: {len(spider_population)} spiders.")
-    for spider in spider_population: 
-        print(f"- Spider {id(spider)} ({spider.gender}) created with signature α={spider.signature[0]}, β={spider.signature[1]}.")
-
-    # 3. Main Simulation Loop
-    num_steps = 15
-    for i in range(num_steps):
-        print(f"\n{'='*30} TIME STEP {i + 1} {'='*30}")
-        print(f"Population: {len(spider_population)} | Environmental Chaos: {environment['chaos_factor']:.2f}")
-
-        # Fluctuate chaos
-        environment["chaos_factor"] = max(0, 0.1 + np.sin(i / 3) * 0.2)
-
+        environment = {
+            "chaos_factor": max(0, 0.1 + np.sin(gen / 3) * 0.2)
+        }
         emitted_waves = []
-        reproduction_events = []
-        newly_born = []
+        reproduction_pairs = []
 
-        # --- Action & Communication Phase ---
-        # First, determine actions without immediate interaction
-        for spider in spider_population:
-            # Spiders perceive an environment without waves first
-            environmental_data = {"locations": environment["locations"], "waves": []}
-            action = spider.forward(environmental_data)
+        # --- Agent Actions & Communication ---
+        for agent in population:
+            if agent.gender == 'male':
+                action = agent.forward(environment)
+                if action["type"] == "EMIT_MATING_WAVE":
+                    print(f"Event: Male {id(agent)} (Health: {agent.health:.2f}) emits mating wave.")
+                    emitted_waves.append({"emitter_id": id(agent), "wave": action["wave"]})
 
-            if action["type"] == "EMIT_MATING_WAVE":
-                print(f"Event: Male {id(spider)} emits a mating wave.")
-                emitted_waves.append({
-                    "emitter_id": id(spider),
-                    "wave_form_base": action["wave"],
-                    "signature": spider.signature
-                })
-
-        # --- Interaction & Analysis Phase ---
+        # --- Female Analysis & Mating Selection ---
         if emitted_waves:
-            propagated_waves = []
-            for wave_packet in emitted_waves:
-                distorted_form = wave_packet["wave_form_base"].propagate(environment["chaos_factor"])
-                propagated_waves.append({
-                    "emitter_id": wave_packet["emitter_id"],
-                    "wave_form": distorted_form,
-                    "signature": wave_packet["signature"]
-                })
-
-            for spider in spider_population:
-                if spider.gender == 'female' and spider.mating_readiness > spider.reproduction_threshold:
-                    # This female is now listening to the propagated waves
-                    action = spider.forward({"locations": environment["locations"], "waves": propagated_waves})
+            environment["waves"] = emitted_waves # Add waves to the environment for females
+            for agent in population:
+                if agent.gender == 'female':
+                    action = agent.forward(environment)
                     if action["type"] == "REPRODUCE":
-                        reproduction_events.append((spider, action["partner_id"]))
+                        # Find the partner agent from the ID
+                        partner = next((p for p in population if id(p) == action["partner_id"]), None)
+                        if partner:
+                            print(f"Event: Female {id(agent)} accepts mate {id(partner)}.")
+                            reproduction_pairs.append((agent, partner))
 
-        # --- Resolution Phase ---
-        if reproduction_events:
-            for female, male_id in reproduction_events:
-                print(f"*** SUCCESS! Female {id(female)} correlated with Male {male_id}. Reproduction occurs! ***")
-                num_offspring = random.randint(1, 3)
-                for _ in range(num_offspring):
-                    newly_born.append(Araneae_PsiQRH(maturity_age=female.age + 5))
-            
-            if newly_born:
-                print(f"---> {len(newly_born)} spiderling(s) were born! <---")
-                spider_population.extend(newly_born)
+        # --- Resolution: Reproduction & New Generation ---
+        newly_born = []
+        if reproduction_pairs:
+            for parent1, parent2 in reproduction_pairs:
+                print(f"*** Reproduction Occurs! Offspring from {id(parent1)} and {id(parent2)} ***")
+                child = Araneae_PsiQRH.reproduce(parent1, parent2)
+                newly_born.append(child)
+        
+        if newly_born:
+            print(f"---> {len(newly_born)} new agent(s) born! Population growing. <---")
+            population.extend(newly_born)
 
-    print("\n" + "-" * 80)
+    print("\n" + "=" * 80)
     print("SIMULATION COMPLETE")
-    print(f"Final population: {len(spider_population)} spiders.")
-    print("-" * 80)
+    print(f"Final population size: {len(population)}")
+    # Print DNA of the final generation for analysis
+    print("\n--- Final Generation DNA Samples ---")
+    for i, agent in enumerate(random.sample(population, min(5, len(population)))):
+        print(f"  Sample {i+1}: Alpha={agent.config.alpha:.3f}, Angles={np.round(agent.dna.rotation_angles, 2).tolist()}")
+    print("=" * 80)
 
 if __name__ == "__main__":
-    simulate_emergence()
+    run_emergent_simulation()

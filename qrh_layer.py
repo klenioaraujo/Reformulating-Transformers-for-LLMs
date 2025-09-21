@@ -307,3 +307,24 @@ class QRHLayer(nn.Module):
         
         with torch.autocast(device_type=x.device.type, dtype=dtype):
             return self._forward_impl(x)
+
+    def check_health(self, x: torch.Tensor) -> dict:
+        """Performs validation checks inspired by the test suite."""
+        health_report = {}
+        with torch.no_grad():
+            output = self.forward(x)
+            
+            # 1. Energy Conservation Test
+            input_energy = torch.norm(x).item()
+            output_energy = torch.norm(output).item()
+            # Avoid division by zero
+            if input_energy > 1e-6:
+                energy_ratio = output_energy / input_energy
+                # Healthy DNA should keep energy ratio within a reasonable bound (e.g., 0.5 to 2.0)
+                health_report['energy_ratio'] = energy_ratio
+                health_report['is_stable'] = 0.5 < energy_ratio < 2.0
+            else:
+                health_report['energy_ratio'] = 0
+                health_report['is_stable'] = False
+
+        return health_report

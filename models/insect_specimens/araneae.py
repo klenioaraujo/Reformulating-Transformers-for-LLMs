@@ -1,138 +1,109 @@
 
 import torch
 import random
+import numpy as np
 from .base_specimen import PsiQRHBase
-from .communication import PadilhaWave, WaveAnalyzer
+from .dna import AraneaeDNA
+from qrh_layer import QRHLayer
+from .communication import PadilhaWave
 
 class Araneae_PsiQRH(PsiQRHBase):
     """
-    Enhanced spider agent with a full lifecycle, environmental intelligence,
-    and a reproductive cycle based on ΨQRH wave communication.
+    An agent whose behavior and processing capabilities emerge from its DNA.
+    The DNA defines the configuration of its personal QRHLayer.
     """
-    def __init__(self, maturity_age: int = 4, device: str = 'cpu'):
+    def __init__(self, dna: AraneaeDNA, maturity_age: int = 5, device: str = 'cpu'):
         super().__init__()
-        self.heuristic = "maximize_prey_capture_minimize_energy_cost_and_reproduce"
-        
-        # Core Attributes
-        self.age = 0
-        self.gender = random.choice(['male', 'female'])
+        self.heuristic = "survive_and_reproduce"
+        self.dna = dna
         self.device = device
 
-        # Lifecycle & State
+        # Create the agent's personal QRHLayer from its DNA
+        self.config = self.dna.create_config(embed_dim=64, device=self.device)
+        self.qrh_layer = QRHLayer(config=self.config)
+        
+        # --- Attributes derived from DNA and State ---
+        self.age = 0
+        self.gender = random.choice(['male', 'female'])
         self.life_stage = "spiderling"
         self.maturity_age = maturity_age
-        self.state = "SCOUTING"
-        self.location = None
-
-        # Resources
-        self.silk_reserves = 1.0
-        self.web_exists = False
-        self.web_integrity = 0.0
-        self.web_repair_threshold = 0.7
-
-        # Reproduction Attributes
+        self.state = "IDLE"
+        self.health = 1.0 # Represents the stability of its DNA/QRHLayer
         self.mating_readiness = 0.0
-        self.reproduction_threshold = 0.8
+        self.reproduction_threshold = 0.6 # Lowered threshold
         self.last_reproduced_age = -10
-        self.signature = self._generate_signature()
-        self.wave_analyzer = WaveAnalyzer(embed_dim=128, device=self.device)
 
-    def _generate_signature(self) -> tuple:
-        """Generates a unique (alpha, beta) signature for the spider's wave.
-           Conceptually, this is part of its 'DNA'."""
-        # Use object id for a unique, stable seed
-        random.seed(id(self))
-        alpha = round(random.uniform(1.2, 2.5), 3)
-        beta = round(random.uniform(0.5, 1.5), 3)
-        return (alpha, beta)
+    @staticmethod
+    def reproduce(parent1: 'Araneae_PsiQRH', parent2: 'Araneae_PsiQRH', mutation_rate: float = 0.1) -> 'Araneae_PsiQRH':
+        """Creates a new agent via genetic crossover and mutation."""
+        child_dna = AraneaeDNA.crossover(parent1.dna, parent2.dna)
+        child_dna.mutate(mutation_rate=mutation_rate)
+        # The child inherits the maturity age from its parents, plus some delay
+        child_maturity_age = max(parent1.age, parent2.age) + 5
+        return Araneae_PsiQRH(dna=child_dna, maturity_age=child_maturity_age)
 
-    def _update_internal_state(self):
-        """Handles all internal state changes per time step."""
+    def analyze_wave(self, received_wave: PadilhaWave) -> float:
+        """Uses the agent's own QRHLayer to analyze a received wave."""
+        # This replaces the old WaveAnalyzer, making the analysis personal to the agent's DNA
+        ideal_wave = PadilhaWave(emitter_signature=(self.config.alpha, 0)) # Simplified expected signature
+        
+        # Convert waves to tensors
+        # This logic needs to be robust and match the layer's expectation
+        seq_len = len(received_wave.wave_shape)
+        received_tensor = torch.zeros(1, seq_len, 4 * self.config.embed_dim, device=self.device)
+        ideal_tensor = torch.zeros(1, seq_len, 4 * self.config.embed_dim, device=self.device)
+        
+        received_tensor[0, :, 0] = torch.from_numpy(np.real(received_wave.wave_shape)).float()
+        received_tensor[0, :, 1] = torch.from_numpy(np.imag(received_wave.wave_shape)).float()
+        ideal_tensor[0, :, 0] = torch.from_numpy(np.real(ideal_wave.wave_shape)).float()
+        ideal_tensor[0, :, 1] = torch.from_numpy(np.imag(ideal_wave.wave_shape)).float()
+
+        with torch.no_grad():
+            processed_received = self.qrh_layer(received_tensor)
+            processed_ideal = self.qrh_layer(ideal_tensor)
+        
+        similarity = torch.nn.functional.cosine_similarity(processed_received.flatten(), processed_ideal.flatten(), dim=0)
+        return max(0, similarity.item())
+
+    def forward(self, environmental_data: dict):
         self.age += 1
         if self.age >= self.maturity_age and self.life_stage == "spiderling":
             self.life_stage = "adult"
-            self.state = "SCOUTING"
             print(f"*** Spider {id(self)} has matured into an ADULT ({self.gender})! ***")
 
-        self.silk_reserves = min(1.0, self.silk_reserves + 0.05)
-        if self.web_exists:
-            self.web_integrity = max(0.0, self.web_integrity - 0.02)
+        # Health check: Unstable DNA can lead to poor health
+        health_check = self.qrh_layer.check_health(torch.randn(1, 256, 4 * self.config.embed_dim, device=self.device))
+        self.health = 0.9 * self.health + 0.1 * (1.0 if health_check.get('is_stable', True) else 0.0)
 
-        # Update mating readiness based on health, age, and successful living
-        if self.life_stage == 'adult' and self.web_exists and self.web_integrity > 0.5 and (self.age - self.last_reproduced_age > 5):
-            self.mating_readiness = min(1.0, self.mating_readiness + 0.15)
+        # Mating readiness depends on age, health, and time since last reproduction
+        if self.life_stage == 'adult' and self.health > 0.7 and (self.age - self.last_reproduced_age > 5):
+            self.mating_readiness = min(1.0, self.mating_readiness + 0.2)
         else:
             self.mating_readiness = max(0.0, self.mating_readiness - 0.1)
 
-    def _evaluate_locations(self, locations: dict) -> str:
-        best_location = None
-        max_score = -float('inf')
-        print(f"Spider {id(self)} is evaluating locations:")
-        for name, props in locations.items():
-            score = (props['prey_traffic'] * 1.5) - (props['wind_exposure'] * 1.2) + (props['anchor_points'] * 0.5)
-            print(f"  - {name}: Score {score:.2f}")
-            if score > max_score:
-                max_score = score
-                best_location = name
-        return best_location
+        action = {"type": "IDLE"}
 
-    def forward(self, environmental_data: dict):
-        self._update_internal_state()
+        if self.life_stage == 'spiderling':
+            action["type"] = "HIDING"
+        elif self.state == "IDLE" and self.mating_readiness > self.reproduction_threshold:
+            self.state = "SEEKING_MATE"
 
-        action = {"type": "WAIT"} # Default action is a dictionary
-
-        # --- Primary State Machine ---
-        if self.mating_readiness > self.reproduction_threshold and self.gender == 'male' and self.state != 'SEEKING_MATE':
-             self.state = 'SEEKING_MATE'
-
-        # --- Behavior based on State ---
-        if self.state == "SCOUTING":
-            if self.life_stage == "spiderling":
-                action["type"] = "HIDING_AND_GROWING"
-            else:
-                best_location_name = self._evaluate_locations(environmental_data['locations'])
-                self.location = best_location_name
-                self.state = "IDLE"
-                action["type"] = f"CHOSE_LOCATION '{self.location}'"
-
-        elif self.state == "IDLE":
-            if self.life_stage == "adult" and self.silk_reserves >= 0.5:
-                self.state = "BUILDING"
-                action["type"] = "START_BUILDING_WEB"
-            else:
-                action["type"] = "RESTING"
-
-        elif self.state == "BUILDING":
-            self.web_exists = True
-            self.web_integrity = 1.0
-            self.silk_reserves -= 0.5
-            self.state = "WAITING"
-            action["type"] = "FINISH_BUILDING_WEB"
-
-        elif self.state == "WAITING":
-            # Females listen for mating calls when ready
-            if self.mating_readiness > self.reproduction_threshold and self.gender == 'female':
-                for wave_packet in environmental_data.get("waves", []):
-                    correlation = self.wave_analyzer.analyze_correlation(wave_packet["wave_form"], wave_packet["signature"])
-                    print(f"Female {id(self)} analyzed a wave with correlation: {correlation:.2f}")
-                    if correlation > 0.85: # High correlation needed
-                        action["type"] = "REPRODUCE"
-                        action["partner_id"] = wave_packet["emitter_id"]
-                        self.mating_readiness = 0.0
-                        self.last_reproduced_age = self.age
-                        break # Found a mate
-            # Standard waiting behavior if not mating
-            if action["type"] == "WAIT":
-                # Handle prey, repairs etc.
-                pass # Simplified for clarity
-
-        elif self.state == "SEEKING_MATE":
+        if self.state == "SEEKING_MATE":
             if self.gender == 'male':
                 action["type"] = "EMIT_MATING_WAVE"
-                action["wave"] = PadilhaWave(self.signature)
-                # After emitting, go back to waiting to conserve energy
-                self.state = "WAITING"
-
-        # Simplified print statement
-        print(f"Spider {id(self)} ({self.gender}, Age {self.age}, State {self.state}, Readiness {self.mating_readiness:.2f}) -> Action: {action['type']}")
+                action["wave"] = PadilhaWave(emitter_signature=(self.config.alpha, 0))
+                self.state = "IDLE" # Conserve energy
+            else: # Female is listening
+                for wave_packet in environmental_data.get("waves", []):
+                    correlation = self.analyze_wave(wave_packet["wave"])
+                    print(f"Female {id(self)} analyzed wave from {wave_packet['emitter_id']} with correlation: {correlation:.2f}")
+                    if correlation > 0.9: # High correlation needed
+                        action["type"] = "REPRODUCE"
+                        action["partner_id"] = wave_packet['emitter_id']
+                        self.mating_readiness = 0.0
+                        self.last_reproduced_age = self.age
+                        self.state = "IDLE"
+                        break
+        
+        print(f"Spider {id(self)} ({self.gender}, Age {self.age}, State {self.state}, Health {self.health:.2f}, Readiness {self.mating_readiness:.2f}) -> Action: {action['type']}")
         return action
