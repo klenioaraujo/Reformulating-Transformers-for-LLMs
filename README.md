@@ -122,7 +122,7 @@ $$\Lambda_{24} = \{x \in \mathbb{R}^{24} : x \cdot x \in 2\mathbb{Z}, x \equiv (
 
 **Golay Code G₂₄:**
 
-$$G_{24} = \{c \in \mathbb{F}_2^{24} : H \cdot c^T = 0\}$$
+$$G_{24} = \{c \in \mathbb{F}_2^{24} : H \cdot c^T = 0$$
 
 Where H is the 12×24 parity-check matrix.
 
@@ -130,7 +130,7 @@ Where H is the 12×24 parity-check matrix.
 
 **Orthogonality Error:**
 
-$$E_{orth} = |\|\text{input}\|_2 - \|\text{output}\|_2|$$
+$$E_{orth} = |\|\text{input}\||_2 - \|\text{output}\||_2|$$
 
 **Energy Conservation Ratio:**
 
@@ -226,7 +226,7 @@ $$\Lambda_{24} = \{x \in \mathbb{R}^{24} : x \cdot x \in 2\mathbb{Z}, x \equiv (
 3. **Fault tolerance**: Automatic correction of small perturbations
 
 **Algebraic Structure:**
-$$G_{24} = \{c \in \mathbb{F}_2^{24} : H \cdot c^T = 0\}$$
+$$G_{24} = \{c \in \mathbb{F}_2^{24} : H \cdot c^T = 0$$
 Where **H** is the 12×24 parity-check matrix of the Golay code.
 
 ## 3. Proofs of Concept: From Fractals to Spectral Regularization
@@ -289,13 +289,13 @@ An IFS is defined by a set of contractive affine transformations:
 $$f_i(x) = A_i \cdot x + b_i$$
 
 **Where:**
-$$x = \begin{bmatrix} x \\ y \end{bmatrix}, \quad A_i = \begin{bmatrix} a_i & b_i \\ c_i & d_i \end{bmatrix}, \quad b_i = \begin{bmatrix} e_i \\ f_i \end{bmatrix}$$
+$$x = \begin{bmatrix} x \ y \end{bmatrix}, \quad A_i = \begin{bmatrix} a_i & b_i \ c_i & d_i \end{bmatrix}, \quad b_i = \begin{bmatrix} e_i \ f_i \end{bmatrix}$$
 
 **3D Transformation:**
 $$f_i(x) = A_i \cdot x + b_i$$
 
 **Where:**
-$$x = \begin{bmatrix} x \\ y \\ z \end{bmatrix}, \quad A_i = \begin{bmatrix} a_i & b_i & c_i \\ d_i & e_i & f_i \\ g_i & h_i & i_i \end{bmatrix}, \quad b_i = \begin{bmatrix} j_i \\ k_i \\ l_i \end{bmatrix}$$
+$$x = \begin{bmatrix} x \ y \ z \end{bmatrix}, \quad A_i = \begin{bmatrix} a_i & b_i & c_i \ d_i & e_i & f_i \ g_i & h_i & i_i \end{bmatrix}, \quad b_i = \begin{bmatrix} j_i \ k_i \ l_i \end{bmatrix}$$
 
 **Attractor Set (Fractal):**
 $$A = \bigcup_{i=1}^{N} f_i(A)$$
@@ -531,7 +531,7 @@ pytest test_multi_device.py::TestMultiDevice::test_qrh_device_compatibility -v
 ### 8.3 Performance Scaling
 
 | Device Type | Memory Usage | Inference Speed | Training Speed |
-|-------------|--------------|-----------------|----------------|
+|---|---|---|---|
 | **CPU** | 7.3 GB | 890 tok/s | 1.2× baseline |
 | **CUDA** | 5.8 GB | 2,680 tok/s | 3.1× baseline |
 | **MPS** | 6.1 GB | 2,150 tok/s | 2.7× baseline |
@@ -583,7 +583,7 @@ The ΨQRH framework has been successfully integrated with PyTorch and validated 
 #### 8.3.1 Enhanced Validation Test Results (100% Success Rate)
 
 | Component | Status | Performance Details |
-|-----------|--------|-------------------|
+|---|---|---|
 | **Quaternion Operations** | ✓ PASS | Identity error: 0.000000, Unit norm: 1.000000 ± 0.000000 |
 | **Spectral Filter** | ✓ PASS | Filter magnitude: 1.000000 ± 0.000000, Unitary: True |
 | **QRH Layer** | ✓ PASS | Forward time: 0.0019s, Gradient flow: ✓, Shape integrity: ✓ |
@@ -595,7 +595,7 @@ The ΨQRH framework has been successfully integrated with PyTorch and validated 
 #### 8.3.2 Robust Statistical Validation Results (80% Success Rate)
 
 | Component | Robust Status | Statistical Metrics |
-|-----------|---------------|-------------------|
+|---|---|---|
 | **Quaternion Operations** | ✓ ROBUST PASS | P-value: 0.9000, Effect size: 0.000, n=100 trials |
 | **Spectral Filter** | ✓ ROBUST PASS | P-value: 0.9000, Effect size: 0.000, Deterministic system |
 | **Padilha Wave Equation** | ✓ ROBUST PASS | Stability: 100%, CV: 0.002, n=50 trials |
@@ -613,7 +613,7 @@ The ΨQRH framework has been successfully integrated with PyTorch and validated 
 - **Statistical robustness**: 85.4% confidence, 14.6% false positive risk
 - **Framework maturity**: Evolved from experimental (66.7%) to production-ready (>80%)
 
-### 8.4 ΨQRH Parameters for Specific Simulations
+#### 8.4 ΨQRH Parameters for Specific Simulations
 
 **Sierpinski Triangle Configuration (D ≈ 1.585):**
 ```python
@@ -669,7 +669,7 @@ Success Rate: 100.0%
 Overall Status: EXCELLENT
 ```
 
-### 8.5 Significance for Physical AGI
+#### 8.5 Significance for Physical AGI
 
 The validation results establish the **first functioning prototype** of physical-grounded AGI by demonstrating:
 
@@ -682,9 +682,9 @@ The **enhanced validation results** (100% enhanced validation + 80% robust stati
 
 **Key Achievement**: First successful integration of the Padilha wave equation `f(λ,t) = I₀ sin(ωt + αλ) e^(i(ωt - kλ + βλ²))` into a transformer architecture, with demonstrated mathematical stability and fractal-parameter coupling.
 
-### 8.6 Enhanced Validation with Padilha Wave Equation Integration
+#### 8.6 Enhanced Validation with Padilha Wave Equation Integration
 
-#### 8.6.1 Padilha Wave Equation Implementation
+##### 8.6.1 Padilha Wave Equation Implementation
 
 We have successfully integrated the **Padilha Wave Equation** into the ΨQRH framework, representing a significant advancement in physical-mathematical grounding:
 
@@ -700,7 +700,7 @@ $$f(\lambda,t) = I_0 \sin(\omega t + \alpha\lambda) e^{i(\omega t - k\lambda + \
 - **λ** = Spatial position
 - **t** = Time
 
-#### 8.6.2 Enhanced Validation Results
+##### 8.6.2 Enhanced Validation Results
 
 The enhanced validation test (`simple_validation_test.py`) with Padilha wave equation integration demonstrates:
 
@@ -744,7 +744,7 @@ Overall Status:  EXCELLENT
 - ✅ **Configuration Compliance**: PASS (2.0ms)
 - ✅ **Component Integration**: PASS (73.2ms)
 - ✅ **Performance Benchmarks**: PASS (5415.4ms)
-- ✅ **Edge Cases & Robustness**: PASS (58.1ms)
+- ✅ **Edge Cases & Robustness**: PASS (Including NaN resilience)
 - ✅ **Mathematical Consistency**: PASS (6.4ms)
 
 ### **Updated Performance Metrics:**
@@ -781,7 +781,7 @@ D \to \beta \text{ mapping}: & \quad \beta(D) = [(2n + 1) - 2D] \times \text{sca
 
 **Enhanced Performance Metrics:**
 | Metric | Before Fixes | After Latest Fixes | Improvement |
-|--------|-------------|-------------------|-------------|
+|---|---|---|---|
 | **Validation Success Rate** | 80% (GOOD) | **100% (EXCELLENT)** | +25% |
 | **Configuration Compliance** | FAIL | **PASS** | ✅ Fixed |
 | **NaN Resilience** | FAIL | **PASS** | ✅ Fixed |
@@ -1003,7 +1003,7 @@ Where:
 #### Scaling Properties
 
 | Embedding Dim | Forward Pass (ms) | Memory (KB) | Energy Ratio |
-|---------------|-------------------|-------------|--------------|
+|---|---|---|---|
 | 16            | 2.1              | 8.4         | 0.98         |
 | 32            | 4.7              | 33.6        | 0.97         |
 | 64            | 11.2             | 134.4       | 0.96         |
@@ -1035,10 +1035,10 @@ The 4D Unitary Layer includes an extensive test suite with **100% pass rate**:
 
 The framework automatically generates comprehensive analysis plots:
 
-1. **`quaternion_detailed_analysis.png`**: Quaternion norm stability, non-commutativity effects, rotation composition accuracy
-2. **`4d_layer_performance_analysis.png`**: Energy conservation, spectral response, scaling performance
-3. **`gate_controller_analysis.png`**: Gate decision distribution, policy effects, threshold sensitivity
-4. **`integration_complete_analysis.png`**: Component timing, memory usage, error propagation
+1.  **`quaternion_detailed_analysis.png`**: Quaternion norm stability, non-commutativity effects, rotation composition accuracy
+2.  **`4d_layer_performance_analysis.png`**: Energy conservation, spectral response, scaling performance
+3.  **`gate_controller_analysis.png`**: Gate decision distribution, policy effects, threshold sensitivity
+4.  **`integration_complete_analysis.png`**: Component timing, memory usage, error propagation
 
 #### Performance Monitoring
 
@@ -1149,7 +1149,7 @@ layer = QRHLayer(
 #### Comparison with Standard Attention
 
 | Metric                | Standard Attention | 4D Unitary Layer | Improvement |
-|----------------------|-------------------|------------------|-------------|
+|---|---|---|---|
 | Memory Usage         | 100%              | 75%              | 25% ↓       |
 | Inference Speed      | 100%              | 210%             | 2.1× ↑      |
 | Parameter Efficiency | 100%              | 134%             | 34% ↑       |
@@ -1204,7 +1204,7 @@ The 4D Unitary Layer represents a significant advancement in the ΨQRH framework
 
 This component bridges the gap between theoretical advances in quaternion-based computing and practical deep learning applications, providing a validated, efficient, and mathematically sound foundation for next-generation transformer architectures.
 
----
+--- 
 
 **Documentation Status**: ✅ Complete
 **Test Coverage**: ✅ 100%
@@ -1214,7 +1214,7 @@ This component bridges the gap between theoretical advances in quaternion-based 
 4.  It calls the visualization functions to generate the conceptual demo images.
 5.  Finally, it generates the `needle_results.png` plot, which shows the fractal attractor alongside the log-log plot of the box-counting analysis.
 
----
+--- 
 
 ##  **LATEST UPDATE: FRAMEWORK ACHIEVES 100% TEST SUCCESS RATE**
 
@@ -1262,7 +1262,7 @@ Recommendations: 🎯 Framework ready for production use
 ### **Framework Readiness Status**
 
 | Aspect | Status | Details |
-|--------|---------|---------|
+|---|---|---|
 | **Mathematical Foundation** | ✅ Complete | Quaternion operations, spectral filtering validated |
 | **Implementation** | ✅ Production Ready | Full PyTorch integration with 100% test coverage |
 | **Performance** | ✅ Optimized | 25% memory reduction, 2.1× speed improvement |
@@ -1283,6 +1283,167 @@ With 100% test success rate achieved, the framework is now ready for:
 **Mathematical Validation**: **Complete ✅**
 **Performance**: **Optimized ✅**
 
----
+--- 
 
 *Last Updated: September 20, 2025 - Framework Status: EXCELLENT (100% Success Rate)*
+
+## 10. Conceptual Application: Emergent Insect Cognition
+
+To showcase the flexibility and expressive power of the ΨQRH framework, we present a conceptual application in modeling emergent insect cognition. The goal is not just to explain insect behavior, but to have it *emerge* from the foundational principles of the framework.
+
+Each insect species is modeled as a unique, trained instance of a `PsiQRHBase` class, with its own specialized sensory inputs, heuristics, and relational understanding of its environment.
+
+### Simulation Graphic
+
+This graphic illustrates the simulation loop, where the environment provides sensory data to the emergent ΨQRH specimens, which in turn produce actions that modify their state within the environment.
+
+```text
++--------------------------------------------------------------------------+
+|                                                                          |
+|                        EMERGENCE SIMULATION LOOP (Time Step t)             |
+|                                                                          |
++--------------------------------------------------------------------------+
+|                                                                          |
+|   +-----------------------+      +-----------------------+                 |
+|   |   Chrysopidae (Prey)  |      |  Tettigoniidae (Sound)  |                 |
+|   +-----------------------+      +-----------------------+                 |
+|               |                          |                                 |
+|     [Vision, Odor, Vibe]           [Acoustic, Tactile]                     |
+|               |                          |                                 |
+|   +-----------------------+      +-----------------------+                 |
+|   |  ΨQRH Instance 1      |      |  ΨQRH Instance 2      |                 |
+|   | (Heuristic: Maximize  |      | (Heuristic: Maximize  |                 |
+|   |  Prey Capture)        |      |  Mating Success)      |                 |
+|   +-----------------------+      +-----------------------+                 |
+|               |                          |                                 |
+|         ACTION (t)                   ACTION (t)                          |
+|      (e.g., ATTACK)               (e.g., RESPOND)                        |
+|               |                          |                                 |
+|   +-----------------------------------------------------+                |
+|   |                  ENVIRONMENT (t+1)                    |                |
+|   +-----------------------------------------------------+                |
+|                                                                          |
++--------------------------------------------------------------------------+
+```
+
+### Simulation Code
+
+The following script, `emergence_simulation.py`, instantiates the insect specimens and runs them in a simulated environment for several time steps.
+
+```python
+import torch
+import random
+from models.insect_specimens import Chrysopidae_PsiQRH, Tettigoniidae_PsiQRH
+
+def simulate_emergence():
+    """
+    A simulation to demonstrate the 'emergence' of behaviors from the ΨQRH insect specimens.
+    """
+    print("-" * 50)
+    print("ΨQRH INSECT EMERGENCE SIMULATION")
+    print("-" * 50)
+
+    # 1. Instantiate the emergent specimens
+    chrysopidae = Chrysopidae_PsiQRH(attack_threshold=0.8)
+    tettigoniidae = Tettigoniidae_PsiQRH()
+
+    print("Specimens emerged:")
+    print(f"- {chrysopidae.__class__.__name__} (Heuristic: {chrysopidae.heuristic})")
+    print(f"- {tettigoniidae.__class__.__name__} (Heuristic: {tettigoniidae.heuristic})")
+    print("\n" + "-" * 50)
+
+    # 2. Simulation loop for a few time steps
+    num_steps = 3
+    for i in range(num_steps):
+        print(f"\nTIME STEP {i + 1}")
+
+        # --- Chrysopidae Simulation (Tensor-based) ---
+        print("\n--- Chrysopidae's Environment ---")
+        # Simulate sensory input with random tensors
+        vision_input = torch.randn(10)
+        vibration_input = torch.randn(5)
+        odor_input = torch.randn(5)
+
+        # To demonstrate the logic, we'll manually add a strong signal
+        # in some steps to push the score above the threshold.
+        if i % 2 == 0:
+            print("A strong prey signature is detected nearby!")
+            odor_input = odor_input * 3 # Amplify odor signal
+            vision_input = vision_input * 2 # Amplify vision signal
+        else:
+            print("The environment is calm.")
+        
+        action = chrysopidae.forward(vision=vision_input, vibration=vibration_input, odor=odor_input)
+        print(f"--> Chrysopidae's action: {action}")
+
+        # --- Tettigoniidae Simulation (String-based) ---
+        print("\n--- Tettigoniidae's Environment ---")
+        # Simulate acoustic environment with string placeholders
+        possible_sounds = ["wind_rustling", "predator_frequency", "mate_call"]
+        acoustic_input = random.choice(possible_sounds)
+        tactile_input = "leaf_surface"
+        vision_input = "dappled_light"
+
+        action = tettigoniidae.forward(acoustic=acoustic_input, tactile=tactile_input, vision=vision_input)
+        print(f"--> Tettigoniidae's action: {action}")
+
+    print("\n" + "-" * 50)
+    print("SIMULATION COMPLETE")
+    print("-" * 50)
+
+if __name__ == "__main__":
+    simulate_emergence()
+```
+
+### Simulation Output
+
+Running the script produces the following output, demonstrating the emergent behaviors of the different specimens based on their unique heuristics and sensory inputs.
+
+```python
+"""
+--------------------------------------------------
+ΨQRH INSECT EMERGENCE SIMULATION
+--------------------------------------------------
+Specimens emerged:
+- Chrysopidae_PsiQRH (Heuristic: maximize_prey_capture_per_energy)
+- Tettigoniidae_PsiQRH (Heuristic: maximize_mating_minimize_predation)
+
+--------------------------------------------------
+
+TIME STEP 1
+
+--- Chrysopidae's Environment ---
+A strong prey signature is detected nearby!
+Chrysopidae perceives a prey score of: 0.55
+--> Chrysopidae's action: SEARCH
+
+--- Tettigoniidae's Environment ---
+Katydid hears: wind_rustling, feels: leaf_surface, sees: dappled_light
+--> Tettigoniidae's action: CRAWL
+
+TIME STEP 2
+
+--- Chrysopidae's Environment ---
+The environment is calm.
+Chrysopidae perceives a prey score of: 0.54
+--> Chrysopidae's action: SEARCH
+
+--- Tettigoniidae's Environment ---
+Katydid hears: mate_call, feels: leaf_surface, sees: dappled_light
+--> Tettigoniidae's action: RESPOND
+
+TIME STEP 3
+
+--- Chrysopidae's Environment ---
+A strong prey signature is detected nearby!
+Chrysopidae perceives a prey score of: 0.74
+--> Chrysopidae's action: SEARCH
+
+--- Tettigoniidae's Environment ---
+Katydid hears: wind_rustling, feels: leaf_surface, sees: dappled_light
+--> Tettigoniidae's action: CRAWL
+
+--------------------------------------------------
+SIMULATION COMPLETE
+--------------------------------------------------
+```
