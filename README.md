@@ -122,7 +122,7 @@ $$\Lambda_{24} = \{x \in \mathbb{R}^{24} : x \cdot x \in 2\mathbb{Z}, x \equiv (
 
 **Golay Code G₂₄:**
 
-$$G_{24} = \{c \in \mathbb{F}_2^{24} : H \cdot c^T = 0$$
+$$G_{24} = \{c \in \mathbb{F}_2^{24} : H \cdot c^T = 0\}$$
 
 Where H is the 12×24 parity-check matrix.
 
@@ -226,7 +226,7 @@ $$\Lambda_{24} = \{x \in \mathbb{R}^{24} : x \cdot x \in 2\mathbb{Z}, x \equiv (
 3. **Fault tolerance**: Automatic correction of small perturbations
 
 **Algebraic Structure:**
-$$G_{24} = \{c \in \mathbb{F}_2^{24} : H \cdot c^T = 0$$
+$$G_{24} = \{c \in \mathbb{F}_2^{24} : H \cdot c^T = 0\}$$
 Where **H** is the 12×24 parity-check matrix of the Golay code.
 
 ## 3. Proofs of Concept: From Fractals to Spectral Regularization
