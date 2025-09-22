@@ -252,4 +252,4 @@ The system demonstrates **genuine emergence** through GLS integration, validatin
 **Next Analysis**: Automated continuous monitoring active
 
 
-![ΨQRH Living Ecosystem with GLS Integration](images/GLS_Analysis_Report_Browser.png)
+![ΨQRH Living Ecosystem with GLS Integration](GLS_Analysis_Report_Browser.png)
