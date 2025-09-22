@@ -15,26 +15,73 @@ class AraneaeDNA:
     Represents the genetic code of a spider agent.
     This DNA is used to generate a specific QRHConfig for the agent's QRHLayer,
     making the layer's behavior an emergent property of the agent's genetics.
+    Enhanced with GLS (Generalized Light Spectrum) generation capabilities.
     """
     # Genetic sequence for the fractal signature (Iterated Function System coefficients)
-    ifs_coefficients: list = field(default_factory=lambda: 
+    ifs_coefficients: list = field(default_factory=lambda:
         [
             [random.uniform(0.4, 0.6), 0, 0, random.uniform(0.4, 0.6), random.uniform(0, 0.5), 0],
             [random.uniform(0.4, 0.6), 0, 0, random.uniform(0.4, 0.6), random.uniform(0.5, 1), random.uniform(0.3, 0.7)]
         ])
 
     # Genetic sequence for the 4D Unitary Rotation (6 angles)
-    rotation_angles: list = field(default_factory=lambda: 
+    rotation_angles: list = field(default_factory=lambda:
         [random.uniform(0, np.pi / 4) for _ in range(6)]) # Smaller initial rotations for stability
+
+    def calculate_gls_health_score(self) -> float:
+        """
+        Calculate health score based on GLS stability.
+        Saúde do agente baseada na estabilidade do GLS.
+        """
+        try:
+            # Generate GLS if not cached
+            if not hasattr(self, '_cached_gls') or self._cached_gls is None:
+                self._cached_gls = self.generate_gls()
+
+            # Import here to avoid circular imports
+            import sys
+            import os
+            sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+            from gls_equations import gls_stability_score
+            return gls_stability_score(self._cached_gls)
+
+        except Exception:
+            return 0.5  # Default moderate health
+
+    def get_dynamic_alpha(self, base_alpha: float = 1.5) -> float:
+        """
+        Get dynamic alpha parameter based on DNA complexity and GLS stability.
+        Mapeamento DNA → Alpha (complexidade do espectro).
+        """
+        try:
+            # Generate GLS for analysis
+            if not hasattr(self, '_cached_gls') or self._cached_gls is None:
+                self._cached_gls = self.generate_gls()
+
+            # Import here to avoid circular imports
+            import sys
+            import os
+            sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+            from gls_equations import enhanced_dna_to_alpha_mapping
+            alpha_tensor = enhanced_dna_to_alpha_mapping(self._cached_gls, base_alpha)
+
+            return float(alpha_tensor.item())
+
+        except Exception:
+            # Fallback to basic calculation
+            fractal_dim = self._calculate_fractal_dimension()
+            normalized_dim = (fractal_dim - 2.0) / 2.0
+            alpha = base_alpha * (1.0 + 0.8 * normalized_dim)
+            return max(0.1, min(3.0, alpha))
 
     def create_config(self, embed_dim: int, device: str) -> QRHConfig:
         """
+        Enhanced config creation with GLS-based alpha mapping.
         Translates this DNA into a QRHConfig object for the QRHLayer.
         This is the bridge between the agent's genetics and its processing physics.
         """
-        # 1. Derive alpha from the fractal dimension
-        fractal_dimension = self._calculate_fractal_dimension()
-        alpha = self._map_dimension_to_alpha(fractal_dimension)
+        # 1. Derive alpha from GLS complexity (enhanced mapping)
+        alpha = self.get_dynamic_alpha(base_alpha=1.5)
 
         # 2. Unpack the rotation angles
         theta_l, omega_l, phi_l, theta_r, omega_r, phi_r = self.rotation_angles
@@ -100,3 +147,51 @@ class AraneaeDNA:
         for i in range(len(self.rotation_angles)):
             if random.random() < mutation_rate:
                 self.rotation_angles[i] += random.uniform(-mutation_strength * np.pi, mutation_strength * np.pi)
+
+    def generate_gls(self):
+        """
+        Creates the GLS (Generalized Light Spectrum) visual layer from DNA using the enhanced FractalGenerator.
+        This is the core innovation that makes each specimen visually distinct and preserves DNA integrity.
+        """
+        from .base_specimen import FractalGenerator
+
+        # Create 3D fractal generator with DNA signature
+        fractal = FractalGenerator(dim=3)
+
+        # Create DNA signature for integrity preservation
+        dna_signature = (
+            tuple(tuple(coeff) for coeff in self.ifs_coefficients),
+            tuple(self.rotation_angles)
+        )
+        fractal.set_dna_signature(dna_signature)
+
+        # Convert 2D IFS coefficients to 3D for enhanced visual spectrum
+        for i, coeffs_2d in enumerate(self.ifs_coefficients):
+            # Extend 2D transform to 3D by adding rotation angles
+            # 2D: [a, b, c, d, e, f] -> 3D affine transform matrix + translation
+            a, b, c, d, e, f = coeffs_2d
+
+            # Use different rotation angles for each transform if available
+            rotation_influence = self.rotation_angles[i % len(self.rotation_angles)] if self.rotation_angles else 0.1
+
+            # Additional rotation angles for 3D enhancement
+            rotation_y = self.rotation_angles[(i + 1) % len(self.rotation_angles)] if len(self.rotation_angles) > 1 else 0.05
+            rotation_z = self.rotation_angles[(i + 2) % len(self.rotation_angles)] if len(self.rotation_angles) > 2 else 0.02
+
+            # Create enhanced 3D transformation: 9 matrix elements + 3 translation elements
+            coeffs_3d = [
+                a * np.cos(rotation_influence), b * np.sin(rotation_y), rotation_z * 0.1,  # First row
+                c * np.sin(rotation_influence), d * np.cos(rotation_y), rotation_z * 0.05, # Second row
+                rotation_influence * 0.1, rotation_y * 0.05, np.cos(rotation_z) * 0.5,    # Third row (3D rotation)
+                e, f, rotation_z * 0.2        # Translation vector with Z component
+            ]
+
+            fractal.add_transform(coeffs_3d)
+
+        # Generate GLS spectrum with DNA integrity preservation
+        gls_layer = fractal.generate_gls_spectrum(
+            n_points=5000,
+            preserve_dna_integrity=True
+        )
+
+        return gls_layer

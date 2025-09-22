@@ -10,12 +10,12 @@ from .communication import PadilhaWave
 class Araneae_PsiQRH(PsiQRHBase):
     """
     An agent whose behavior and processing capabilities emerge from its DNA.
-    The DNA defines the configuration of its personal QRHLayer.
+    The DNA defines the configuration of its personal QRHLayer and generates a unique GLS visual spectrum.
     """
     def __init__(self, dna: AraneaeDNA, maturity_age: int = 5, device: str = 'cpu'):
-        super().__init__()
+        # Initialize base class with DNA to generate GLS automatically
+        super().__init__(dna=dna)
         self.heuristic = "survive_and_reproduce"
-        self.dna = dna
         self.device = device
 
         # Create the agent's personal QRHLayer from its DNA

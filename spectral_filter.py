@@ -38,7 +38,9 @@ class SpectralFilter(nn.Module):
 
             # More robust normalization for multi-dimensional tensors
             log_k_mean = log_k.mean(dim=-1, keepdim=True)
-            log_k_std = log_k.std(dim=-1, keepdim=True) + self.epsilon
+            log_k_std = log_k.std(dim=-1, keepdim=True, correction=0) + self.epsilon
+            # Ensure std is not zero to avoid division issues
+            log_k_std = torch.clamp(log_k_std, min=self.epsilon)
             log_k_normalized = (log_k - log_k_mean) / log_k_std
 
             # Use GELU for stable smoothing (phase component)

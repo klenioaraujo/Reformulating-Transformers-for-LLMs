@@ -1,4 +1,3 @@
-
 import random
 import numpy as np
 from models.insect_specimens.dna import AraneaeDNA
@@ -61,7 +60,7 @@ def run_emergent_simulation():
                 print(f"*** Reproduction Occurs! Offspring from {id(parent1)} and {id(parent2)} ***")
                 child = Araneae_PsiQRH.reproduce(parent1, parent2)
                 newly_born.append(child)
-        
+
         if newly_born:
             print(f"---> {len(newly_born)} new agent(s) born! Population growing. <---")
             population.extend(newly_born)

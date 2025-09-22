@@ -30,3 +30,8 @@ class ApisMellifera_PsiQRH(PsiQRHBase):
         Perception-action cycle for the Honeybee.
         """
         raise NotImplementedError("Implement the perception-action cycle for Apis mellifera.")
+
+
+def create_apis_specimen():
+    """Factory function to create an Apis specimen"""
+    return ApisMellifera_PsiQRH()

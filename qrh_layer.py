@@ -302,10 +302,13 @@ class QRHLayer(nn.Module):
         Top-level forward pass with device-aware Automatic Mixed Precision (AMP).
         Uses bfloat16 on compatible devices (CUDA, MPS) and float32 on CPU.
         """
-        # Choose dtype for autocast: bfloat16 for performance on GPU/MPS, float32 for stability on CPU
-        dtype = torch.bfloat16 if x.device.type != 'cpu' and torch.cuda.is_bf16_supported() else torch.float32
-        
-        with torch.autocast(device_type=x.device.type, dtype=dtype):
+        # Only use autocast on GPU devices that support it
+        if x.device.type != 'cpu' and torch.cuda.is_bf16_supported():
+            dtype = torch.bfloat16
+            with torch.autocast(device_type=x.device.type, dtype=dtype):
+                return self._forward_impl(x)
+        else:
+            # Run directly without autocast on CPU to avoid warnings
             return self._forward_impl(x)
 
     def check_health(self, x: torch.Tensor) -> dict:
