@@ -1,0 +1,108 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+gls_env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+logs/
+comprehensive_integration_test.log
+fractal_integration.log
+robust_validation.log
+
+# Temporary files
+*.tmp
+*.temp
+tmp/
+temp/
+
+# Large datasets (if any)
+*.tar.gz
+*.zip
+*.rar
+
+# Model checkpoints and weights
+*.pth
+*.pt
+*.ckpt
+*.h5
+
+# Jupyter Notebooks checkpoints
+.ipynb_checkpoints/
+
+# PyTorch cache
+.torch/
+
+# Output directories que podem ser grandes
+reports/*.pdf
+reports/*.png
+images/*.png
+visualizations/
+
+# Arquivos específicos do projeto que não são necessários no container
+article.tex
+arxiv_submission/
+rascunhos/
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# README em outras línguas (manter apenas o principal)
+README_*.md
+
+# Arquivos de configuração local
+.env
+.env.local
+.env.*.local
+
+# Cache do sistema
+.cache/

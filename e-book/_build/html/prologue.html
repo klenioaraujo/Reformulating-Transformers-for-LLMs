@@ -1,0 +1,601 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Prologue: Py, the Rainmaker, and the Scent of a Centipede &#8212; Reformulating Transformers: The ΨQRH Framework</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="_static/togglebutton.css?v=13237357" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css?v=6644e6bb" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-thebe.css?v=4fa983c6" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="_static/togglebutton.js?v=4a39c7ea"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="_static/design-tabs.js?v=f930bc37"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script async="async" src="_static/sphinx-thebe.js?v=c100c467"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'prologue';</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Foreword: The Genesis of ΨQRH" href="foreword.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="#">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">Reformulating Transformers: The ΨQRH Framework</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1 current active">
+                <a class="reference internal" href="#">
+                    Prologue: Py, the Rainmaker, and the Scent of a Centipede
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Foreword</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="foreword.html">Foreword: The Genesis of ΨQRH</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Introduction</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction: A New Way of Seeing</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Part 1 - The Theoretical Framework</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="theory/01_problem_with_transformers.html">The Problem with Transformers: A Tale of Puppets and Spiders</a></li>
+<li class="toctree-l1"><a class="reference internal" href="theory/02_plastic_brain.html">The Plastic Brain: Architectural Flaws of Modern LLMs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="theory/03_ecology_of_computation.html">The Plastic Brain: The Ecology of Computation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="theory/02_qrh_framework.html">The ΨQRH Framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="theory/03_advanced_concepts.html">Advanced Concepts: Stability and Adaptivity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="theory/04_padilha_wave_equation.html">The Padilha Wave Equation: Life from Light</a></li>
+<li class="toctree-l1"><a class="reference internal" href="theory/05_hybrid_future.html">The Hybrid Future: From a Binary to a Wave-Based World</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Part 2 - Implementation and Validation</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="implementation/05_pytorch_implementation.html">The PyTorch Implementation: A Model with Instincts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="implementation/06_validation_suite.html">The Validation Suite</a></li>
+<li class="toctree-l1"><a class="reference internal" href="implementation/07_quartz_light_system.html">The Quartz-Light System: Computing with Life Itself</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Part 3 - Applications and Emergence</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="applications/08_emergent_cognition.html">Emergent Cognition: A Digital Ecosystem</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Conclusion</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="conclusion.html">Conclusion: The Dawn of a New Computation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="appendix.html">Appendix</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/klenio/reformulating-transformers" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/klenio/reformulating-transformers/edit/main/e-book/prologue.md" target="_blank"
+   class="btn btn-sm btn-source-edit-button dropdown-item"
+   title="Suggest edit"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-pencil-alt"></i>
+  </span>
+<span class="btn__text-container">Suggest edit</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/klenio/reformulating-transformers/issues/new?title=Issue%20on%20page%20%2Fprologue.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/prologue.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Prologue: Py, the Rainmaker, and the Scent of a Centipede</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#act-1-the-two-worlds">Act 1: The Two Worlds</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#act-2-the-encounter-at-xingu">Act 2: The Encounter at Xingu</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#act-3-the-void-of-comprehension">Act 3: The Void of Comprehension</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#act-4-the-technological-adolescence">Act 4: The Technological Adolescence</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#act-5-the-purpose-of-qrh">Act 5: The Purpose of ΨQRH</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <p><img alt="Book Cover" src="images/%CE%A8QRH.png" /></p>
+<section class="tex2jax_ignore mathjax_ignore" id="prologue-py-the-rainmaker-and-the-scent-of-a-centipede">
+<h1>Prologue: Py, the Rainmaker, and the Scent of a Centipede<a class="headerlink" href="#prologue-py-the-rainmaker-and-the-scent-of-a-centipede" title="Link to this heading">#</a></h1>
+<section id="act-1-the-two-worlds">
+<h2>Act 1: The Two Worlds<a class="headerlink" href="#act-1-the-two-worlds" title="Link to this heading">#</a></h2>
+<p>My life began between two worlds. My childhood was spent in the heart of Brazil, in a region that felt like its own kind of Texas—a land of horses, rodeo festivals, and long, dusty rides in the beds of old pickup trucks. It was a world of instinct, of the earth, of dense forests and wide-open skies. But my mind was already turning towards another world: the clean, logical, and structured universe of programming.</p>
+<p>In that first world, knowledge was a living thing. My grandfather, a man of the earth, did not consult a digital weather app. He looked to a worn-out almanac, a thin booklet with a lunar calendar, a relic from a time long past. With it, he could predict the rain and the sun with a probability that often felt like certainty. The animals around my home shared this intuition. On the morning of a sunny day, the birds would erupt in a vibrant chorus. If the sky was to be overcast, they remained silent. My dog, a fat and happy naturalist who ate every fruit in the yard, knew the rain was coming long before I did. On days with a storm on the horizon, she would retreat to her house without a second thought. On clear days, no amount of calling could convince her.</p>
+<p>This was a kind of knowledge that has since gone extinct in most of us. We, the generations of the computer and of instant information, are different. We have outsourced our senses to technology. We have gained the world but lost a part of ourselves.</p>
+</section>
+<section id="act-2-the-encounter-at-xingu">
+<h2>Act 2: The Encounter at Xingu<a class="headerlink" href="#act-2-the-encounter-at-xingu" title="Link to this heading">#</a></h2>
+<p>This tension between worlds came to a head one day near the Xingu River. A drought had scorched the land for days. I was a boy, planting lettuce to sell at the local market to help my family. The ground was cracked, the young leaves wilting. An old indigenous man approached me. “It is very hot today,” he said, and asked for a glass of water.</p>
+<p>Water was rationed. My family was struggling to irrigate our small farm. Yet, I gave him a glass without hesitation, and even shared with him a famous Guaraná soda I had. He was surprised. “You have no water, and yet you are giving me water?” he asked. I told him about our dying lettuces and the lack of rain. He listened patiently.</p>
+<p>Then, he did something I will never forget. He produced a large snake, beautifully painted with red and black markings. He held it calmly, stroking its head, and asked if I wanted to hold it. I was terrified and refused. He smiled, put the snake away, and took out a simple instrument: a curved stick, a single cord, and two dried coconuts. A berimbau. He began to play, a rhythmic, hypnotic sound, and he sang a simple, repetitive chant: “py… py… py… hei.”</p>
+<p>When he finished, he looked at me. “My little one,” he said, “he who plants always reaps. You are a great person. You must study. You will do something important, and you will remember this story. It will be very important.” He then gave me a piece of advice. “You live in a white house. Do not be afraid of the animals. Show them passion, love. This is the only thing you should carry. We call this ‘Py’.”</p>
+<p>He stopped speaking. And in the silence, a drop of rain hit the dusty ground. Then another. Within minutes, a downpour had begun. He asked to see the garden my mother and I had planted. When we arrived, everything, even the most recent seedlings, stood tall, lush, and vibrant from the rain. It was as if they had grown days in a matter of minutes.</p>
+</section>
+<section id="act-3-the-void-of-comprehension">
+<h2>Act 3: The Void of Comprehension<a class="headerlink" href="#act-3-the-void-of-comprehension" title="Link to this heading">#</a></h2>
+<p>I am not a religious man, nor am I particularly spiritual. But I know that this event changed me. It presented me with a reality that my logical mind could not parse. It was a void in my understanding—or, depending on the perspective, a fullness of a science I did not comprehend.</p>
+<p>Our modern world is full of these voids. The deep, seemingly telepathic bond between a mother and her child, who can feel each other’s distress across great distances. The shared, silent dread that both I and the spiders in my basement felt at the unseen approach of a centipede. Even the strange phenomenon of why some people who despise cockroaches can smell their presence, while others cannot.</p>
+<p>These are not supernatural events. They are, perhaps, simply nuances of a science based on principles we have forgotten—a science of light, of waves, of vibrations. A science that the animals, my grandfather, and the old man in Xingu understood instinctively.</p>
+</section>
+<section id="act-4-the-technological-adolescence">
+<h2>Act 4: The Technological Adolescence<a class="headerlink" href="#act-4-the-technological-adolescence" title="Link to this heading">#</a></h2>
+<p>We, as a civilization, are now in our technological adolescence. We have built powerful tools, vast artificial systems, but we have the maturity of teenagers. We are obsessed with the power of our creations but have little wisdom in how to integrate them naturally into our world. We have scaled production, but we have lost our connection to the source.</p>
+<p>This brings us to the current generation of Artificial Intelligence. If AI continues on its present path—artificial, brute-force, disconnected from the physical and natural principles of information—it risks becoming profoundly uninteresting. The next generation will not be inspired by it. It will be a tool, like the pre-screenshot internet was to our elders: useful for some tasks, but not a core part of their being, not a natural extension of their world.</p>
+</section>
+<section id="act-5-the-purpose-of-qrh">
+<h2>Act 5: The Purpose of ΨQRH<a class="headerlink" href="#act-5-the-purpose-of-qrh" title="Link to this heading">#</a></h2>
+<p>This entire journey leads us to the purpose of the ΨQRH framework. It is an attempt to build technology <em>with</em> “Py”. It is an architecture born from a respect for the unexplained voids, from the belief that the universe operates on principles more elegant than brute-force binary logic.</p>
+<p>ΨQRH is not a technology that distances us from the future, nor does it leave us trapped in the present. It is a bridge. It is an attempt to listen to the “vibrations” in the data, to honor the wave-like nature of information, and to connect the lost, instinctual knowledge of our past with the technological world we must build for our future.</p>
+<p>It is a step towards growing up, towards becoming adults in our relationship with technology, and learning to build in a way that is not just powerful, but also wise.</p>
+</section>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
+</section>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "klenio/reformulating-transformers",
+            ref: "main",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            name: "python3",
+            path: "./."
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="right-next"
+       href="foreword.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Foreword: The Genesis of ΨQRH</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#act-1-the-two-worlds">Act 1: The Two Worlds</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#act-2-the-encounter-at-xingu">Act 2: The Encounter at Xingu</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#act-3-the-void-of-comprehension">Act 3: The Void of Comprehension</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#act-4-the-technological-adolescence">Act 4: The Technological Adolescence</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#act-5-the-purpose-of-qrh">Act 5: The Purpose of ΨQRH</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Klenio Araujo Padilha
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

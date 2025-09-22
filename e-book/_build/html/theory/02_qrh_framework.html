@@ -1,0 +1,624 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>The ΨQRH Framework &#8212; Reformulating Transformers: The ΨQRH Framework</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css?v=13237357" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css?v=6644e6bb" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-thebe.css?v=4fa983c6" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../_static/togglebutton.js?v=4a39c7ea"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script async="async" src="../_static/sphinx-thebe.js?v=c100c467"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'theory/02_qrh_framework';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Advanced Concepts: Stability and Adaptivity" href="03_advanced_concepts.html" />
+    <link rel="prev" title="The Plastic Brain: The Ecology of Computation" href="03_ecology_of_computation.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../prologue.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">Reformulating Transformers: The ΨQRH Framework</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../prologue.html">
+                    Prologue: Py, the Rainmaker, and the Scent of a Centipede
+                </a>
+            </li>
+        </ul>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Foreword</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../foreword.html">Foreword: The Genesis of ΨQRH</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Introduction</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Part 1 - The Theoretical Framework</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="01_problem_with_transformers.html">The Problem with Transformers: A Tale of Puppets and Spiders</a></li>
+<li class="toctree-l1"><a class="reference internal" href="02_plastic_brain.html">The Plastic Brain: Architectural Flaws of Modern LLMs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="03_ecology_of_computation.html">The Plastic Brain: The Ecology of Computation</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">The ΨQRH Framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="03_advanced_concepts.html">Advanced Concepts: Stability and Adaptivity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="04_padilha_wave_equation.html">The Padilha Wave Equation: Life from Light</a></li>
+<li class="toctree-l1"><a class="reference internal" href="05_hybrid_future.html">The Hybrid Future: From a Binary to a Wave-Based World</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Part 2 - Implementation and Validation</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../implementation/05_pytorch_implementation.html">The PyTorch Implementation: A Model with Instincts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../implementation/06_validation_suite.html">The Validation Suite</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../implementation/07_quartz_light_system.html">The Quartz-Light System: Computing with Life Itself</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Part 3 - Applications and Emergence</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../applications/08_emergent_cognition.html">Emergent Cognition: A Digital Ecosystem</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Conclusion</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../conclusion.html">Conclusion: The Dawn of a New Computation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../appendix.html">Appendix</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/klenio/reformulating-transformers" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/klenio/reformulating-transformers/edit/main/e-book/theory/02_qrh_framework.md" target="_blank"
+   class="btn btn-sm btn-source-edit-button dropdown-item"
+   title="Suggest edit"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-pencil-alt"></i>
+  </span>
+<span class="btn__text-container">Suggest edit</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/klenio/reformulating-transformers/issues/new?title=Issue%20on%20page%20%2Ftheory/02_qrh_framework.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/theory/02_qrh_framework.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>The ΨQRH Framework</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-mathematics-of-quaternions">The Mathematics of Quaternions</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#quaternion-multiplication-hamilton-product">Quaternion Multiplication (Hamilton Product)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#unit-quaternions-for-rotation">Unit Quaternions for Rotation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#complete-4d-unitary-transformation">Complete 4D Unitary Transformation</a></li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="the-qrh-framework">
+<h1>The ΨQRH Framework<a class="headerlink" href="#the-qrh-framework" title="Link to this heading">#</a></h1>
+<p>The fundamental operation of the layer is defined by the equation:
+<strong>Ψ_QRH = R · F⁻¹ { F(k) · F { Ψ } }</strong></p>
+<p>This might look abstract, but its code implementation is straightforward. Here’s what each part does, translated into PyTorch:</p>
+<ul>
+<li><p><strong>Ψ (Input State)</strong>: This is your token embedding, but projected into a quaternion space. Instead of a vector of size d_model, it’s now a vector of size 4 * embed_dim, representing the four components (w, x, y, z) of embed_dim quaternions.</p></li>
+<li><p><strong>F { Ψ } (Fourier Transform)</strong>: <code class="docutils literal notranslate"><span class="pre">Ψ_fft</span> <span class="pre">=</span> <span class="pre">torch.fft.fft(Ψ_complex,</span> <span class="pre">dim=1)</span></code>. This shifts the representation of the sequence from the time domain to the frequency domain. This is the key to achieving O(n log n) complexity.</p></li>
+<li><p><strong>F(k) (The Spectral Filter): The Heart of ΨQRH</strong></p>
+<p>This is the “secret sauce” of the entire framework, the component that replaces the brute-force quadratic complexity of self-attention. It is defined as:</p>
+<p><strong>F(k) = exp(iα · arctan(ln(|k|)))</strong></p>
+<p>At first glance, the equation seems dense. But when we deconstruct it, we reveal a process of profound elegance, inspired by physics and signal processing. It is not a sledgehammer that crushes noise; it is a precision instrument that gently guides the signal.</p>
+<p>Let’s walk through each component to understand its purpose:</p>
+<ol class="arabic simple">
+<li><p><strong>The Domain Shift (<code class="docutils literal notranslate"><span class="pre">F</span></code>)</strong>: First, we apply a Fourier Transform to the input <code class="docutils literal notranslate"><span class="pre">Ψ</span></code>. This is like taking a complex sound wave (our sequence of tokens) and breaking it down into its constituent pure notes (its frequencies). This allows us to analyze the sequence not based on the position of words, but on the patterns and rhythms they form.</p></li>
+<li><p><strong>The Frequency (<code class="docutils literal notranslate"><span class="pre">|k|</span></code>)</strong>: In this new domain, <code class="docutils literal notranslate"><span class="pre">|k|</span></code> represents the frequency of a “note”.</p>
+<ul class="simple">
+<li><p><strong>Low <code class="docutils literal notranslate"><span class="pre">|k|</span></code></strong>: These are the low frequencies, the broad strokes of the sequence. They represent the core themes, the underlying context, the “bassline” of the meaning.</p></li>
+<li><p><strong>High <code class="docutils literal notranslate"><span class="pre">|k|</span></code></strong>: These are the high frequencies, the fine details. They can be important, but they are also where numerical errors and irrelevant noise reside.</p></li>
+</ul>
+</li>
+<li><p><strong>The Complexity Compressor (<code class="docutils literal notranslate"><span class="pre">ln(|k|)</span></code>):</strong> This is our first crucial insight. Instead of treating all frequencies equally, we apply a natural logarithm. The logarithm has a key property: it grows very quickly for small values but very slowly for large values.</p>
+<ul class="simple">
+<li><p><strong>Effect</strong>: It preserves the rich distinctions between the important low frequencies but compresses the long tail of high frequencies. It essentially says, “The difference between a very low frequency and a medium frequency is important, but the difference between a very, very high frequency and an extremely high frequency is not.” It focuses our attention on the signal that matters.</p></li>
+</ul>
+</li>
+<li><p><strong>The Stabilizer (<code class="docutils literal notranslate"><span class="pre">arctan(...)</span></code>)</strong>: The logarithm, while useful, can produce an infinite range of values. The <code class="docutils literal notranslate"><span class="pre">arctan</span></code> function is our stabilizer. It takes any input, no matter how large, and smoothly “squashes” it into a finite and well-behaved range (from -π/2 to +π/2). This ensures that no single frequency, no matter how extreme, can destabilize the system. It guarantees stability and graceful behavior.</p></li>
+<li><p><strong>The Tuning Knob (<code class="docutils literal notranslate"><span class="pre">α</span></code>)</strong>: The <code class="docutils literal notranslate"><span class="pre">alpha</span></code> parameter is a simple multiplier, but it acts as a “tuning knob” for the entire filter. It controls the <em>intensity</em> of the filtering effect. A larger <code class="docutils literal notranslate"><span class="pre">alpha</span></code> will create a stronger separation between how low and high frequencies are treated. Crucially, this is the parameter that is dynamically linked to the <strong>fractal dimension</strong> of the data, making the filter adaptive to the complexity of the input it is processing.</p></li>
+<li><p><strong>The Holographic Interference (<code class="docutils literal notranslate"><span class="pre">exp(i</span> <span class="pre">*</span> <span class="pre">...)</span></code>):</strong> This is the most beautiful part of the process. Notice that the entire expression is inside <code class="docutils literal notranslate"><span class="pre">exp(i</span> <span class="pre">*</span> <span class="pre">...)</span></code>, which, by Euler’s formula, relates to cosines and sines. This means we are not crudely changing the <em>magnitude</em> (the volume) of the frequencies. We are only changing their <em>phase</em> (their relative timing).</p>
+<ul class="simple">
+<li><p><strong>The Result</strong>: By subtly shifting the phase of each frequency according to its importance, we set up a wave interference pattern. When we apply the Inverse Fourier Transform (<code class="docutils literal notranslate"><span class="pre">F⁻¹</span></code>) to return to the original domain, the noisy, high-frequency components (which received large phase shifts) interfere destructively with each other and cancel out. The important, low-frequency components interfere constructively, reinforcing the true signal.</p></li>
+</ul>
+</li>
+</ol>
+<p>This is the difference between a sledgehammer and a laser. A simple low-pass filter is a sledgehammer—it crudely chops off all high frequencies, potentially losing important details. The ΨQRH Spectral Filter is a laser-like instrument. It doesn’t destroy information. It uses the wave nature of the data itself to elegantly and precisely nullify the noise, allowing the true, coherent structure to emerge.</p>
+</li>
+<li><p><strong>F⁻¹ { … } (Inverse Fourier Transform)</strong>: <code class="docutils literal notranslate"><span class="pre">Ψ_ifft</span> <span class="pre">=</span> <span class="pre">torch.fft.ifft(Ψ_filtered,</span> <span class="pre">dim=1)</span></code>. Brings the filtered sequence back to the time domain.</p></li>
+<li><p><strong>R · (Quaternion Rotation)</strong>: <code class="docutils literal notranslate"><span class="pre">rotated</span> <span class="pre">=</span> <span class="pre">quaternion_multiply(R,</span> <span class="pre">Ψ_ifft)</span></code>. This is a learnable rotation in quaternion space. It’s a very efficient and powerful operation that allows the model to mix information between the four components non-commutatively.</p></li>
+</ul>
+<section id="the-mathematics-of-quaternions">
+<h2>The Mathematics of Quaternions<a class="headerlink" href="#the-mathematics-of-quaternions" title="Link to this heading">#</a></h2>
+<p>The power of the ΨQRH framework comes from its use of quaternion algebra, which extends complex numbers to a 4-dimensional space. This provides a compact and efficient way to represent and rotate states.</p>
+<section id="quaternion-multiplication-hamilton-product">
+<h3>Quaternion Multiplication (Hamilton Product)<a class="headerlink" href="#quaternion-multiplication-hamilton-product" title="Link to this heading">#</a></h3>
+<p>Unlike standard multiplication, quaternion multiplication is non-commutative (i.e., <code class="docutils literal notranslate"><span class="pre">q1</span> <span class="pre">*</span> <span class="pre">q2</span> <span class="pre">≠</span> <span class="pre">q2</span> <span class="pre">*</span> <span class="pre">q1</span></code>). This property is key to the rich, non-linear dynamics of the QRH layer.</p>
+<p><span class="math notranslate nohighlight">\(q₁ * q₂ = (w₁w₂ - x₁x₂ - y₁y₂ - z₁z₂) + (w₁x₂ + x₁w₂ + y₁z₂ - z₁y₂)i + (w₁y₂ - x₁z₂ + y₁w₂ + z₁x₂)j + (w₁z₂ + x₁y₂ - y₁x₂ + z₁w₂)k\)</span></p>
+</section>
+<section id="unit-quaternions-for-rotation">
+<h3>Unit Quaternions for Rotation<a class="headerlink" href="#unit-quaternions-for-rotation" title="Link to this heading">#</a></h3>
+<p>Rotations in the framework are represented by unit quaternions, which are defined by an angle of rotation <code class="docutils literal notranslate"><span class="pre">θ</span></code> and an axis of rotation <code class="docutils literal notranslate"><span class="pre">(ω,</span> <span class="pre">φ)</span></code>.</p>
+<p><span class="math notranslate nohighlight">\(q = \cos(\theta/2) + \sin(\theta/2)[\cos(\omega)i + \sin(\omega)\cos(\phi)j + \sin(\omega)\sin(\phi)k]\)</span></p>
+</section>
+<section id="complete-4d-unitary-transformation">
+<h3>Complete 4D Unitary Transformation<a class="headerlink" href="#complete-4d-unitary-transformation" title="Link to this heading">#</a></h3>
+<p>The full rotation in 4D space, which corresponds to the SO(4) group, is achieved by multiplying the input quaternion <code class="docutils literal notranslate"><span class="pre">Ψ</span></code> by two different unit quaternions, <code class="docutils literal notranslate"><span class="pre">q_left</span></code> and <code class="docutils literal notranslate"><span class="pre">q_right</span></code>. This is a highly efficient way to perform complex rotations.</p>
+<p><span class="math notranslate nohighlight">\(\Psi' = q_{left} * \Psi * q_{right}^\dagger\)</span></p>
+<p>Where <code class="docutils literal notranslate"><span class="pre">†</span></code> denotes the quaternion conjugate. This operation is the core of the geometric evolution within the QRH layer.</p>
+</section>
+</section>
+</section>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "klenio/reformulating-transformers",
+            ref: "main",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            name: "python3",
+            path: "./theory"
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="03_ecology_of_computation.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">The Plastic Brain: The Ecology of Computation</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="03_advanced_concepts.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Advanced Concepts: Stability and Adaptivity</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-mathematics-of-quaternions">The Mathematics of Quaternions</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#quaternion-multiplication-hamilton-product">Quaternion Multiplication (Hamilton Product)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#unit-quaternions-for-rotation">Unit Quaternions for Rotation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#complete-4d-unitary-transformation">Complete 4D Unitary Transformation</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Klenio Araujo Padilha
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

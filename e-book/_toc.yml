@@ -1,0 +1,30 @@
+format: jb-book
+root: prologue
+parts:
+  - caption: Foreword
+    chapters:
+      - file: foreword
+  - caption: Introduction
+    chapters:
+      - file: intro
+  - caption: Part 1 - The Theoretical Framework
+    chapters:
+      - file: theory/01_problem_with_transformers
+      - file: theory/02_plastic_brain
+      - file: theory/03_ecology_of_computation
+      - file: theory/02_qrh_framework
+      - file: theory/03_advanced_concepts
+      - file: theory/04_padilha_wave_equation
+      - file: theory/05_hybrid_future
+  - caption: Part 2 - Implementation and Validation
+    chapters:
+      - file: implementation/05_pytorch_implementation
+      - file: implementation/06_validation_suite
+      - file: implementation/07_quartz_light_system
+  - caption: Part 3 - Applications and Emergence
+    chapters:
+      - file: applications/08_emergent_cognition
+  - caption: Conclusion
+    chapters:
+      - file: conclusion
+      - file: appendix

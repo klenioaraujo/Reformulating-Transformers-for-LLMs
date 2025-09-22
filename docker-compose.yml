@@ -1,0 +1,120 @@
+version: '3.8'
+
+services:
+  # Serviço principal do ΨQRH Framework
+  psiqrh:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: psiqrh-transformer
+    volumes:
+      # Montar código fonte para desenvolvimento
+      - .:/app
+      # Persistir modelos e resultados
+      - psiqrh-models:/app/models
+      - psiqrh-logs:/app/logs
+      - psiqrh-images:/app/images
+      - psiqrh-reports:/app/reports
+    environment:
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+      - TORCH_HOME=/app/.torch
+    ports:
+      - "8080:8080"  # Para visualizações web
+      - "8888:8888"  # Para Jupyter (se necessário)
+    stdin_open: true
+    tty: true
+    command: /bin/bash
+
+  # Serviço para testes e validação
+  psiqrh-test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: psiqrh-test
+    volumes:
+      - .:/app
+      - psiqrh-test-results:/app/test-results
+    environment:
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+    command: >
+      bash -c "
+        echo '=== ΨQRH Framework Test Suite ==='
+        python simple_validation_test.py &&
+        python comprehensive_integration_test.py &&
+        python robust_validation_test.py &&
+        echo '=== All tests completed ==='
+      "
+    depends_on:
+      - psiqrh
+
+  # Serviço para demonstrações
+  psiqrh-demo:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: psiqrh-demo
+    volumes:
+      - .:/app
+      - psiqrh-demo-output:/app/demo-output
+    environment:
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+    ports:
+      - "8090:8080"
+    command: >
+      bash -c "
+        echo '=== ΨQRH Framework Demonstrations ==='
+        python fractal_pytorch_integration.py &&
+        python emergence_simulation.py &&
+        python show_habitat_demo.py &&
+        echo '=== Demonstrations completed ==='
+      "
+    depends_on:
+      - psiqrh
+
+  # Serviço para visualizações interativas
+  psiqrh-viz:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: psiqrh-visualization
+    volumes:
+      - .:/app
+      - psiqrh-viz-output:/app/visualizations
+    environment:
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+    ports:
+      - "8091:8080"
+    command: >
+      bash -c "
+        echo '=== Starting ΨQRH Live Ecosystem Server ==='
+        python live_ecosystem_server.py
+      "
+    depends_on:
+      - psiqrh
+
+# Volumes nomeados para persistência de dados
+volumes:
+  psiqrh-models:
+    driver: local
+  psiqrh-logs:
+    driver: local
+  psiqrh-images:
+    driver: local
+  psiqrh-reports:
+    driver: local
+  psiqrh-test-results:
+    driver: local
+  psiqrh-demo-output:
+    driver: local
+  psiqrh-viz-output:
+    driver: local
+
+# Rede personalizada para comunicação entre serviços
+networks:
+  default:
+    name: psiqrh-network
+    driver: bridge

@@ -18,6 +18,21 @@ We propose a novel transformer architecture for Large Language Models (LLMs) tha
 
 **Keywords**: transformer architecture, quaternion algebra, spectral regularization, Leech lattice, LLM efficiency, numerical validation
 
+## Table of Contents
+
+1. [Introduction](#1-introduction)
+2. [Installation and Quick Start](#2-installation-and-quick-start)
+3. [Mathematical Framework](#3-mathematical-framework)
+4. [Proofs of Concept: From Fractals to Spectral Regularization](#4-proofs-of-concept-from-fractals-to-spectral-regularization)
+5. [Implementation and Validation](#5-implementation-and-validation)
+6. [Discussion](#6-discussion)
+7. [Conclusion](#7-conclusion)
+8. [License](#8-license)
+9. [Device Compatibility and Testing](#9-device-compatibility-and-testing)
+10. [Hybrid Fractal-PyTorch Integration Results](#10-hybrid-fractal-pytorch-integration-results)
+11. [Docker Deployment: Containerized Research Environment](#11-docker-deployment-containerized-research-environment)
+12. [Emergent Spider Cognition: ΨQRH Genetic Algorithm with Chaos-Driven Visualization](#12-emergent-spider-cognition-ψqrh-genetic-algorithm-with-chaos-driven-visualization)
+
 ## 1. Introduction
 
 Transformer-based models have revolutionized natural language processing but face fundamental challenges in computational complexity ($O(n^2)$ for attention), memory constraints, and lack of physical interpretability. While recent advances like linear attention and flash attention mechanisms have addressed some limitations, they remain rooted in conventional digital computation paradigms.
@@ -36,13 +51,97 @@ Unlike speculative proposals, this work provides:
 - Empirical validation on language modeling tasks
 - Detailed complexity analysis
 
-## 2. Mathematical Framework
+## 2. Installation and Quick Start
+
+### 2.1 Prerequisites
+
+- Docker Engine 20.10+
+- Docker Compose 1.29+
+- Make (GNU Make)
+- 8GB RAM minimum (16GB recommended)
+- 10GB disk space
+
+### 2.2 Quick Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/your-username/reformulating-transformers.git
+cd reformulating-transformers
+
+# Complete setup (build Docker image and start services)
+make setup
+
+# Verify installation with test suite
+make test
+```
+
+**Expected output**: `All tests passed!` with 100% success rate.
+
+### 2.3 First Steps
+
+```bash
+# Interactive development environment
+make shell
+
+# Run all demonstrations
+make demo
+
+# View available commands
+make help
+
+# Access generated results
+make results
+```
+
+### 2.4 Alternative Installation Methods
+
+#### Option A: Manual Docker Commands
+```bash
+# Build and start services
+docker-compose up --build
+
+# Access container
+docker-compose exec psiqrh bash
+```
+
+#### Option B: Local Python Installation
+```bash
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# venv\Scripts\activate   # Windows
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run validation
+python simple_validation_test.py
+```
+
+### 2.5 Validation
+
+After installation, verify the framework is working correctly:
+
+```bash
+# Quick validation (< 2 minutes)
+make test-simple
+
+# Complete validation suite (< 10 minutes)
+make test
+
+# Run demonstrations (< 5 minutes)
+make demo
+```
+
+For detailed installation instructions and troubleshooting, see [README.Docker.md](README.Docker.md) and [QUICKSTART.md](QUICKSTART.md).
+
+## 3. Mathematical Framework
 
 ### Core Mathematical Equations
 
 The ΨQRH framework is built upon rigorous mathematical foundations. Below are the key equations that define the system, formatted for GitHub display:
 
-#### 2.1 Quaternion Operations
+#### 3.1 Quaternion Operations
 
 **Quaternion Multiplication (Hamilton Product):**
 
@@ -52,7 +151,7 @@ $$q₁ * q₂ = (w₁w₂ - x₁x₂ - y₁y₂ - z₁z₂) + (w₁x₂ + x₁w�
 
 $$q = \cos(\theta/2) + \sin(\theta/2)[\cos(\omega)i + \sin(\omega)\cos(\phi)j + \sin(\omega)\sin(\phi)k]$$
 
-#### 2.2 4D Unitary Transformation
+#### 3.2 4D Unitary Transformation
 
 **Complete 4D Rotation (SO(4) Group):**
 
@@ -63,7 +162,7 @@ Where:
 - `†` denotes quaternion conjugate
 - SO(4) ≅ (SU(2) × SU(2))/Z₂
 
-#### 2.3 Spectral Filter Function
+#### 3.3 Spectral Filter Function
 
 **Logarithmic Phase Filter:**
 
@@ -78,7 +177,7 @@ Where:
 - `ε = 10⁻¹⁰` for numerical stability
 - `k` is the frequency domain variable
 
-#### 2.4 Core QRH Transform
+#### 3.4 Core QRH Transform
 
 **Complete QRH Evolution:**
 
@@ -89,7 +188,7 @@ Where:
 - `F(k)` is the spectral filter function
 - `R_left, R_right` are quaternion rotation operators
 
-#### 2.5 Padilha Wave Equation Integration
+#### 3.5 Padilha Wave Equation Integration
 
 **Laser Pulse Function with Quadratic Chirp:**
 
@@ -104,7 +203,7 @@ Where:
 - `λ` = Spatial position
 - `t` = Time
 
-#### 2.6 Fractal Dimension Relationships
+#### 3.6 Fractal Dimension Relationships
 
 **Box-Counting Dimension:**
 
@@ -121,7 +220,7 @@ $$\alpha(D) = \alpha_0\left(1 + \lambda\frac{D - D_{euclidean}}{D_{euclidean}}\r
 
 Bounded: α ∈ [0.1, 3.0]
 
-#### 2.7 Leech Lattice Error Correction
+#### 3.7 Leech Lattice Error Correction
 
 **Leech Lattice Definition:**
 
@@ -133,7 +232,7 @@ $$G_{24} = \{c \in \mathbb{F}_2^{24} : H \cdot c^T = 0\}$$
 
 Where H is the 12×24 parity-check matrix.
 
-#### 2.8 Gate Controller Receipts
+#### 3.8 Gate Controller Receipts
 
 **Orthogonality Error:**
 
@@ -147,7 +246,7 @@ $$R_{energy} = \frac{E_{in} - E_{out}}{E_{in} + \varepsilon}$$
 
 $$\theta_{drift} = \sqrt{\theta_L^2 + \omega_L^2 + \phi_L^2 + \theta_R^2 + \omega_R^2 + \phi_R^2}$$
 
-### 2.9 Theoretical Framework
+### 3.9 Theoretical Framework
 
 #### 2.9.1 Quaternionic Representation of Token Embeddings
 
@@ -236,7 +335,7 @@ $$\Lambda_{24} = \{x \in \mathbb{R}^{24} : x \cdot x \in 2\mathbb{Z}, x \equiv (
 $$G_{24} = \{c \in \mathbb{F}_2^{24} : H \cdot c^T = 0\}$$
 Where **H** is the 12×24 parity-check matrix of the Golay code.
 
-## 3. Proofs of Concept: From Fractals to Spectral Regularization
+## 4. Proofs of Concept: From Fractals to Spectral Regularization
 
 A key innovation of the ΨQRH framework is its ability to connect high-level structural properties, such as the fractal dimension of data, to low-level model parameters. This section provides empirical validation for the core concepts that underpin this connection.
 
@@ -335,7 +434,7 @@ $$\Phi(\lambda,t) = \omega t - k\lambda + \beta\lambda^2 = \omega t - \frac{2\pi
 - **Temporal detection**: t records the optical response
 - **Spectral analysis**: Fourier transform reveals fractal dimension
 
-## 4. Implementation and Validation
+## 5. Implementation and Validation
 
 ### 4.1 PyTorch Implementation
 
@@ -423,7 +522,7 @@ We conduct extensive ablation studies to validate design choices:
     - 3% improvement in training stability
     - 2× improvement in noise robustness
 
-## 5. Discussion
+## 6. Discussion
 
 ### 5.1 Efficiency Gains
 
@@ -481,11 +580,11 @@ Addressing these limitations is the primary focus of future work:
 -   **Robustness and Stability**: Conduct a thorough analysis of the numerical stability of the framework and explore its compatibility with quantization and other model compression techniques.
 -   **Community and Tooling**: Improve documentation, create tutorials, and work towards better integration with standard deep learning libraries and tools.
 
-## 6. Conclusion
+## 7. Conclusion
 
 We present a rigorously validated transformer reformulation based on the ΨQRH framework. Our approach demonstrates concrete improvements in efficiency while maintaining competitive performance on standard NLP benchmarks. The mathematical foundation provides interesting properties for physical implementation while avoiding speculative claims. We open-source our implementation to facilitate further research in this direction.
 
-## 7. License
+## 8. License
 
 This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
 
@@ -497,7 +596,7 @@ This project is licensed under the GNU General Public License v3.0 - see the [LI
 - Conway, J. H., & Sloane, N. J. A. (1999). *Sphere Packings, Lattices and Groups*. Springer.
 - Padilha, K. A. (2025). *Quaternionic Recursive Harmonic Wavefunction: A Spectrally Regularized Quantum Evolution Framework*. arXiv.
 
-## 8. Device Compatibility and Testing
+## 9. Device Compatibility and Testing
 
 ### 8.1 Device-Agnostic Architecture
 
@@ -549,7 +648,7 @@ pytest test_multi_device.py::TestMultiDevice::test_qrh_device_compatibility -v
 - **Consistent accuracy** across all device types
 - **Efficient memory usage** on resource-constrained devices
 
-## 9. Hybrid Fractal-PyTorch Integration Results
+## 10. Hybrid Fractal-PyTorch Integration Results
 
 ### 9.1 System Validation Summary
 
@@ -1294,11 +1393,276 @@ With 100% test success rate achieved, the framework is now ready for:
 
 *Last Updated: September 20, 2025 - Framework Status: EXCELLENT (100% Success Rate)*
 
-## 10. Emergent Spider Cognition: ΨQRH Genetic Algorithm with Chaos-Driven Visualization
+## 11. Docker Deployment: Containerized Research Environment
+
+To facilitate experimentation and result reproduction, the ΨQRH project is fully containerized using Docker with a comprehensive Makefile for unified management. This allows researchers to run the framework in any environment without worrying about dependencies or complex configurations.
+
+**Recommended approach**: Use the included Makefile which provides a unified interface for all Docker operations, testing, and demonstrations.
+
+### 11.1 Requirements
+
+- Docker Engine (version 20.10+)
+- Docker Compose (version 1.29+)
+- 8GB RAM minimum (16GB recommended)
+- Disk space: 10GB
+
+### 11.2 Quick Start
+
+```bash
+# Clone repository
+git clone https://github.com/your-username/reformulating-transformers.git
+cd reformulating-transformers
+
+# Build and run complete environment
+docker-compose up --build
+
+# Access interactive container
+docker-compose exec psiqrh bash
+```
+
+### 11.3 Available Services
+
+The docker-compose.yml provides several specialized services:
+
+#### Main Service (psiqrh)
+```bash
+# Interactive development environment
+docker-compose up psiqrh
+docker-compose exec psiqrh bash
+
+# Run specific scripts
+docker-compose exec psiqrh python fractal_pytorch_integration.py
+docker-compose exec psiqrh python emergence_simulation.py
+```
+
+#### Automated Test Suite (psiqrh-test)
+```bash
+# Run all validation tests
+docker-compose up psiqrh-test
+
+# Expected output:
+# === ΨQRH Framework Test Suite ===
+# Tests Run: 5/5 ✅
+# Success Rate: 100.0%
+# Overall Status: EXCELLENT
+```
+
+#### Demonstrations (psiqrh-demo)
+```bash
+# Run complete demonstrations
+docker-compose up psiqrh-demo
+
+# View results
+docker-compose exec psiqrh ls images/
+```
+
+#### Interactive Visualizations (psiqrh-viz)
+```bash
+# Start visualization server
+docker-compose up psiqrh-viz
+
+# Access at: http://localhost:8091
+```
+
+### 11.4 Useful Commands
+
+```bash
+# Build image only
+docker build -t psiqrh-transformer .
+
+# Run single container
+docker run -it --rm -v $(pwd):/app psiqrh-transformer bash
+
+# View logs
+docker-compose logs -f psiqrh
+
+# Clean volumes and containers
+docker-compose down -v
+docker system prune -a
+```
+
+### 11.5 Volume Structure
+
+Persistent data is organized in named volumes:
+
+```
+psiqrh-models/      # Trained models and checkpoints
+psiqrh-logs/        # Training and validation logs
+psiqrh-images/      # Generated visualizations and plots
+psiqrh-reports/     # Analysis reports
+psiqrh-test-results/# Test results
+```
+
+### 11.6 GPU Configuration
+
+To use NVIDIA GPUs inside the container:
+
+```yaml
+# docker-compose.gpu.yml
+version: '3.8'
+services:
+  psiqrh:
+    extends:
+      file: docker-compose.yml
+      service: psiqrh
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+```
+
+```bash
+# Run with GPU
+docker-compose -f docker-compose.yml -f docker-compose.gpu.yml up
+```
+
+### 11.7 Development with Docker
+
+For active development:
+
+```bash
+# Mount code as volume (already configured)
+docker-compose up psiqrh
+
+# In another terminal
+docker-compose exec psiqrh bash
+
+# Install additional dependencies (if needed)
+pip install new-dependency
+```
+
+### 11.8 Usage Examples
+
+#### Complete Validation
+```bash
+# Run complete validation suite
+docker-compose run --rm psiqrh python simple_validation_test.py
+docker-compose run --rm psiqrh python comprehensive_integration_test.py
+docker-compose run --rm psiqrh python robust_validation_test.py
+```
+
+#### Fractal Analysis
+```bash
+# Generate fractal dimension analysis
+docker-compose run --rm psiqrh python needle_fractal_dimension.py
+
+# View results
+docker-compose exec psiqrh ls images/needle_*.png
+```
+
+#### Emergence Simulation
+```bash
+# Run spider genetic simulation
+docker-compose run --rm psiqrh python emergence_simulation.py
+
+# Follow logs in real-time
+docker-compose logs -f psiqrh
+```
+
+### 11.9 Troubleshooting
+
+**Issue**: Container won't start
+```bash
+# Check logs
+docker-compose logs psiqrh
+
+# Rebuild image
+docker-compose build --no-cache psiqrh
+```
+
+**Issue**: File permissions
+```bash
+# Set correct permissions
+docker-compose exec psiqrh chown -R $(id -u):$(id -g) /app
+```
+
+**Issue**: Insufficient memory
+```bash
+# Increase Docker memory limit
+# Docker Desktop: Settings > Resources > Memory > 8GB+
+```
+
+### 11.10 CI/CD Integration
+
+For automated pipelines:
+
+```yaml
+# .github/workflows/docker-test.yml
+name: ΨQRH Docker Tests
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run Tests
+        run: |
+          docker-compose up --build psiqrh-test
+          docker-compose down
+```
+
+The Docker environment provides a robust and reproducible platform for experimenting with the ΨQRH framework, allowing researchers to focus on science rather than environment setup.
+
+### 11.11 Quick Start with Make (Recommended)
+
+The project includes a comprehensive Makefile for unified management:
+
+```bash
+# Complete setup (build and start)
+make setup
+
+# Run all tests
+make test
+
+# Interactive development shell
+make shell
+
+# Run specific demonstrations
+make fractal    # Fractal analysis
+make spider     # Evolution simulation
+make demo       # All demonstrations
+
+# Performance and validation
+make benchmark  # Performance benchmarks
+make validate-all  # Complete validation suite
+
+# Cleanup
+make clean      # Clean everything
+make reset      # Clean and rebuild
+
+# Show all available commands
+make help
+```
+
+### Alternative: Docker Scripts
+
+For those preferring scripts over make:
+
+```bash
+# Using the provided script
+./run_docker.sh build && ./run_docker.sh up
+./run_docker.sh test
+./run_docker.sh shell
+```
+
+**Key Benefits of Docker Deployment:**
+- ✅ **Zero Configuration**: No dependency management needed
+- ✅ **Reproducible Results**: Same environment across all machines
+- ✅ **Isolated Environment**: No conflicts with host system
+- ✅ **Easy Sharing**: Share exact research environment
+- ✅ **CI/CD Ready**: Automated testing and deployment
+- ✅ **Cross-Platform**: Works on Linux, macOS, Windows
+
+For detailed Docker instructions, see [README.Docker.md](README.Docker.md).
+
+## 12. Emergent Spider Cognition: ΨQRH Genetic Algorithm with Chaos-Driven Visualization
 
 This section demonstrates a revolutionary application of the ΨQRH framework: **emergent spider cognition through genetic algorithms**. Unlike traditional AI systems, these virtual spiders develop intelligence through evolution, with each spider's unique DNA directly controlling its neural processing capabilities.
 
-### 10.1 Framework Architecture
+### 12.1 Framework Architecture
 
 The system combines three core components:
 
@@ -1312,7 +1676,7 @@ Each spider agent (`Araneae_PsiQRH`) possesses:
 - **Health System**: Based on numerical stability of personal QRHLayer
 - **Mating Behavior**: Emergent from genetic compatibility analysis
 
-### 10.2 Chaos-Driven Visual Perspective
+### 12.2 Chaos-Driven Visual Perspective
 
 A unique innovation of this system is the **chaos-modulated visual perspective**. The environment's `chaos_factor` doesn't just affect agent behavior—it fundamentally alters how we perceive the computational space itself.
 
@@ -1330,7 +1694,7 @@ A unique innovation of this system is the **chaos-modulated visual perspective**
 4. **DNA Profile**: Scatter plot of spider population's genetic characteristics
 5. **Spectral Power Map**: Frequency domain analysis revealing fractal patterns
 
-### 10.3 DNA-to-Hardware Mapping
+### 12.3 DNA-to-Hardware Mapping
 
 The breakthrough innovation is the direct mapping from biological DNA to quantum hardware:
 
@@ -1348,7 +1712,7 @@ Processor State = α(D) × e^(i·θ₄D) × health × chaos_modulation
 Where: α(D) = α₀(1 + λ(D - D_euclidean)/D_euclidean)
 ```
 
-### 10.4 Genetic Algorithm Implementation
+### 12.4 Genetic Algorithm Implementation
 
 The core simulation (`emergence_simulation.py`) implements a complete genetic algorithm where spider cognition emerges through evolution:
 
@@ -1410,7 +1774,7 @@ def run_emergent_simulation():
 3. **Genetic Crossover**: Child DNA combines fractal and rotation genes from both parents
 4. **Adaptive Mutation**: Small random changes to DNA parameters ensure genetic diversity
 
-### 10.5 Actual Simulation Results
+### 12.5 Actual Simulation Results
 
 Running the complete genetic algorithm produces remarkable emergent behaviors. Here's actual output from a successful simulation:
 
@@ -1451,7 +1815,7 @@ Final population size: 8
   Sample 3: Alpha=1.003, Angles=[0.62, 0.6, 0.2, 0.29, 0.4, 0.02]
 ```
 
-### 10.6 Key Achievements & Implications
+### 12.6 Key Achievements & Implications
 
 #### Scientific Breakthroughs
 
@@ -1476,7 +1840,7 @@ This framework opens unprecedented possibilities:
 - **Adaptive AI Systems**: Neural networks that evolve their own architecture
 - **Chaos-Resilient Computing**: Systems that maintain function under extreme environmental variation
 
-### 10.7 Running the Simulation
+### 12.7 Running the Simulation
 
 ```bash
 # Activate environment
