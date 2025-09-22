@@ -176,7 +176,7 @@ class QRHLayer(nn.Module):
         return x
 
     def _preprocess_input(self, x: torch.Tensor) -> torch.Tensor:
-        # Tudo aqui usa device de x
+        # All operations here use device of x
         V = torch.einsum('bij,jk->bik', x, self.v_proj.weight)
         if self.v_proj.bias is not None:
             V = V + self.v_proj.bias

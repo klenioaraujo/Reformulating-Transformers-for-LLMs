@@ -1268,7 +1268,7 @@ layer = QRHLayer(
 
 ```bash
 # Clone repository
-git clone https://github.com/your-repo/reformulating-transformers.git
+git clone https://github.com/klenioaraujo/Reformulating-Transformers-for-LLMs/tree/example_model_PsiQRH
 cd reformulating-transformers
 
 # Install dependencies
