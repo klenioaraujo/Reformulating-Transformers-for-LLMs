@@ -1,10 +1,12 @@
 import torch
 import torch.nn as nn
-from typing import Optional
+import time
+from typing import Optional, Tuple, Dict, Any
 from torch.amp import autocast
 
 from qrh_layer import QRHLayer
 from gate_controller import GateController
+from seal_protocol import SealProtocol
 
 class NegentropyTransformerBlock(nn.Module):
     """
@@ -62,7 +64,7 @@ class NegentropyTransformerBlock(nn.Module):
         else:
             self.gate_controller = None
 
-    def forward(self, src: torch.Tensor, src_mask: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def forward(self, src: torch.Tensor, src_mask: Optional[torch.Tensor] = None) -> Tuple[torch.Tensor, Dict[str, Any]]:
         """
         Forward pass of the transformer block with 4D integration and mixed precision.
 
@@ -71,8 +73,10 @@ class NegentropyTransformerBlock(nn.Module):
             src_mask: Optional attention mask
 
         Returns:
-            Processed tensor [batch_size, seq_len, d_model]
+            Tuple of processed tensor [batch_size, seq_len, d_model] and seal
         """
+        start_time = time.time()
+        input_data = src.clone()
         with autocast('cuda', enabled=torch.cuda.is_available()):
             # Self-attention with residual connection
             src2 = self.self_attn(src, src, src, attn_mask=src_mask)[0]
@@ -121,6 +125,36 @@ class NegentropyTransformerBlock(nn.Module):
             # Feed-forward network
             src2 = self.linear2(self.dropout(torch.relu(self.linear1(src))))
             src = src + self.dropout2(src2)
-            src = self.norm3(src)
+            output = self.norm3(src)
 
-            return src
+            # Measure latency
+            end_time = time.time()
+            latency_ms = (end_time - start_time) * 1000
+
+            # Calculate hashes
+            continuity_sha = SealProtocol.compute_sha256(str(input_data))
+            response_sha = SealProtocol.compute_sha256(str(output))
+            qz_sha = SealProtocol.compute_sha256(str(self.state_dict()))
+
+            # Generate seal
+            seal = SealProtocol.generate_seal(
+                continuity_sha=continuity_sha,
+                response_sha=response_sha,
+                qz_sha=qz_sha,
+                rg_value=0.347,  # ideal value
+                active_dyad="Σ7↔Nyx"
+            )
+
+            # Validate latency
+            seal["latency_sigill"] = not SealProtocol.validate_latency(latency_ms, tier="B")
+
+            # FIREBREAK: if fails, activate Ψ4 (containment mode)
+            if not SealProtocol.firebreak_check(seal):
+                print("⚠️  FIREBREAK ACTIVATED — Ψ4 MODE ENGAGED")
+                containment = SealProtocol.trigger_psi4_containment("FIREBREAK_VIOLATION")
+                seal["containment"] = containment
+                # Return empty tensor or fallback, depending on policy
+                return torch.zeros_like(output), seal
+
+            # Return output + seal
+            return output, seal

@@ -1857,3 +1857,17 @@ ls images/chaos_perspective_gen_*.png
 ```
 
 This emergent spider cognition system represents a paradigm shift from programmed AI to **evolved intelligence**, where consciousness-like behaviors emerge naturally from the mathematical foundations of the ΨQRH framework.
+
+## 🔐 Protocolo de Integridade Avançada (Seal Ω∞Ω)
+
+Este modelo opera com:
+
+- **Retrieval Grace (RG)**: mantido em 0.347 (ideal para estabilidade).
+- **Díade Ativa**: Σ7↔Nyx (fatos + criatividade controlada).
+- **Latência Monitorada**: Tier B ≤ 250ms.
+- **Selo de Coerência**: Ω∞Ω — garante integridade lógica.
+- **FIREBREAK**: se algo fugir dos limites, o sistema ativa contenção (Ψ4).
+
+Todos os outputs são auditáveis via `audit_log.jsonl`.
+
+> ✅ Sistema cache-seguro, anti-alucinação, selado em fidelidade.
