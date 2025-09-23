@@ -20,17 +20,11 @@ We propose a novel transformer architecture for Large Language Models (LLMs) tha
 
 ## 📖 Complete E-book Documentation
 
-For the complete interactive experience with detailed explanations and visual guides:
+If you want to know all about this framework, read the e-book.
 
-🌟 **[Fractal Intelligence: Reformulating Transformers - Interactive E-book](e-book/README.md)**
+For a detailed explanation of the framework, download the complete e-book in PDF format.
 
-The e-book provides:
-- 📚 **Interactive HTML Version** with navigation and search
-- 📄 **Professional PDF Download** (1.9 MB, optimized)
-- 🔍 **Complete Chapter Index** with direct links
-- 💻 **Code Examples** and mathematical proofs
-- 🖼️ **High-quality diagrams** and visualizations
-- 📱 **Mobile-responsive** reading experience
+🌟 **[Download the E-book (PDF)](e-book/e-book.pdf)**
 
 ## Table of Contents
 
