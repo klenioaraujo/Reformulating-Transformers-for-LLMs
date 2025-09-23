@@ -18,6 +18,20 @@ We propose a novel transformer architecture for Large Language Models (LLMs) tha
 
 **Keywords**: transformer architecture, quaternion algebra, spectral regularization, Leech lattice, LLM efficiency, numerical validation
 
+## 📖 Complete E-book Documentation
+
+For the complete interactive experience with detailed explanations and visual guides:
+
+🌟 **[Fractal Intelligence: Reformulating Transformers - Interactive E-book](e-book/README.md)**
+
+The e-book provides:
+- 📚 **Interactive HTML Version** with navigation and search
+- 📄 **Professional PDF Download** (1.9 MB, optimized)
+- 🔍 **Complete Chapter Index** with direct links
+- 💻 **Code Examples** and mathematical proofs
+- 🖼️ **High-quality diagrams** and visualizations
+- 📱 **Mobile-responsive** reading experience
+
 ## Table of Contents
 
 1. [Introduction](#1-introduction)
