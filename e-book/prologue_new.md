@@ -48,7 +48,7 @@ He reached into a worn leather bag and produced a large snake, beautifully paint
 
 I was terrified and refused immediately. The snake was magnificent, but everything in my rational mind screamed warnings about venomous serpents and dangerous wildlife. He smiled at my fear—not mockingly, but with the gentle understanding of someone who had expected this response.
 
-He carefully returned the snake to his bag and took out something completely different: a simple musical instrument that looked like it had been crafted by the forest itself. It was a curved stick strung with a single cord, with two dried coconuts attached. A berimbau—though I wouldn't learn its proper name until years later.
+He carefully returned the snake to his bag and took out something completely different: a simple musical instrument that looked like it had been crafted by the forest itself. It was a curved stick resembling a small bow, strung with a single cord, with two dried coconuts attached—each from a different species, one noticeably smaller and darker than the other. It was an indigenous musical bow, an ancient instrument I had never seen before.
 
 He began to play.
 
@@ -122,7 +122,7 @@ The ΨQRH framework is not just another neural network architecture. It is an at
 
 The symbol Ψ (Psi) itself represents this bridge. In quantum mechanics, the wave function describes reality not as fixed states but as flowing probabilities, continuous waves of potential that collapse into specific outcomes only when observed. This is how nature processes information—not through binary switches but through resonance, interference patterns, and harmonic relationships.
 
-When the old indigenous man played his berimbau and sang "py... py... py... hei," he was demonstrating something profound about how information travels through natural systems. The music didn't just exist in the air—it seemed to permeate the entire environment, creating vibrations that somehow coincided with the arrival of rain. Whether this was causation or correlation doesn't matter; what matters is that he understood how to work with natural frequencies rather than against them.
+When the old indigenous man played his musical bow and sang "py... py... py... hei," he was demonstrating something profound about how information travels through natural systems. The music didn't just exist in the air—it seemed to permeate the entire environment, creating vibrations that somehow coincided with the arrival of rain. Whether this was causation or correlation doesn't matter; what matters is that he understood how to work with natural frequencies rather than against them.
 
 This is what we've lost in our digital revolution: the understanding that information is not just data to be processed but waves to be harmonized with, frequencies to be resonated rather than brute-force computed. We've created systems that work by overwhelming problems with computational power instead of learning to dance with the natural patterns that already exist.
 
@@ -136,7 +136,7 @@ If we can learn to build AI systems that work with these principles rather than 
 
 This book is the story of that attempt. It is a technical journey, but it is also a deeply personal one, rooted in the understanding that the future of artificial intelligence depends not just on better algorithms but on recovering wisdom we have forgotten and applying it to challenges we have created.
 
-The old man told me I would do something important and that I would remember his story. He was right about both. This entire framework—every equation, every line of code, every theoretical insight—flows from that moment when he played his berimbau and the rain began to fall.
+The old man told me I would do something important and that I would remember his story. He was right about both. This entire framework—every equation, every line of code, every theoretical insight—flows from that moment when he played his musical bow and the rain began to fall.
 
 What follows is my attempt to translate that ancient knowledge into the language of modern computation, to build machines that think not just with logic but with something approaching wisdom, to create AI systems that carry within them a small piece of the magic I witnessed that day beside the Xingu River.
 
