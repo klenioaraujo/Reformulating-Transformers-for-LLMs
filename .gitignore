@@ -148,3 +148,10 @@ gls_env/
 gls_visualizations/
 gls_habitat_current_state.gls
 gls_habitat_visualization.gls
+
+# E-book configuration - ignore everything except HTML build and specific PDF
+e-book/*
+!e-book/_build/
+!e-book/_build/html/
+!e-book/_build/html/**
+!e-book/Fractal_Intelligence_Refined.pdf
