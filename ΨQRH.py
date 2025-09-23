@@ -3,6 +3,7 @@ import yaml
 import sys
 from typing import Optional
 
+
 # Import the classes from the new modules to maintain the public signature
 from quaternion_operations import QuaternionOperations
 from spectral_filter import SpectralFilter
