@@ -43,6 +43,41 @@ class FFTCache:
         self.cache[key] = result
         return result
 
+class QuaternionLayerNorm(nn.Module):
+    """
+    Layer normalization specifically designed for quaternions.
+    Normalizes each quaternion (4-component vector) independently.
+    """
+
+    def __init__(self, epsilon: float = 1e-5):
+        super().__init__()
+        self.epsilon = epsilon
+
+        # Learnable parameters for gain (gamma) and bias (beta)
+        # One parameter for each quaternion component (w, x, y, z)
+        self.gamma = nn.Parameter(torch.ones(4))
+        self.beta = nn.Parameter(torch.zeros(4))
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Apply quaternion layer normalization.
+
+        Args:
+            x: Input tensor with shape (..., 4) where last dimension represents quaternion components
+
+        Returns:
+            Normalized tensor with same shape as input
+        """
+        # Calculate mean and variance along the last dimension (quaternion components)
+        mean = x.mean(dim=-1, keepdim=True)
+        variance = x.var(dim=-1, keepdim=True, unbiased=False)
+
+        # Normalize
+        x_normalized = (x - mean) / torch.sqrt(variance + self.epsilon)
+
+        # Apply learnable scaling and shifting
+        return self.gamma * x_normalized + self.beta
+
 @dataclass
 class QRHConfig:
     embed_dim: int = 64
@@ -60,6 +95,8 @@ class QRHConfig:
     fft_cache_size: int = 10
     device: str = 'cpu'
     enable_warnings: bool = True
+    normalization_type: Optional[Literal['layer_norm', 'unit_projection']] = None
+    spectral_dropout_rate: float = 0.0
 
 class QRHLayer(nn.Module):
     """
@@ -95,6 +132,11 @@ class QRHLayer(nn.Module):
         # Projection layers
         self.v_proj = nn.Linear(self.total_dim, self.total_dim)
         self.out_proj = nn.Linear(self.total_dim, self.total_dim)
+
+        # Initialize normalization if specified
+        self.quaternion_norm = None
+        if config.normalization_type == 'layer_norm':
+            self.quaternion_norm = QuaternionLayerNorm()
 
     def get_rotation_quaternions(self) -> Tuple[torch.Tensor, torch.Tensor]:
         """Returns the left and right rotation quaternions for SO(4) using a vectorized operation."""
@@ -214,6 +256,27 @@ class QRHLayer(nn.Module):
         # Apply filter in frequency domain - complex × complex multiplication
         Ψ_filtered_fft = Ψ_fft * filter_expanded
 
+        # Apply Spectral Dropout for regularization
+        if self.training and self.config.spectral_dropout_rate > 0:
+            # Determine the number of frequencies to drop (contiguous band)
+            num_to_drop = int(seq_len * self.config.spectral_dropout_rate)
+
+            if num_to_drop > 0 and num_to_drop < seq_len:
+                # Create dropout mask with same shape as Ψ_fft
+                mask = torch.ones_like(Ψ_filtered_fft)
+
+                # Choose random starting index for the band to be zeroed
+                start_index = torch.randint(0, seq_len - num_to_drop, (1,)).item()
+
+                # Zero out the contiguous frequency band
+                mask[:, start_index : start_index + num_to_drop, :, :] = 0
+
+                # Apply the mask
+                Ψ_filtered_fft = Ψ_filtered_fft * mask
+
+                # Re-scale to maintain expected magnitude
+                Ψ_filtered_fft = Ψ_filtered_fft / (1.0 - self.config.spectral_dropout_rate)
+
         # CRITICAL: Verify that phase rotation is actually applied
         assert Ψ_filtered_fft.dtype in [torch.complex64, torch.complex128], "Filtered FFT must be complex!"
         assert not torch.allclose(Ψ_filtered_fft.imag, torch.zeros_like(Ψ_filtered_fft.imag), atol=1e-10), \
@@ -256,20 +319,45 @@ class QRHLayer(nn.Module):
 
         return Ψ_rotated
 
-    def _postprocess_output(self, Ψ_rotated: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
+    def _apply_normalization(self, Ψ_rotated: torch.Tensor) -> torch.Tensor:
         """
-        Postprocesses the rotated quaternion output and applies residual connection.
+        Apply normalization to the quaternion tensor.
 
         Args:
-            Ψ_rotated: Rotated tensor [B, T, D, 4]
+            Ψ_rotated: Rotated tensor [B, T, D, 4] (quaternion components in last dim)
+        Returns:
+            Normalized tensor with same shape
+        """
+        if self.config.normalization_type == 'layer_norm':
+            # Apply quaternion layer normalization
+            return self.quaternion_norm(Ψ_rotated)
+
+        elif self.config.normalization_type == 'unit_projection':
+            # Apply unit projection (normalize quaternions to unit length)
+            # Calculate L2 norm of each quaternion along the last dimension
+            norm = torch.norm(Ψ_rotated, p=2, dim=-1, keepdim=True)
+            # Divide by norm with epsilon for numerical stability
+            Ψ_normalized = Ψ_rotated / (norm + 1e-6)
+            return Ψ_normalized
+
+        else:
+            # No normalization, return as-is
+            return Ψ_rotated
+
+    def _postprocess_output(self, Ψ_normalized: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
+        """
+        Postprocesses the normalized quaternion output and applies residual connection.
+
+        Args:
+            Ψ_normalized: Normalized tensor [B, T, D, 4]
             x: Original input tensor [B, T, 4*D] for residual connection
         Returns:
             Final output tensor [B, T, 4*D]
         """
-        batch_size, seq_len, embed_dim, quat_dim = Ψ_rotated.shape
+        batch_size, seq_len, embed_dim, quat_dim = Ψ_normalized.shape
 
         # Reshape from [B, T, D, 4] to [B, T, 4*D]
-        Ψ_reshaped = Ψ_rotated.permute(0, 1, 3, 2).reshape(batch_size, seq_len, self.total_dim)
+        Ψ_reshaped = Ψ_normalized.permute(0, 1, 3, 2).reshape(batch_size, seq_len, self.total_dim)
 
         # Apply output projection
         Ψ_projected = torch.einsum('bij,jk->bik', Ψ_reshaped, self.out_proj.weight)
@@ -294,8 +382,12 @@ class QRHLayer(nn.Module):
         Ψ = self._preprocess_input(x_validated)
         Ψ_filtered = self._apply_spectral_filtering(Ψ)
         Ψ_rotated = self._apply_quaternion_rotations(Ψ_filtered)
+
+        # Apply normalization if specified
+        Ψ_normalized = self._apply_normalization(Ψ_rotated)
+
         # Pass validated 'x' for residual connection
-        return self._postprocess_output(Ψ_rotated, x_validated)
+        return self._postprocess_output(Ψ_normalized, x_validated)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """

@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import time
-from typing import Optional, Tuple, Dict, Any
+from typing import Optional, Tuple, Dict, Any, Literal
 from torch.amp import autocast
 
 from qrh_layer import QRHLayer
@@ -24,7 +24,9 @@ class NegentropyTransformerBlock(nn.Module):
                  qrh_embed_dim: int = 64,
                  alpha: float = 1.0,
                  use_learned_rotation: bool = True,
-                 enable_gate: bool = True):
+                 enable_gate: bool = True,
+                 qrh_normalization_type: Optional[Literal['layer_norm', 'unit_projection']] = None,
+                 init_layer_scale: float = 1e-4):
         super().__init__()
 
         self.d_model = d_model
@@ -44,7 +46,8 @@ class NegentropyTransformerBlock(nn.Module):
         config = QRHConfig(
             embed_dim=qrh_embed_dim,
             alpha=alpha,
-            use_learned_rotation=use_learned_rotation
+            use_learned_rotation=use_learned_rotation,
+            normalization_type=qrh_normalization_type
         )
         self.qrh_layer = QRHLayer(config)
 
@@ -63,6 +66,10 @@ class NegentropyTransformerBlock(nn.Module):
             self.gate_controller = GateController()
         else:
             self.gate_controller = None
+
+        # Layer scaling parameters for residual connections
+        self.layer_scale_qrh = nn.Parameter(init_layer_scale * torch.ones(d_model))
+        self.layer_scale_ffn = nn.Parameter(init_layer_scale * torch.ones(d_model))
 
     def forward(self, src: torch.Tensor, src_mask: Optional[torch.Tensor] = None) -> Tuple[torch.Tensor, Dict[str, Any]]:
         """
@@ -118,13 +125,13 @@ class NegentropyTransformerBlock(nn.Module):
             # Project back to d_model space
             projected_output = self.output_proj(gated_output)
 
-            # Residual connection and normalization
-            src = src + self.dropout(projected_output)
+            # Residual connection with layer scaling and normalization
+            src = src + self.dropout(self.layer_scale_qrh * projected_output)
             src = self.norm2(src)
 
             # Feed-forward network
             src2 = self.linear2(self.dropout(torch.relu(self.linear1(src))))
-            src = src + self.dropout2(src2)
+            src = src + self.dropout2(self.layer_scale_ffn * src2)
             output = self.norm3(src)
 
             # Measure latency
