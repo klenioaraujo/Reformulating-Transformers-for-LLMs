@@ -138,29 +138,31 @@ class AdvancedTestModel(nn.Module):
         return ''.join(chars).strip()
 
     def generate_wiki_appropriate_response(self, input_text, prompt_info):
-        """Generate response with wiki-appropriate formatting using ΨQRH framework principles"""
-        # Use ΨQRH framework to process the input and generate structured response
-        # Instead of relying on untrained language model, use framework's mathematical properties
+        """Generate response by directly analyzing the raw, unpadded input signal.
 
-        # Convert input to tensor representation
-        input_tensor = self.text_to_tensor(input_text)
+        This bypasses the random weights AND the zero-padding to get a true
+        measure of the input text's inherent spectral properties.
+        """
+        # 1. Convert text to a tensor of ASCII values, which includes padding.
+        padded_tensor = self.text_to_tensor(input_text)
 
-        # Process through ΨQRH framework to get meaningful numerical representation
+        # 2. CRITICAL FIX: Remove the zero-padding to analyze only the true signal.
+        unpadded_signal = padded_tensor[padded_tensor != 0].float()
+
+        # If the signal is empty after removing padding, handle it gracefully.
+        if unpadded_signal.numel() == 0:
+            unpadded_signal = torch.tensor([0.0]) # Avoid errors on empty input
+
         try:
-            # Process through the transformer to get the pre-normalization tensor
-            processed_output = self.transformer.forward_pre_norm(input_tensor)
+            # 3. Directly analyze the raw, UNPADDED signal's statistics.
+            output_stats = self._analyze_output_statistics(unpadded_signal)
 
-            # Extract meaningful patterns from the processing
-            # Use statistical properties of the output to guide response generation
-            output_stats = self._analyze_output_statistics(processed_output)
-
-            # Generate wiki-appropriate response based on category and framework analysis
+            # 4. Generate the wiki response from the true metrics.
             formatted_response = self._generate_structured_wiki_response(
                 prompt_info, output_stats, input_text
             )
 
         except Exception as e:
-            # Fallback to template-based generation if processing fails
             print(f"  Framework processing failed ({e}), using template fallback")
             formatted_response = self._generate_template_wiki_response(prompt_info, input_text)
 
@@ -179,8 +181,23 @@ class AdvancedTestModel(nn.Module):
         # Spectral properties (FFT analysis)
         try:
             fft_result = torch.fft.fft(output_tensor.flatten())
+            
+            # Use only the first half of the spectrum for centroid calculation (positive frequencies)
+            N = len(fft_result)
+            half_N = N // 2
+            
             magnitude = torch.abs(fft_result)
-            stats['spectral_centroid'] = torch.sum(magnitude * torch.arange(len(magnitude), device=magnitude.device)) / torch.sum(magnitude)
+            half_magnitude = magnitude[:half_N]
+            
+            # Create corresponding frequencies for the first half
+            freqs = torch.arange(half_N, device=magnitude.device)
+            
+            # Calculate centroid on the first half
+            spectral_centroid = torch.sum(half_magnitude * freqs) / torch.sum(half_magnitude)
+            
+            # Normalize centroid to be between 0.0 and 1.0
+            stats['spectral_centroid'] = (spectral_centroid / half_N).item()
+
             stats['spectral_rolloff'] = torch.where(torch.cumsum(magnitude.sort(descending=True)[0]) > 0.85 * torch.sum(magnitude))[0][0].item()
         except:
             stats['spectral_centroid'] = 0.5

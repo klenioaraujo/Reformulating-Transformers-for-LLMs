@@ -443,7 +443,7 @@ class LayerTestHarness:
         }
 
         # Save comprehensive report
-        with open('tests/comprehensive_layer_results.json', 'w') as f:
+        with open('comprehensive_layer_results.json', 'w') as f:
             json.dump(report, f, indent=2)
 
         return report
@@ -552,7 +552,7 @@ class LayerTestHarness:
         for i, rec in enumerate(report['recommendations'][:3], 1):
             print(f"   {i}. {rec}")
 
-        print(f"\n📁 Full report saved: tests/comprehensive_layer_results.json")
+        print(f"\n📁 Full report saved: comprehensive_layer_results.json")
         print("=" * 60)
 
         return report

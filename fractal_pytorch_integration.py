@@ -324,6 +324,30 @@ class FractalTransformer(nn.Module):
         # Return the tensor BEFORE the final normalization
         return x
 
+    def forward_first_layer_output(self, input_ids: torch.Tensor) -> torch.Tensor:
+        """
+        Processes the input through the embedding and ONLY the first QRH layer.
+        This provides the most meaningful signal for structural analysis.
+
+        Args:
+            input_ids: Token indices [batch_size, seq_len]
+
+        Returns:
+            The tensor after processing by the first layer.
+        """
+        batch_size, seq_len = input_ids.shape
+        device = input_ids.device
+
+        # Embeddings
+        positions = torch.arange(seq_len, device=device).unsqueeze(0).expand(batch_size, -1)
+        x = self.token_embedding(input_ids) + self.position_embedding(positions)
+
+        # Process through the FIRST layer only
+        if self.layers:
+            x = self.layers[0](x)
+
+        return x
+
     def get_fractal_analysis(self) -> Dict:
         """Return comprehensive fractal analysis of the model"""
         if not self.fractal_history:

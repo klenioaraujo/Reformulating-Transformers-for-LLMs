@@ -1,0 +1,658 @@
+{
+  "timestamp": "2025-09-24T18:07:22.513840",
+  "test_summary": {
+    "individual_layers_tested": 5,
+    "multi_layer_combinations_tested": 14,
+    "total_test_duration_seconds": 0.004046440124511719
+  },
+  "individual_layer_results": {
+    "quaternion_core": {
+      "input": {
+        "shape": "torch.Size([2, 16, 128])",
+        "dtype": "torch.float32",
+        "sample_values": [
+          0.1692463755607605,
+          -0.9260569214820862,
+          0.8129146695137024,
+          -0.10775703936815262,
+          -0.3455392122268677
+        ],
+        "statistics": {
+          "mean": -0.013353671878576279,
+          "std": 0.9992049932479858,
+          "min": -3.481644868850708,
+          "max": 4.352111339569092
+        }
+      },
+      "output": {
+        "shape": "torch.Size([2, 16, 128])",
+        "dtype": "torch.float32",
+        "sample_values": [
+          -0.0834895595908165,
+          0.047001875936985016,
+          0.04510781913995743,
+          -0.14494460821151733,
+          -0.010869679972529411
+        ],
+        "statistics": {
+          "mean": 0.004828530363738537,
+          "std": 0.10359369218349457,
+          "min": -0.37227553129196167,
+          "max": 0.3199649453163147
+        }
+      },
+      "metadata": {
+        "processing_time_ms": 1.5933513641357422,
+        "transformation_ratio": 0.10367611795663834,
+        "shape_preserved": true,
+        "layer_type": "quaternion_rotation",
+        "parameters": 66048
+      },
+      "timestamp": 1758733642.5026798
+    },
+    "resonant_harmonic": {
+      "input": {
+        "shape": "torch.Size([2, 16, 128])",
+        "dtype": "torch.float32",
+        "sample_values": [
+          0.36996158957481384,
+          -0.6136999130249023,
+          0.2438487857580185,
+          -0.7761135101318359,
+          2.877224922180176
+        ],
+        "statistics": {
+          "mean": 0.018868498504161835,
+          "std": 0.9755414128303528,
+          "min": -3.244021415710449,
+          "max": 3.286769390106201
+        }
+      },
+      "output": {
+        "shape": "torch.Size([2, 16, 128])",
+        "dtype": "torch.float32",
+        "sample_values": [
+          0.5298846364021301,
+          -0.508194625377655,
+          0.3927711844444275,
+          -0.7633523344993591,
+          2.979841947555542
+        ],
+        "statistics": {
+          "mean": 0.016729597002267838,
+          "std": 0.9809591770172119,
+          "min": -3.320765972137451,
+          "max": 3.1197776794433594
+        }
+      },
+      "metadata": {
+        "processing_time_ms": 0.40841102600097656,
+        "transformation_ratio": 1.0055536031723022,
+        "shape_preserved": true,
+        "layer_type": "harmonic_resonance",
+        "residual_connection": true,
+        "parameters": 49536
+      },
+      "timestamp": 1758733642.5042725
+    },
+    "semantic_filter": {
+      "input": {
+        "shape": "torch.Size([2, 16, 128])",
+        "dtype": "torch.float32",
+        "sample_values": [
+          0.49962079524993896,
+          -0.9806976318359375,
+          1.335031270980835,
+          1.4982609748840332,
+          -0.22353851795196533
+        ],
+        "statistics": {
+          "mean": -0.008711605332791805,
+          "std": 0.9994308352470398,
+          "min": -3.5308656692504883,
+          "max": 3.700592279434204
+        }
+      },
+      "output": {
+        "shape": "torch.Size([2, 16, 128])",
+        "dtype": "torch.float32",
+        "sample_values": [
+          -0.1430547535419464,
+          0.06151764094829559,
+          -0.030870499089360237,
+          -0.16849413514137268,
+          0.5384317636489868
+        ],
+        "statistics": {
+          "mean": 0.014079573564231396,
+          "std": 0.24644587934017181,
+          "min": -0.9602913856506348,
+          "max": 0.8869795203208923
+        }
+      },
+      "metadata": {
+        "processing_time_ms": 0.4458427429199219,
+        "transformation_ratio": 0.24658623337745667,
+        "shape_preserved": true,
+        "layer_type": "semantic_filtering",
+        "filter_types": [
+          "contradiction",
+          "irrelevance",
+          "clarity"
+        ],
+        "parameters": 98816
+      },
+      "timestamp": 1758733642.5061746
+    },
+    "neurotransmitter_system": {
+      "input": {
+        "shape": "torch.Size([2, 16, 128])",
+        "dtype": "torch.float32",
+        "sample_values": [
+          -0.07613889127969742,
+          -0.9020745754241943,
+          -0.10066887736320496,
+          0.7808793187141418,
+          -2.1461315155029297
+        ],
+        "statistics": {
+          "mean": -0.019972769543528557,
+          "std": 1.0131067037582397,
+          "min": -4.078588962554932,
+          "max": 4.133549213409424
+        }
+      },
+      "output": {
+        "shape": "torch.Size([2, 16, 128])",
+        "dtype": "torch.float32",
+        "sample_values": [
+          0.09306758642196655,
+          -0.29228633642196655,
+          -0.411453515291214,
+          0.06067144125699997,
+          0.04290644824504852
+        ],
+        "statistics": {
+          "mean": 0.007347031496465206,
+          "std": 0.24744169414043427,
+          "min": -0.816223680973053,
+          "max": 0.9183266162872314
+        }
+      },
+      "metadata": {
+        "processing_time_ms": 0.2124309539794922,
+        "transformation_ratio": 0.24424050748348236,
+        "shape_preserved": true,
+        "layer_type": "neurotransmitter_simulation",
+        "pathways": [
+          "dopamine",
+          "serotonin",
+          "acetylcholine",
+          "gaba"
+        ],
+        "parameters": 33024
+      },
+      "timestamp": 1758733642.507401
+    },
+    "temporal_coherence": {
+      "input": {
+        "shape": "torch.Size([2, 16, 128])",
+        "dtype": "torch.float32",
+        "sample_values": [
+          -0.2685214579105377,
+          1.2519978284835815,
+          -1.4067187309265137,
+          -1.627029299736023,
+          0.21383194625377655
+        ],
+        "statistics": {
+          "mean": 0.019544299691915512,
+          "std": 1.0147842168807983,
+          "min": -3.404515504837036,
+          "max": 3.7285356521606445
+        }
+      },
+      "output": {
+        "shape": "torch.Size([2, 16, 128])",
+        "dtype": "torch.float32",
+        "sample_values": [
+          0.019974252209067345,
+          -0.07989128679037094,
+          -0.021140284836292267,
+          0.021474892273545265,
+          -0.0003761957341339439
+        ],
+        "statistics": {
+          "mean": 0.002672991482540965,
+          "std": 0.03742950037121773,
+          "min": -0.10949518531560898,
+          "max": 0.1391979455947876
+        }
+      },
+      "metadata": {
+        "processing_time_ms": 1.386404037475586,
+        "transformation_ratio": 0.03688419610261917,
+        "shape_preserved": true,
+        "layer_type": "temporal_processing",
+        "perspectives": [
+          "past",
+          "present",
+          "future"
+        ],
+        "attention_heads": 8,
+        "parameters": 115584
+      },
+      "timestamp": 1758733642.510695
+    }
+  },
+  "multi_layer_results": {
+    "quaternion_core + resonant_harmonic": {
+      "input": {
+        "shape": "torch.Size([2, 16, 128])",
+        "statistics": {
+          "mean": -0.016449326649308205,
+          "std": 1.0071892738342285
+        }
+      },
+      "output": {
+        "shape": "torch.Size([2, 16, 128])",
+        "statistics": {
+          "mean": -0.0017148740589618683,
+          "std": 0.10500138998031616
+        }
+      },
+      "metadata": {
+        "total_processing_time_ms": 2.0017623901367188,
+        "layers_involved": [
+          "quaternion_core",
+          "resonant_harmonic"
+        ],
+        "cumulative_transformation_ratio": 0.10425189137458801,
+        "is_full_stack": false,
+        "synergy_factor": 1.8
+      },
+      "timestamp": 1758733642.5110152
+    },
+    "quaternion_core + semantic_filter": {
+      "input": {
+        "shape": "torch.Size([2, 16, 128])",
+        "statistics": {
+          "mean": -0.009000081568956375,
+          "std": 1.001861810684204
+        }
+      },
+      "output": {
+        "shape": "torch.Size([2, 16, 128])",
+        "statistics": {
+          "mean": -0.00023008801508694887,
+          "std": 0.02561269886791706
+        }
+      },
+      "metadata": {
+        "total_processing_time_ms": 2.039194107055664,
+        "layers_involved": [
+          "quaternion_core",
+          "semantic_filter"
+        ],
+        "cumulative_transformation_ratio": 0.025565100833773613,
+        "is_full_stack": false,
+        "synergy_factor": 1.4
+      },
+      "timestamp": 1758733642.5112336
+    },
+    "quaternion_core + neurotransmitter_system": {
+      "input": {
+        "shape": "torch.Size([2, 16, 128])",
+        "statistics": {
+          "mean": -0.026784127578139305,
+          "std": 0.9895293712615967
+        }
+      },
+      "output": {
+        "shape": "torch.Size([2, 16, 128])",
+        "statistics": {
+          "mean": -0.0006782252457924187,
+          "std": 0.02505677193403244
+        }
+      },
+      "metadata": {
+        "total_processing_time_ms": 1.8057823181152344,
+        "layers_involved": [
+          "quaternion_core",
+          "neurotransmitter_system"
+        ],
+        "cumulative_transformation_ratio": 0.02532190829515457,
+        "is_full_stack": false,
+        "synergy_factor": 1.1
+      },
+      "timestamp": 1758733642.5114503
+    },
+    "quaternion_core + temporal_coherence": {
+      "input": {
+        "shape": "torch.Size([2, 16, 128])",
+        "statistics": {
+          "mean": 0.012847227044403553,
+          "std": 0.9982974529266357
+        }
+      },
+      "output": {
+        "shape": "torch.Size([2, 16, 128])",
+        "statistics": {
+          "mean": 4.912793156108819e-05,
+          "std": 0.003817499615252018
+        }
+      },
+      "metadata": {
+        "total_processing_time_ms": 2.979755401611328,
+        "layers_involved": [
+          "quaternion_core",
+          "temporal_coherence"
+        ],
+        "cumulative_transformation_ratio": 0.003824010258540511,
+        "is_full_stack": false,
+        "synergy_factor": 1.1
+      },
+      "timestamp": 1758733642.5116532
+    },
+    "resonant_harmonic + semantic_filter": {
+      "input": {
+        "shape": "torch.Size([2, 16, 128])",
+        "statistics": {
+          "mean": 0.03497818857431412,
+          "std": 1.0060632228851318
+        }
+      },
+      "output": {
+        "shape": "torch.Size([2, 16, 128])",
+        "statistics": {
+          "mean": 0.008673041127622128,
+          "std": 0.24945908784866333
+        }
+      },
+      "metadata": {
+        "total_processing_time_ms": 0.8542537689208984,
+        "layers_involved": [
+          "resonant_harmonic",
+          "semantic_filter"
+        ],
+        "cumulative_transformation_ratio": 0.24795567989349365,
+        "is_full_stack": false,
+        "synergy_factor": 1.1
+      },
+      "timestamp": 1758733642.5119133
+    },
+    "resonant_harmonic + neurotransmitter_system": {
+      "input": {
+        "shape": "torch.Size([2, 16, 128])",
+        "statistics": {
+          "mean": -0.015927545726299286,
+          "std": 0.9997010231018066
+        }
+      },
+      "output": {
+        "shape": "torch.Size([2, 16, 128])",
+        "statistics": {
+          "mean": -0.003911756444722414,
+          "std": 0.24552348256111145
+        }
+      },
+      "metadata": {
+        "total_processing_time_ms": 0.6208419799804688,
+        "layers_involved": [
+          "resonant_harmonic",
+          "neurotransmitter_system"
+        ],
+        "cumulative_transformation_ratio": 0.24559691548347473,
+        "is_full_stack": false,
+        "synergy_factor": 1.1
+      },
+      "timestamp": 1758733642.5121171
+    },
+    "resonant_harmonic + temporal_coherence": {
+      "input": {
+        "shape": "torch.Size([2, 16, 128])",
+        "statistics": {
+          "mean": -0.0016799001023173332,
+          "std": 0.9956613779067993
+        }
+      },
+      "output": {
+        "shape": "torch.Size([2, 16, 128])",
+        "statistics": {
+          "mean": -6.230591679923236e-05,
+          "std": 0.036928121000528336
+        }
+      },
+      "metadata": {
+        "total_processing_time_ms": 1.7948150634765625,
+        "layers_involved": [
+          "resonant_harmonic",
+          "temporal_coherence"
+        ],
+        "cumulative_transformation_ratio": 0.0370890349149704,
+        "is_full_stack": false,
+        "synergy_factor": 1.5
+      },
+      "timestamp": 1758733642.5123184
+    },
+    "semantic_filter + neurotransmitter_system": {
+      "input": {
+        "shape": "torch.Size([2, 16, 128])",
+        "statistics": {
+          "mean": -0.011430029757320881,
+          "std": 0.9879501461982727
+        }
+      },
+      "output": {
+        "shape": "torch.Size([2, 16, 128])",
+        "statistics": {
+          "mean": -0.0006883891765028238,
+          "std": 0.05950062721967697
+        }
+      },
+      "metadata": {
+        "total_processing_time_ms": 0.6582736968994141,
+        "layers_involved": [
+          "semantic_filter",
+          "neurotransmitter_system"
+        ],
+        "cumulative_transformation_ratio": 0.06022634729743004,
+        "is_full_stack": false,
+        "synergy_factor": 1.1
+      },
+      "timestamp": 1758733642.51252
+    },
+    "semantic_filter + temporal_coherence": {
+      "input": {
+        "shape": "torch.Size([2, 16, 128])",
+        "statistics": {
+          "mean": 0.030074594542384148,
+          "std": 0.979438304901123
+        }
+      },
+      "output": {
+        "shape": "torch.Size([2, 16, 128])",
+        "statistics": {
+          "mean": 0.0002735324378591031,
+          "std": 0.008908123709261417
+        }
+      },
+      "metadata": {
+        "total_processing_time_ms": 1.8322467803955078,
+        "layers_involved": [
+          "semantic_filter",
+          "temporal_coherence"
+        ],
+        "cumulative_transformation_ratio": 0.009095135144889355,
+        "is_full_stack": false,
+        "synergy_factor": 1.1
+      },
+      "timestamp": 1758733642.5127223
+    },
+    "neurotransmitter_system + temporal_coherence": {
+      "input": {
+        "shape": "torch.Size([2, 16, 128])",
+        "statistics": {
+          "mean": 0.018912531435489655,
+          "std": 1.002986192703247
+        }
+      },
+      "output": {
+        "shape": "torch.Size([2, 16, 128])",
+        "statistics": {
+          "mean": 0.00017037570069078356,
+          "std": 0.009035516530275345
+        }
+      },
+      "metadata": {
+        "total_processing_time_ms": 1.5988349914550781,
+        "layers_involved": [
+          "neurotransmitter_system",
+          "temporal_coherence"
+        ],
+        "cumulative_transformation_ratio": 0.009008615277707577,
+        "is_full_stack": false,
+        "synergy_factor": 1.1
+      },
+      "timestamp": 1758733642.512932
+    },
+    "quaternion_core + semantic_filter + temporal_coherence": {
+      "input": {
+        "shape": "torch.Size([2, 16, 128])",
+        "statistics": {
+          "mean": 0.00045344559475779533,
+          "std": 1.0075186491012573
+        }
+      },
+      "output": {
+        "shape": "torch.Size([2, 16, 128])",
+        "statistics": {
+          "mean": 4.2757801566040143e-07,
+          "std": 0.0009500379674136639
+        }
+      },
+      "metadata": {
+        "total_processing_time_ms": 3.42559814453125,
+        "layers_involved": [
+          "quaternion_core",
+          "semantic_filter",
+          "temporal_coherence"
+        ],
+        "cumulative_transformation_ratio": 0.0009429482743144035,
+        "is_full_stack": false,
+        "synergy_factor": 1.6940000000000002
+      },
+      "timestamp": 1758733642.5131466
+    },
+    "resonant_harmonic + neurotransmitter_system + semantic_filter": {
+      "input": {
+        "shape": "torch.Size([2, 16, 128])",
+        "statistics": {
+          "mean": 0.010460270568728447,
+          "std": 0.9889921545982361
+        }
+      },
+      "output": {
+        "shape": "torch.Size([2, 16, 128])",
+        "statistics": {
+          "mean": 0.0006334826466627419,
+          "std": 0.05989417806267738
+        }
+      },
+      "metadata": {
+        "total_processing_time_ms": 1.0666847229003906,
+        "layers_involved": [
+          "resonant_harmonic",
+          "neurotransmitter_system",
+          "semantic_filter"
+        ],
+        "cumulative_transformation_ratio": 0.06056082248687744,
+        "is_full_stack": false,
+        "synergy_factor": 1.3310000000000004
+      },
+      "timestamp": 1758733642.5133631
+    },
+    "quaternion_core + resonant_harmonic + neurotransmitter_system": {
+      "input": {
+        "shape": "torch.Size([2, 16, 128])",
+        "statistics": {
+          "mean": 0.02507040463387966,
+          "std": 0.9961714148521423
+        }
+      },
+      "output": {
+        "shape": "torch.Size([2, 16, 128])",
+        "statistics": {
+          "mean": 0.000638356083072722,
+          "std": 0.02536504901945591
+        }
+      },
+      "metadata": {
+        "total_processing_time_ms": 2.214193344116211,
+        "layers_involved": [
+          "quaternion_core",
+          "resonant_harmonic",
+          "neurotransmitter_system"
+        ],
+        "cumulative_transformation_ratio": 0.02546253427863121,
+        "is_full_stack": false,
+        "synergy_factor": 2.1780000000000004
+      },
+      "timestamp": 1758733642.5135734
+    },
+    "FULL_STACK_\u03a8QRH": {
+      "input": {
+        "shape": "torch.Size([2, 16, 128])",
+        "statistics": {
+          "mean": -0.010168377310037613,
+          "std": 1.022109866142273
+        }
+      },
+      "output": {
+        "shape": "torch.Size([2, 16, 128])",
+        "statistics": {
+          "mean": -2.354845264562755e-06,
+          "std": 0.00023670551308896393
+        }
+      },
+      "metadata": {
+        "total_processing_time_ms": 4.046440124511719,
+        "layers_involved": [
+          "quaternion_core",
+          "resonant_harmonic",
+          "semantic_filter",
+          "neurotransmitter_system",
+          "temporal_coherence"
+        ],
+        "cumulative_transformation_ratio": 0.0002315851888852194,
+        "is_full_stack": true,
+        "synergy_factor": 9.575995829400005
+      },
+      "timestamp": 1758733642.5138223
+    }
+  },
+  "performance_analysis": {
+    "fastest_layer": "neurotransmitter_system",
+    "slowest_layer": "quaternion_core",
+    "highest_transformation": "resonant_harmonic",
+    "average_processing_time_ms": 0.8092880249023438,
+    "average_transformation_ratio": 0.3273881316184998
+  },
+  "synergy_analysis": {
+    "highest_synergy_combination": [
+      "FULL_STACK_\u03a8QRH",
+      9.575995829400005
+    ],
+    "lowest_synergy_combination": [
+      "quaternion_core + neurotransmitter_system",
+      1.1
+    ],
+    "average_synergy": 1.9413568449571434
+  },
+  "recommendations": [
+    "Optimize quaternion_core layer - currently 1.59ms vs 0.21ms for neurotransmitter_system",
+    "Excellent full-stack synergy (9.58x) - maintain current architecture",
+    "Consider JIT compilation for production deployment",
+    "Implement mixed precision for memory optimization"
+  ]
+}
