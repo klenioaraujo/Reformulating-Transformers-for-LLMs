@@ -1,0 +1,559 @@
+import torch
+import torch.nn as nn
+import torch.fft as fft
+import math
+from typing import Dict, List, Optional, Tuple, Callable
+from dataclasses import dataclass
+from enum import Enum
+
+from quaternion_operations import QuaternionOperations
+
+
+class TemporalEvolutionMode(Enum):
+    """Modos de evolução temporal do continuum"""
+    LINEAR = "linear"           # Evolução linear no tempo
+    EXPONENTIAL = "exponential" # Decaimento/crescimento exponencial
+    OSCILLATORY = "oscillatory" # Evolução oscilatória
+    FRACTAL = "fractal"         # Evolução com propriedades fractais
+
+
+@dataclass
+class ContinuumConfig:
+    """Configuração para o Continuum Temporal Aprimorado"""
+    embed_dim: int = 64
+    memory_length: int = 512      # Comprimento da memória temporal
+    decay_rate: float = 0.95      # Taxa de decaimento da memória
+    evolution_rate: float = 0.15  # Increased for better temporal sensitivity
+    fractal_dimension: float = 2.0 # Dimensão fractal para evolução
+    temperature: float = 1.0      # Temperatura para suavização
+    num_evolution_modes: int = 4  # Número de modos de evolução
+    consistency_threshold: float = 0.6 # Lowered for better discontinuity detection
+    sarcasm_sensitivity: float = 0.3  # More sensitive irony detection
+    coherence_window: int = 5     # New: window for coherence calculation
+    discontinuity_threshold: float = 0.8  # New: threshold for detecting breaks
+    min_trajectory_length: int = 3  # New: minimum trajectory length for analysis
+
+
+class ConceptTrajectory:
+    """
+    Representa a trajetória de um conceito no espaço dos quaternions ao longo do tempo.
+    Cada conceito não é um estado fixo, mas uma trajetória evolutiva.
+    """
+
+    def __init__(self, initial_state: torch.Tensor, concept_id: str):
+        self.concept_id = concept_id
+        self.trajectory: List[torch.Tensor] = [initial_state.clone()]
+        self.timestamps: List[float] = [0.0]
+        self.phase_history: List[torch.Tensor] = []
+        self.magnitude_history: List[torch.Tensor] = []
+
+    def add_state(self, state: torch.Tensor, timestamp: float):
+        """Adiciona um novo estado à trajetória"""
+        self.trajectory.append(state.clone())
+        self.timestamps.append(timestamp)
+
+        # Calcula mudanças de fase e magnitude
+        if len(self.trajectory) > 1:
+            prev_state = self.trajectory[-2]
+
+            # Quaternion para coordenadas esféricas para análise de fase
+            phase_curr = torch.atan2(
+                torch.norm(state[1:]), state[0]  # Fase baseada em componentes imaginárias
+            )
+            phase_prev = torch.atan2(
+                torch.norm(prev_state[1:]), prev_state[0]
+            )
+
+            phase_change = phase_curr - phase_prev
+            self.phase_history.append(phase_change)
+
+            # Mudança de magnitude
+            mag_change = torch.norm(state) - torch.norm(prev_state)
+            self.magnitude_history.append(mag_change)
+
+    def detect_discontinuity(self, threshold: float = 0.5) -> bool:
+        """
+        Detecta quebras no continuum (mudanças abruptas que podem indicar
+        contradições ou mudanças de tópico)
+        """
+        if len(self.phase_history) < 2:
+            return False
+
+        # Calcula a derivada segunda da fase (aceleração da mudança)
+        recent_phases = self.phase_history[-3:] if len(self.phase_history) >= 3 else self.phase_history
+
+        if len(recent_phases) < 2:
+            return False
+
+        phase_acceleration = torch.abs(recent_phases[-1] - recent_phases[-2])
+        return phase_acceleration > threshold
+
+    def detect_phase_inversion(self) -> bool:
+        """
+        Detecta inversões súbitas na fase, que podem indicar ironia ou sarcasmo
+        """
+        if len(self.phase_history) < 2:
+            return False
+
+        # Verifica se houve uma inversão próxima a π (180 graus)
+        recent_phase_change = self.phase_history[-1]
+        return torch.abs(torch.abs(recent_phase_change) - math.pi) < 0.3
+
+
+class TemporalMemoryBank:
+    """
+    Sistema de memória temporal que modela a evolução e degradação
+    de conceitos ao longo do tempo, similar à memória física.
+    """
+
+    def __init__(self, config: ContinuumConfig):
+        self.config = config
+        self.concept_trajectories: Dict[str, ConceptTrajectory] = {}
+        self.global_time: float = 0.0
+        self.memory_states: List[torch.Tensor] = []
+
+        # Parâmetros de evolução temporal
+        self.evolution_kernels = nn.ParameterDict({
+            'linear': nn.Parameter(torch.randn(4, 4) * 0.1),
+            'exponential': nn.Parameter(torch.randn(4, 4) * 0.1),
+            'oscillatory': nn.Parameter(torch.randn(4, 4) * 0.1),
+            'fractal': nn.Parameter(torch.randn(4, 4) * 0.1)
+        })
+
+    def evolve_concept(self, concept_state: torch.Tensor,
+                      evolution_mode: TemporalEvolutionMode,
+                      time_delta: float) -> torch.Tensor:
+        """
+        Evolui um conceito no tempo usando o modo especificado
+        """
+        if evolution_mode == TemporalEvolutionMode.LINEAR:
+            # Evolução linear: q(t) = q(0) + α*t*K*q(0)
+            evolution_matrix = self.evolution_kernels['linear']
+            evolved_state = concept_state + self.config.evolution_rate * time_delta * torch.matmul(evolution_matrix, concept_state)
+
+        elif evolution_mode == TemporalEvolutionMode.EXPONENTIAL:
+            # Evolução exponencial: q(t) = q(0) * exp(α*t*K)
+            evolution_matrix = self.evolution_kernels['exponential']
+            exp_factor = torch.exp(self.config.evolution_rate * time_delta)
+            evolved_state = concept_state * exp_factor * torch.matmul(evolution_matrix, concept_state).norm()
+
+        elif evolution_mode == TemporalEvolutionMode.OSCILLATORY:
+            # Evolução oscilatória: q(t) = q(0) * cos(ωt) + K*q(0) * sin(ωt)
+            omega = 2 * math.pi * self.config.evolution_rate
+            cos_term = torch.cos(torch.tensor(omega * time_delta))
+            sin_term = torch.sin(torch.tensor(omega * time_delta))
+            evolution_matrix = self.evolution_kernels['oscillatory']
+
+            evolved_state = (cos_term * concept_state +
+                           sin_term * torch.matmul(evolution_matrix, concept_state))
+
+        elif evolution_mode == TemporalEvolutionMode.FRACTAL:
+            # Evolução fractal: incorpora propriedades de auto-similaridade
+            evolution_matrix = self.evolution_kernels['fractal']
+            fractal_scaling = torch.pow(torch.tensor(time_delta + 1e-6),
+                                      1.0 / self.config.fractal_dimension)
+            evolved_state = fractal_scaling * torch.matmul(evolution_matrix, concept_state)
+
+        else:
+            evolved_state = concept_state
+
+        # Normaliza para manter na variedade dos quaternions unitários
+        evolved_state = evolved_state / (torch.norm(evolved_state) + 1e-8)
+
+        return evolved_state
+
+    def update_concept_trajectory(self, concept_id: str,
+                                new_state: torch.Tensor,
+                                evolution_mode: TemporalEvolutionMode = TemporalEvolutionMode.LINEAR):
+        """
+        Atualiza a trajetória de um conceito específico
+        """
+        self.global_time += 1.0  # Incrementa tempo global
+
+        if concept_id not in self.concept_trajectories:
+            # Novo conceito
+            self.concept_trajectories[concept_id] = ConceptTrajectory(new_state, concept_id)
+        else:
+            # Evolui conceito existente
+            current_trajectory = self.concept_trajectories[concept_id]
+            last_state = current_trajectory.trajectory[-1]
+
+            # Aplica evolução temporal
+            time_delta = self.global_time - current_trajectory.timestamps[-1]
+            evolved_state = self.evolve_concept(last_state, evolution_mode, time_delta)
+
+            # Combina estado evoluído com novo estado observado
+            # Usa um peso adaptativo baseado na consistência
+            consistency = torch.cosine_similarity(evolved_state.unsqueeze(0),
+                                                new_state.unsqueeze(0), dim=1)
+
+            if consistency > self.config.consistency_threshold:
+                # Alta consistência: maior peso para evolução predita
+                combined_state = 0.7 * evolved_state + 0.3 * new_state
+            else:
+                # Baixa consistência: possível mudança de tópico ou contradição
+                combined_state = 0.3 * evolved_state + 0.7 * new_state
+
+            current_trajectory.add_state(combined_state, self.global_time)
+
+    def get_temporal_coherence_score(self) -> float:
+        """
+        Calcula um score de coerência temporal global APRIMORADO baseado em todas as trajetórias
+        """
+        if not self.concept_trajectories:
+            return 1.0
+
+        total_coherence = 0.0
+        num_concepts = 0
+        coherence_components = []
+
+        for concept_id, trajectory in self.concept_trajectories.items():
+            if len(trajectory.trajectory) < self.config.min_trajectory_length:
+                continue
+
+            # IMPROVEMENT 1: Multiple coherence metrics
+            trajectory_length = len(trajectory.trajectory)
+            window_size = min(self.config.coherence_window, trajectory_length)
+
+            # 1.1. Smoothness coherence (acceleration-based)
+            if trajectory_length >= 3:
+                recent_states = trajectory.trajectory[-window_size:]
+                smoothness_scores = []
+
+                for i in range(2, len(recent_states)):
+                    velocity_prev = recent_states[i-1] - recent_states[i-2]
+                    velocity_curr = recent_states[i] - recent_states[i-1]
+                    acceleration = torch.norm(velocity_curr - velocity_prev)
+                    smoothness = 1.0 / (1.0 + acceleration.item())
+                    smoothness_scores.append(smoothness)
+
+                avg_smoothness = sum(smoothness_scores) / len(smoothness_scores) if smoothness_scores else 0.5
+                coherence_components.append(('smoothness', avg_smoothness, 0.4))
+
+            # 1.2. Directional coherence (consistent direction)
+            if trajectory_length >= 4:
+                directions = []
+                states = trajectory.trajectory[-window_size:]
+
+                for i in range(1, len(states)):
+                    direction = states[i] - states[i-1]
+                    directions.append(direction)
+
+                if len(directions) >= 2:
+                    # Calculate consistency of directions
+                    direction_similarities = []
+                    for i in range(1, len(directions)):
+                        similarity = torch.cosine_similarity(
+                            directions[i-1].unsqueeze(0),
+                            directions[i].unsqueeze(0),
+                            dim=1
+                        ).item()
+                        direction_similarities.append(max(similarity, 0))  # Clamp to positive
+
+                    directional_coherence = sum(direction_similarities) / len(direction_similarities)
+                    coherence_components.append(('directional', directional_coherence, 0.3))
+
+            # 1.3. Magnitude coherence (consistent magnitude changes)
+            if trajectory_length >= 3:
+                magnitudes = [torch.norm(state).item() for state in trajectory.trajectory[-window_size:]]
+                if len(magnitudes) >= 2:
+                    magnitude_changes = [abs(magnitudes[i] - magnitudes[i-1]) for i in range(1, len(magnitudes))]
+                    avg_change = sum(magnitude_changes) / len(magnitude_changes)
+                    magnitude_coherence = 1.0 / (1.0 + avg_change)
+                    coherence_components.append(('magnitude', magnitude_coherence, 0.3))
+
+            # Combine coherence components for this trajectory
+            trajectory_coherence = 0.0
+            total_weight = 0.0
+
+            for comp_name, score, weight in coherence_components:
+                trajectory_coherence += score * weight
+                total_weight += weight
+
+            if total_weight > 0:
+                trajectory_coherence /= total_weight
+                total_coherence += trajectory_coherence
+                num_concepts += 1
+
+            coherence_components.clear()  # Reset for next trajectory
+
+        global_coherence = total_coherence / max(num_concepts, 1)
+
+        # IMPROVEMENT 2: Apply global consistency penalty
+        # Penalize if trajectories are inconsistent with each other
+        if num_concepts > 1:
+            consistency_penalty = self._calculate_cross_trajectory_consistency()
+            global_coherence *= (1.0 - 0.1 * consistency_penalty)  # Apply small penalty
+
+        return max(global_coherence, 0.0)  # Ensure non-negative
+
+    def _calculate_cross_trajectory_consistency(self) -> float:
+        """
+        Calculate consistency penalty based on cross-trajectory analysis
+        """
+        if len(self.concept_trajectories) < 2:
+            return 0.0
+
+        trajectories = list(self.concept_trajectories.values())
+        inconsistencies = []
+
+        for i in range(len(trajectories)):
+            for j in range(i + 1, len(trajectories)):
+                traj1, traj2 = trajectories[i], trajectories[j]
+
+                if len(traj1.trajectory) > 0 and len(traj2.trajectory) > 0:
+                    # Compare latest states
+                    state1 = traj1.trajectory[-1]
+                    state2 = traj2.trajectory[-1]
+
+                    # Measure inconsistency (high = inconsistent)
+                    similarity = torch.cosine_similarity(
+                        state1.unsqueeze(0), state2.unsqueeze(0), dim=1
+                    ).item()
+
+                    inconsistency = max(0, -similarity)  # Convert to positive inconsistency
+                    inconsistencies.append(inconsistency)
+
+        return sum(inconsistencies) / len(inconsistencies) if inconsistencies else 0.0
+
+    def detect_global_contradictions(self) -> List[Tuple[str, str, float]]:
+        """
+        Detecta contradições globais entre diferentes trajetórias de conceitos
+        """
+        contradictions = []
+        concept_ids = list(self.concept_trajectories.keys())
+
+        for i, id1 in enumerate(concept_ids):
+            for j, id2 in enumerate(concept_ids[i+1:], i+1):
+                traj1 = self.concept_trajectories[id1]
+                traj2 = self.concept_trajectories[id2]
+
+                if len(traj1.trajectory) > 0 and len(traj2.trajectory) > 0:
+                    # Calcula similaridade/oposição entre trajetórias mais recentes
+                    state1 = traj1.trajectory[-1]
+                    state2 = traj2.trajectory[-1]
+
+                    # Produto escalar quaterniônico para medir oposição
+                    opposition_score = -torch.cosine_similarity(
+                        state1.unsqueeze(0), state2.unsqueeze(0), dim=1
+                    ).item()
+
+                    if opposition_score > 0.7:  # Alta oposição
+                        contradictions.append((id1, id2, opposition_score))
+
+        return contradictions
+
+
+class EnhancedTemporalContinuum(nn.Module):
+    """
+    Continuum Temporal Aprimorado que modela explicitamente a evolução
+    de conceitos ao longo do tempo, integrando memória e detecção de anomalias.
+    """
+
+    def __init__(self, config: ContinuumConfig):
+        super().__init__()
+        self.config = config
+        self.embed_dim = config.embed_dim * 4  # Quaternion embedding
+
+        # Sistema de memória temporal
+        self.memory_bank = TemporalMemoryBank(config)
+
+        # Redes para análise temporal
+        self.temporal_encoder = nn.Sequential(
+            nn.Linear(self.embed_dim, self.embed_dim),
+            nn.LayerNorm(self.embed_dim),
+            nn.GELU(),
+            nn.Linear(self.embed_dim, self.embed_dim // 2)
+        )
+
+        # Detector de sarcasmo/ironia baseado em inversões de fase
+        self.sarcasm_detector = nn.Sequential(
+            nn.Linear(self.embed_dim, self.embed_dim // 2),
+            nn.ReLU(),
+            nn.Linear(self.embed_dim // 2, 1),
+            nn.Sigmoid()
+        )
+
+        # Parâmetros para modelagem temporal explícita
+        self.time_embedding = nn.Parameter(torch.randn(config.memory_length, self.embed_dim))
+
+        # Evolução paramétrica do "sinal"
+        self.signal_evolution_params = nn.ParameterDict({
+            'frequency': nn.Parameter(torch.tensor(1.0)),
+            'phase_shift': nn.Parameter(torch.tensor(0.0)),
+            'amplitude_decay': nn.Parameter(torch.tensor(0.95))
+        })
+
+    def model_signal_evolution(self, x: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
+        """
+        Modela a evolução explícita do "sinal" usando a Equação de Onda de Padilha
+        com parâmetro temporal explícito.
+
+        Ψ(x,t) = A(t) * exp(i * (k·x - ω*t + φ))
+
+        Args:
+            x: Estado atual [B, T, 4*D]
+            t: Parâmetro temporal [B, T] ou [T]
+        Returns:
+            Sinal evoluído no tempo
+        """
+        batch_size, seq_len, embed_dim = x.shape
+
+        # Parâmetros da evolução temporal
+        omega = self.signal_evolution_params['frequency']
+        phi = self.signal_evolution_params['phase_shift']
+        decay = self.signal_evolution_params['amplitude_decay']
+
+        # Amplitude com decaimento temporal
+        amplitude = torch.pow(decay, t)
+
+        # Fase temporal: ω*t + φ
+        temporal_phase = omega * t + phi
+
+        # Aplicar evolução temporal quaterniônica
+        x_quat = x.view(batch_size, seq_len, embed_dim // 4, 4)
+
+        # Cria quaternion de rotação temporal para cada timestep
+        cos_half_phase = torch.cos(temporal_phase / 2).unsqueeze(-1).unsqueeze(-1)
+        sin_half_phase = torch.sin(temporal_phase / 2).unsqueeze(-1).unsqueeze(-1)
+
+        # Quaternion de rotação temporal: [cos(θ/2), sin(θ/2), 0, 0]
+        temporal_quat = torch.cat([
+            cos_half_phase,
+            sin_half_phase,
+            torch.zeros_like(sin_half_phase),
+            torch.zeros_like(sin_half_phase)
+        ], dim=-1)
+
+        # Aplica rotação temporal via multiplicação quaterniônica
+        evolved_signal = torch.zeros_like(x_quat)
+        for b in range(batch_size):
+            for t_idx in range(seq_len):
+                for d in range(embed_dim // 4):
+                    evolved_signal[b, t_idx, d] = QuaternionOperations.multiply(
+                        temporal_quat[b, t_idx].unsqueeze(0),
+                        x_quat[b, t_idx, d].unsqueeze(0)
+                    ).squeeze(0)
+
+        # Aplica decaimento de amplitude - fix dimension mismatch
+        # amplitude: [B, T] -> [B, T, 1, 1] to match evolved_signal: [B, T, D, 4]
+        amplitude_expanded = amplitude.unsqueeze(-1).unsqueeze(-1)
+        evolved_signal = amplitude_expanded * evolved_signal
+
+        return evolved_signal.view(batch_size, seq_len, embed_dim)
+
+    def detect_sarcasm_and_irony(self, x: torch.Tensor,
+                               previous_states: List[torch.Tensor]) -> torch.Tensor:
+        """
+        Detecta sarcasmo e ironia através de análise de inversões súbitas de fase
+        """
+        if len(previous_states) < 2:
+            return torch.zeros(x.shape[0], x.shape[1], device=x.device)
+
+        # Compara estado atual com estados anteriores
+        prev_state = previous_states[-1]
+
+        # Calcula mudança de fase quaterniônica
+        phase_change = torch.zeros(x.shape[0], x.shape[1], device=x.device)
+
+        x_quat = x.view(*x.shape[:-1], -1, 4)
+        prev_quat = prev_state.view(*prev_state.shape[:-1], -1, 4)
+
+        for b in range(x.shape[0]):
+            for t in range(x.shape[1]):
+                # Produto escalar para medir mudança de orientação
+                dot_product = torch.sum(x_quat[b, t] * prev_quat[b, t], dim=-1)
+                phase_change[b, t] = torch.mean(torch.acos(torch.clamp(torch.abs(dot_product), 0, 1)))
+
+        # Detecta inversões próximas a π (indicativo de ironia)
+        sarcasm_mask = (torch.abs(phase_change - math.pi) < self.config.sarcasm_sensitivity).float()
+
+        # Refina detecção com rede neural
+        sarcasm_scores = self.sarcasm_detector(x).squeeze(-1)
+
+        # Combina detecção geométrica com aprendizada
+        final_sarcasm_scores = 0.6 * sarcasm_mask + 0.4 * sarcasm_scores
+
+        return final_sarcasm_scores
+
+    def forward(self, x: torch.Tensor, concept_ids: Optional[List[str]] = None) -> Tuple[torch.Tensor, Dict]:
+        """
+        Processa entrada através do continuum temporal aprimorado
+
+        Args:
+            x: Input tensor [B, T, 4*D]
+            concept_ids: IDs opcionais dos conceitos para rastreamento
+        Returns:
+            output: Tensor processado com evolução temporal
+            temporal_metrics: Métricas temporais e de consistência
+        """
+        batch_size, seq_len, embed_dim = x.shape
+        temporal_metrics = {}
+
+        # Criar tensor de tempo para cada posição da sequência
+        time_indices = torch.arange(seq_len, dtype=torch.float32, device=x.device)
+        time_tensor = time_indices.unsqueeze(0).expand(batch_size, -1)
+
+        # 1. Aplicar evolução temporal explícita
+        evolved_signal = self.model_signal_evolution(x, time_tensor)
+
+        # 2. Atualizar trajetórias de conceitos no banco de memória
+        if concept_ids is not None:
+            for i, concept_id in enumerate(concept_ids):
+                if i < batch_size:
+                    # Média ao longo da sequência para representar o conceito
+                    concept_state = evolved_signal[i].mean(dim=0)
+
+                    # Converte para quaternion unitário
+                    concept_quat = concept_state[:4]  # Primeiros 4 componentes
+                    concept_quat = concept_quat / (torch.norm(concept_quat) + 1e-8)
+
+                    self.memory_bank.update_concept_trajectory(
+                        concept_id, concept_quat, TemporalEvolutionMode.LINEAR
+                    )
+
+        # 3. Detectar sarcasmo/ironia
+        memory_states = [torch.randn_like(evolved_signal) for _ in range(2)]  # Mock previous states
+        sarcasm_scores = self.detect_sarcasm_and_irony(evolved_signal, memory_states)
+
+        # 4. Calcular métricas de consistência temporal
+        temporal_coherence = self.memory_bank.get_temporal_coherence_score()
+        global_contradictions = self.memory_bank.detect_global_contradictions()
+
+        # 5. Análise de quebras no continuum
+        continuity_breaks = []
+        if hasattr(self.memory_bank, 'concept_trajectories'):
+            for concept_id, trajectory in self.memory_bank.concept_trajectories.items():
+                if trajectory.detect_discontinuity():
+                    continuity_breaks.append(concept_id)
+
+        # Compor métricas de saída
+        temporal_metrics.update({
+            'temporal_coherence': temporal_coherence,
+            'sarcasm_scores': sarcasm_scores,
+            'global_contradictions': global_contradictions,
+            'continuity_breaks': continuity_breaks,
+            'signal_evolution_params': dict(self.signal_evolution_params.items()),
+            'concept_count': len(self.memory_bank.concept_trajectories)
+        })
+
+        return evolved_signal, temporal_metrics
+
+    def get_concept_trajectory_analysis(self, concept_id: str) -> Optional[Dict]:
+        """
+        Retorna análise detalhada da trajetória de um conceito específico
+        """
+        if concept_id not in self.memory_bank.concept_trajectories:
+            return None
+
+        trajectory = self.memory_bank.concept_trajectories[concept_id]
+
+        return {
+            'trajectory_length': len(trajectory.trajectory),
+            'current_state': trajectory.trajectory[-1] if trajectory.trajectory else None,
+            'phase_history': trajectory.phase_history,
+            'magnitude_history': trajectory.magnitude_history,
+            'has_discontinuities': trajectory.detect_discontinuity(),
+            'has_phase_inversions': trajectory.detect_phase_inversion(),
+            'timestamps': trajectory.timestamps
+        }

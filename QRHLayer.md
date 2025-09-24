@@ -138,4 +138,60 @@ A critical test is to see if the memory usage scales linearly as promised. We ne
 
     Sweeps the sequence length: [256, 512, 1024, 2048, 4096, 8192].
 
-    Plots the results: Memory vs. Seq Len and Time vs. Seq Len. The QRH lines should have a much shallower slope than the quadratic attention baseline. This would be a huge visual proof of concept       
+    Plots the results: Memory vs. Seq Len and Time vs. Seq Len. The QRH lines should have a much shallower slope than the quadratic attention baseline. This would be a huge visual proof of concept
+
+## JIT Compilation Parameters for QRH System
+
+### JIT Configuration
+```python
+jit_params = {
+    "enable_jit": True,                    # Enable/disable JIT compilation
+    "jit_trace_mode": "trace",             # "trace" or "script"
+    "optimization_level": 2,               # 0=none, 1=basic, 2=aggressive
+    "disable_jit_methods": [               # Methods to exclude from JIT
+        "fast_quaternion_opposition",      # Replaced by neurotransmitter system
+        "dynamic_concept_tracking"         # Dynamic operations not suitable for tracing
+    ]
+}
+```
+
+### JIT-Safe Method Replacements
+```python
+# Original problematic method:
+# @torch.jit.script_method  # REMOVE THIS
+def fast_quaternion_opposition(self, x_quat: torch.Tensor) -> torch.Tensor:
+    # Implementation stays the same, just remove the decorator
+
+# JIT-compatible alternative:
+def safe_quaternion_opposition(self, x_quat: torch.Tensor) -> torch.Tensor:
+    """JIT-safe version using neurotransmitter alignment"""
+    return self.neurotransmitter_system.gaba(x_quat.view(batch_size, seq_len, -1))
+```
+
+### JIT Initialization Pattern
+```python
+def prepare_qrh_for_jit(model, sample_input):
+    """Prepare QRH model for JIT compilation"""
+    model.eval()
+
+    # Test forward pass first
+    with torch.no_grad():
+        test_output = model(sample_input)
+
+    # Apply JIT only to compatible components
+    if hasattr(model, 'qrh_core'):
+        # Core QRH operations are JIT-safe
+        model.qrh_core = torch.jit.trace(model.qrh_core, sample_input)
+
+    return model
+```
+
+### Production JIT Settings
+```python
+production_jit_config = {
+    "jit_warmup_steps": 3,                 # Number of warmup forward passes
+    "jit_sample_input_shape": [2, 16, 128], # [batch, seq_len, embed_dim*4]
+    "jit_compatibility_mode": True,        # Use neurotransmitter alignment for problematic methods
+    "jit_error_fallback": True            # Fall back to non-JIT if compilation fails
+}
+```
