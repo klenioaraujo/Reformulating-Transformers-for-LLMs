@@ -147,7 +147,8 @@ class AdvancedTestModel(nn.Module):
 
         # Process through ΨQRH framework to get meaningful numerical representation
         try:
-            processed_output = self.transformer(input_tensor)
+            # Process through the transformer to get the pre-normalization tensor
+            processed_output = self.transformer.forward_pre_norm(input_tensor)
 
             # Extract meaningful patterns from the processing
             # Use statistical properties of the output to guide response generation
