@@ -6,7 +6,7 @@ import sys
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(BASE_DIR)
 
-from tests.human_testing.test_advanced_chat import AdvancedTestModel
+from tests.human_testing.complete_harmonic_psiqrh import CompleteHarmonicTestModel
 
 import torch
 import os
@@ -16,7 +16,7 @@ import sys
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(BASE_DIR)
 
-from tests.human_testing.test_advanced_chat import AdvancedTestModel
+from tests.human_testing.complete_harmonic_psiqrh import CompleteHarmonicTestModel
 
 def run_graduated_complexity_test():
     """
@@ -25,8 +25,8 @@ def run_graduated_complexity_test():
     """
     print("--- Starting Graduated Complexity Test ---")
 
-    # 1. Initialize the model with a standard configuration.
-    model = AdvancedTestModel(embed_dim=32, num_layers=2, seq_len=256)
+    # 1. Initialize the model with complete ΨQRH system processing.
+    model = CompleteHarmonicTestModel(embed_dim=32, num_layers=2, seq_len=256)
     model.eval()
 
     # 2. Define 10 questions with increasing complexity and varied domains.
@@ -46,7 +46,7 @@ def run_graduated_complexity_test():
         # Level 7: Applied mathematics
         {"content": "How can a differential equation model population growth?", "category": "Scientific_Question", "domain": "Applied Mathematics"},
         # Level 8: Abstract linguistic concept
-        {"content": "Analyze the linguistic concept of semantic satiation.", "category": "Sarcasm_Irony", "domain": "Linguistics"}, # Adapted category
+        {"content": "Analyze the linguistic concept of semantic satiation.", "category": "Scientific_Question", "domain": "Linguistics"}, # Fixed category
         # Level 9: Complex, cross-disciplinary concept
         {"content": "Discuss the relationship between entropy in thermodynamics and information theory.", "category": "Scientific_Question", "domain": "Physics"},
         # Level 10: Advanced physics topic
