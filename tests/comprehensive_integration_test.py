@@ -53,6 +53,8 @@ from quartz_light_prototype import (
     calculate_dimension_from_alpha,
     FractalAnalyzer
 )
+from semantic_adaptive_filters import SemanticAdaptiveFilter, SemanticFilterConfig
+from synthetic_neurotransmitters import SyntheticNeurotransmitterSystem, NeurotransmitterConfig
 
 class ComprehensiveIntegrationTester:
     def __init__(self, config_path="fractal_config.yaml"):
@@ -518,6 +520,121 @@ class ComprehensiveIntegrationTester:
             print(f"  Mathematical consistency: ✗ FAIL - {e}")
             return False
 
+    def test_human_chat_simulation(self) -> bool:
+        """Comprehensive test for end-to-end text generation with detailed operational reporting."""
+        print("\n=== Human Chat Simulation Test (Comprehensive) ===")
+        logging.info("Running comprehensive human chat simulation")
+
+        try:
+            # Define a simple character-level tokenizer inside the method
+            class SimpleCharTokenizer:
+                def __init__(self, corpus):
+                    self.chars = sorted(list(set(corpus)))
+                    self.vocab_size = len(self.chars)
+                    self.stoi = {ch: i for i, ch in enumerate(self.chars)}
+                    self.itos = {i: ch for i, ch in enumerate(self.chars)}
+
+                def encode(self, s, max_len=128):
+                    encoded = [self.stoi.get(ch, 0) for ch in s]
+                    while len(encoded) < max_len:
+                        encoded.append(0)
+                    return encoded[:max_len]
+
+                def decode(self, l):
+                    return ''.join([self.itos.get(i, '') for i in l]).strip()
+
+            prompts = [
+                "Explique o conceito de rotações de quaternion para uma página de wiki.",
+                "Este relatório de bug é 'ótimo'. A total falta de detalhes e clareza realmente acelera o desenvolvimento."
+            ]
+            
+            corpus = ''.join(prompts) + "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ .,:!?'\n"
+            tokenizer = SimpleCharTokenizer(corpus)
+            
+            # Model Parameters
+            embed_dim = 64
+            num_layers = 4
+            seq_len = 128
+
+            # Instantiate all components
+            model = FractalTransformer(
+                vocab_size=tokenizer.vocab_size,
+                embed_dim=embed_dim,
+                num_layers=num_layers,
+                seq_len=seq_len,
+                enable_fractal_adaptation=True
+            )
+            semantic_filter = SemanticAdaptiveFilter(SemanticFilterConfig(embed_dim=embed_dim // 4))
+            neurotransmitter_system = SyntheticNeurotransmitterSystem(NeurotransmitterConfig(embed_dim=embed_dim))
+            fractal_analyzer = FractalAnalyzer()
+
+            report_path = os.path.join(BASE_DIR, "human_chat_report.txt")
+            with open(report_path, "w", encoding="utf-8") as f:
+                f.write("RELATÓRIO DE TESTE DE CHAT DETALHADO (OPERACIONALIDADE)\n")
+                f.write("="*60 + "\n")
+                f.write(f"Modelo: FractalTransformer (layers={num_layers}, embed_dim={embed_dim})\n")
+
+                for i, prompt in enumerate(prompts):
+                    f.write(f"\n--- PROMPT {i+1}: '{prompt}' ---\n")
+                    input_ids = torch.tensor([tokenizer.encode(prompt, max_len=seq_len)], dtype=torch.long)
+                    
+                    # --- Layer-by-Layer Execution ---
+                    f.write("\n--- Análise Camada por Camada ---\n")
+                    x = model.token_embedding(input_ids)
+
+                    # 1. Semantic Filter Analysis
+                    filtered_x, metrics = semantic_filter(x)
+                    f.write("\nMétricas do Filtro Semântico (Pré-Processamento):\n")
+                    f.write(f"  - Nível de Contradição: {metrics['contradiction_scores'].mean().item():.4f}\n")
+                    f.write(f"  - Nível de Relevância: {metrics['relevance_scores'].mean().item():.4f}\n")
+                    x = filtered_x[:,:,:embed_dim]
+
+                    # 2. Fractal Dimension Update
+                    numpy_input = x.detach().cpu().numpy().reshape(-1, embed_dim)
+                    fractal_dim = fractal_analyzer.calculate_box_counting_dimension(numpy_input)
+                    new_alpha = calculate_alpha_from_dimension(fractal_dim, '2d')
+                    f.write(f"\nAnálise Fractal da Entrada:\n  - Dimensão Fractal Calculada: {fractal_dim:.4f}\n  - Novo Alpha para as camadas: {new_alpha:.4f}\n")
+                    for layer in model.layers:
+                        if hasattr(layer, 'qrh_layer') and hasattr(layer.qrh_layer, 'spectral_filter'):
+                            layer.qrh_layer.spectral_filter.alpha = torch.tensor(new_alpha, device=x.device)
+
+                    # 3. Transformer Layers
+                    for i, layer in enumerate(model.layers):
+                        output_tuple = layer(x)
+                        x, seal_info = output_tuple
+
+                        logits = model.output_proj(x)
+                        _, predicted_ids = torch.max(logits, dim=-1)
+                        layer_output_text = tokenizer.decode(predicted_ids[0].tolist())
+                        
+                        f.write(f"\n--- Camada {i+1}/{num_layers} ---\n")
+                        f.write(f"Saída de Texto (parcial): {layer_output_text}\n")
+                        
+                        x = neurotransmitter_system(x)
+                        nt_status = neurotransmitter_system.get_neurotransmitter_status()
+                        
+                        f.write("Status dos Neurotransmissores:\n")
+                        for name, value in nt_status.items():
+                            f.write(f"  - {name}: {value:.4f}\n")
+                        f.write(f"Seal Info: {seal_info.get('decision', 'N/A')} (rg_value: {seal_info.get('rg_value', 0):.3f})\n")
+
+                    # --- Final Output ---
+                    final_logits = model.output_proj(x)
+                    _, final_predicted_ids = torch.max(final_logits, dim=-1)
+                    final_output_text = tokenizer.decode(final_predicted_ids[0].tolist())
+
+                    f.write("\n--- Saída Final Completa ---\n")
+                    f.write(f"{final_output_text}\n")
+                    f.write("="*60 + "\n")
+            
+            print(f"  ✓ Chat simulation (comprehensive) complete. Report saved to {report_path}")
+            return True
+
+        except Exception as e:
+            logging.error(f"Human chat simulation error: {e}", exc_info=True)
+            print(f"  ✗ FAIL - Human chat simulation error: {e}")
+            return False
+
     def generate_cantor_set(self, n_points: int, level: int = 10) -> np.ndarray:
         """Generate Cantor set for testing"""
         points = np.zeros(n_points)
@@ -542,7 +659,8 @@ class ComprehensiveIntegrationTester:
             ("Component Integration", self.test_component_integration),
             ("Performance Benchmarks", self.test_performance_benchmarks),
             ("Edge Cases & Robustness", self.test_edge_cases_robustness),
-            ("Mathematical Consistency", self.test_mathematical_consistency)
+            ("Mathematical Consistency", self.test_mathematical_consistency),
+            ("Human Chat Simulation", self.test_human_chat_simulation)
         ]
 
         results = {}
