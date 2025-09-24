@@ -6,17 +6,7 @@ import sys
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(BASE_DIR)
 
-from tests.human_testing.complete_harmonic_psiqrh import CompleteHarmonicTestModel
-
-import torch
-import os
-import sys
-
-# Add base directory to path to find modules
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-sys.path.append(BASE_DIR)
-
-from tests.human_testing.complete_harmonic_psiqrh import CompleteHarmonicTestModel
+from tests.human_testing.spectral_conversion_psiqrh_fixed import PureSpectralΨQRHTestModel
 
 def run_graduated_complexity_test():
     """
@@ -25,8 +15,8 @@ def run_graduated_complexity_test():
     """
     print("--- Starting Graduated Complexity Test ---")
 
-    # 1. Initialize the model with complete ΨQRH system processing.
-    model = CompleteHarmonicTestModel(embed_dim=32, num_layers=2, seq_len=256)
+    # 1. Initialize the model with PURE SPECTRAL ΨQRH system - ZERO hardcoding, pure mathematical extraction.
+    model = PureSpectralΨQRHTestModel(embed_dim=32, num_layers=8, seq_len=256)
     model.eval()
 
     # 2. Define 10 questions with increasing complexity and varied domains.
@@ -65,7 +55,7 @@ def run_graduated_complexity_test():
             'content': input_text
         }
 
-        # Process the input using the real ΨQRH pipeline.
+        # Process the input using the PURE SPECTRAL ΨQRH pipeline - ZERO hardcoding mathematical extraction.
         output_text = model.generate_wiki_appropriate_response(input_text, prompt_info)
 
         # Print the results in a readable format.

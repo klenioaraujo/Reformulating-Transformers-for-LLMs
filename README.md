@@ -310,7 +310,7 @@ source venv/bin/activate  # Linux/Mac
 pip install -r requirements.txt
 
 # Run validation
-python simple_validation_test.py
+python tests/simple_validation_test.py
 ```
 
 ### 2.5 Validation
@@ -328,7 +328,7 @@ make test
 make demo
 ```
 
-For detailed installation instructions and troubleshooting, see [README.Docker.md](README.Docker.md) and [QUICKSTART.md](QUICKSTART.md).
+For detailed installation instructions and troubleshooting, see [README.Docker.md](docker/README.Docker.md) and [QUICKSTART.md](QUICKSTART.md).
 
 ## 3. Mathematical Framework
 
@@ -1092,10 +1092,10 @@ AdaptiveFractalQRHLayer(
 **Running the Enhanced Validation Suite:**
 ```bash
 # Enhanced validation with Padilha wave equation integration
-python simple_validation_test.py
+python tests/simple_validation_test.py
 
 # Statistical robustness verification against false positives
-python robust_validation_test.py
+python tests/robust_validation_test.py
 
 # Fractal-PyTorch integration
 python fractal_pytorch_integration.py
@@ -1172,10 +1172,10 @@ The enhanced validation test (`simple_validation_test.py`) with Padilha wave equ
 **Running the Enhanced Validation:**
 ```bash
 # Enhanced validation with Padilha wave equation
-python simple_validation_test.py
+python tests/simple_validation_test.py
 
 # Statistical robustness verification
-python robust_validation_test.py
+python tests/robust_validation_test.py
 ```
 
 #### 8.6.3 Complete Test Suite Validation Results
@@ -1296,7 +1296,7 @@ To ensure the reported success rates are statistically valid and not false posit
 **Running Robust Validation:**
 ```bash
 # Execute statistical robustness verification
-(.venv) $ python robust_validation_test.py
+(.venv) $ python tests/robust_validation_test.py
 
 # Expected output for robust framework:
 # Robust Success Rate: ≥80%
@@ -1628,12 +1628,12 @@ cd reformulating-transformers
 pip install torch numpy matplotlib seaborn scipy
 
 # Run comprehensive tests
-python test_4d_unitary_layer.py
+python tests/test_4d_unitary_layer.py
 
 # Generate visualizations
-python simple_validation_test.py
-python comprehensive_integration_test.py
-python robust_validation_test.py
+python tests/simple_validation_test.py
+python tests/comprehensive_integration_test.py
+python tests/robust_validation_test.py
 ```
 
 #### Test Results
@@ -1869,7 +1869,7 @@ services:
 
 ```bash
 # Run with GPU
-docker-compose -f docker-compose.yml -f docker-compose.gpu.yml up
+docker-compose -f docker/docker-compose.yml -f docker-compose.gpu.yml up
 ```
 
 ### 11.7 Development with Docker
@@ -1892,9 +1892,9 @@ pip install new-dependency
 #### Complete Validation
 ```bash
 # Run complete validation suite
-docker-compose run --rm psiqrh python simple_validation_test.py
-docker-compose run --rm psiqrh python comprehensive_integration_test.py
-docker-compose run --rm psiqrh python robust_validation_test.py
+docker-compose run --rm psiqrh python tests/simple_validation_test.py
+docker-compose run --rm psiqrh python tests/comprehensive_integration_test.py
+docker-compose run --rm psiqrh python tests/robust_validation_test.py
 ```
 
 #### Fractal Analysis
@@ -1996,9 +1996,9 @@ For those preferring scripts over make:
 
 ```bash
 # Using the provided script
-./run_docker.sh build && ./run_docker.sh up
-./run_docker.sh test
-./run_docker.sh shell
+./docker/run_docker.sh build && ./docker/run_docker.sh up
+./docker/run_docker.sh test
+./docker/run_docker.sh shell
 ```
 
 **Key Benefits of Docker Deployment:**
@@ -2009,7 +2009,7 @@ For those preferring scripts over make:
 - ✅ **CI/CD Ready**: Automated testing and deployment
 - ✅ **Cross-Platform**: Works on Linux, macOS, Windows
 
-For detailed Docker instructions, see [README.Docker.md](README.Docker.md).
+For detailed Docker instructions, see [README.Docker.md](docker/README.Docker.md).
 
 ## 12. Emergent Spider Cognition: ΨQRH Genetic Algorithm with Chaos-Driven Visualization
 

@@ -184,21 +184,15 @@ class SpectralLanguageGenerator(nn.Module):
 
         print(f"🔄 Processamento espectral QRH:")
 
-        # Processa através de múltiplas camadas QRH
+        # Processa através de múltiplas camadas QRH - ZERO fallbacks
         for i, qrh_layer in enumerate(self.qrh_layers):
-            try:
-                x_old = x.clone()
-                x = qrh_layer(x)
+            x = qrh_layer(x)
 
-                # Analisa mudanças espectrais
-                x_spectrum = fft.fft(self.dim_converter(x), dim=1)
-                spectral_power = torch.abs(x_spectrum).mean().item()
+            # Analisa mudanças espectrais
+            x_spectrum = fft.fft(self.dim_converter(x), dim=1)
+            spectral_power = torch.abs(x_spectrum).mean().item()
 
-                print(f"   ✅ QRH Layer {i+1}: Potência espectral = {spectral_power:.4f}")
-
-            except Exception as e:
-                print(f"   ⚠️ QRH Layer {i+1}: Adaptando - {str(e)[:50]}")
-                x = x_old * 1.1  # Pequena transformação
+            print(f"   ✅ QRH Layer {i+1}: Potência espectral = {spectral_power:.4f}")
 
         return x
 

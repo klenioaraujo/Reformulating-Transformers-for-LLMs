@@ -5,7 +5,7 @@
 # Configuration
 DOCKER_IMAGE := psiqrh-transformer
 DOCKER_TAG := latest
-COMPOSE_FILE := docker-compose.yml
+COMPOSE_FILE := docker/docker-compose.yml
 PROJECT_NAME := psiqrh
 
 # Colors for output
@@ -106,33 +106,33 @@ test: ## Run complete test suite
 	$(call print_info,"Running ΨQRH comprehensive test suite...")
 	@docker-compose -f $(COMPOSE_FILE) run --rm psiqrh bash -c " \
 		echo '=== ΨQRH Framework Test Suite ===' && \
-		python simple_validation_test.py && \
+		python tests/simple_validation_test.py && \
 		echo '--- Comprehensive Integration Test ---' && \
-		python comprehensive_integration_test.py && \
+		python tests/comprehensive_integration_test.py && \
 		echo '--- Robust Validation Test ---' && \
-		python robust_validation_test.py && \
+		python tests/robust_validation_test.py && \
 		echo '=== All tests completed successfully ==='"
 	$(call print_success,"All tests passed!")
 
 .PHONY: test-simple
 test-simple: ## Run simple validation test
 	$(call print_info,"Running simple validation test...")
-	@docker-compose -f $(COMPOSE_FILE) run --rm psiqrh python simple_validation_test.py
+	@docker-compose -f $(COMPOSE_FILE) run --rm psiqrh python tests/simple_validation_test.py
 
 .PHONY: test-comprehensive
 test-comprehensive: ## Run comprehensive integration test
 	$(call print_info,"Running comprehensive integration test...")
-	@docker-compose -f $(COMPOSE_FILE) run --rm psiqrh python comprehensive_integration_test.py
+	@docker-compose -f $(COMPOSE_FILE) run --rm psiqrh python tests/comprehensive_integration_test.py
 
 .PHONY: test-robust
 test-robust: ## Run robust validation test
 	$(call print_info,"Running robust validation test...")
-	@docker-compose -f $(COMPOSE_FILE) run --rm psiqrh python robust_validation_test.py
+	@docker-compose -f $(COMPOSE_FILE) run --rm psiqrh python tests/robust_validation_test.py
 
 .PHONY: test-4d
 test-4d: ## Run 4D Unitary Layer tests
 	$(call print_info,"Running 4D Unitary Layer tests...")
-	@docker-compose -f $(COMPOSE_FILE) run --rm psiqrh python test_4d_unitary_layer.py
+	@docker-compose -f $(COMPOSE_FILE) run --rm psiqrh python tests/test_4d_unitary_layer.py
 
 # Demonstrations and Analysis
 .PHONY: demo
@@ -255,8 +255,8 @@ gpu-test: ## Test GPU functionality
 ci-test: build ## CI/CD test pipeline
 	$(call print_info,"Running CI/CD test pipeline...")
 	@docker-compose -f $(COMPOSE_FILE) run --rm psiqrh bash -c " \
-		python simple_validation_test.py && \
-		python comprehensive_integration_test.py"
+		python tests/simple_validation_test.py && \
+		python tests/comprehensive_integration_test.py"
 	$(call print_success,"CI/CD tests passed!")
 
 .PHONY: docker-push

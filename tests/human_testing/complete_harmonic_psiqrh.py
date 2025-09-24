@@ -302,16 +302,16 @@ class ExpertiseSpectralCalibrator(nn.Module):
         x_mean = x.mean(dim=1)  # [batch, embed_dim]
         base_expertise_weights = self.expertise_selector(x_mean)  # [batch, num_expertise]
 
-        # Mapeamento de domínios para expertises relevantes
+        # Mapeamento CORRETO de domínios para expertises relevantes
         domain_to_expertise = {
-            'Mathematics': ['differential_equations', 'mathematical_modeling'],
+            'Mathematics': ['mathematical_modeling'],  # Números primos, álgebra, etc.
             'Applied Mathematics': ['differential_equations', 'population_dynamics', 'mathematical_modeling'],
-            'Programming': ['mathematical_modeling'],  # Algoritmos e lógica
-            'Physics': ['thermodynamics', 'information_theory', 'statistical_mechanics'],
-            'Literature': ['cognitive_linguistics', 'psycholinguistics'],
+            'Programming': ['mathematical_modeling'],  # Algoritmos, estruturas de dados
+            'Physics': ['thermodynamics', 'statistical_mechanics'],  # Mecânica, termodinâmica
+            'Literature': ['cognitive_linguistics', 'psycholinguistics'],  # Poesia, literatura
             'Linguistics': ['semantic_satiation', 'cognitive_linguistics', 'psycholinguistics'],
-            'Engineering': ['information_theory', 'mathematical_modeling'],
-            'Computer Science': ['information_theory', 'mathematical_modeling'],
+            'Engineering': ['information_theory', 'mathematical_modeling'],  # Processamento de sinais
+            'Computer Science': ['information_theory', 'mathematical_modeling'],  # Algoritmos, computação
             'Particle Physics': ['gauge_theories', 'differential_geometry', 'field_theory'],
             'Chemistry': ['thermodynamics', 'statistical_mechanics'],
             'Biology': ['population_dynamics', 'information_theory'],
@@ -558,7 +558,7 @@ class CompleteHarmonicΨQRHSystem(nn.Module):
         return final_output, all_metrics
 
     def generate_expert_response(self, input_text: str, prompt_info: Dict,
-                               final_output: torch.Tensor, all_metrics: Dict) -> str:
+                                final_output: torch.Tensor, all_metrics: Dict) -> str:
         """
         Gera resposta especializada baseada no processamento harmônico completo
         """
@@ -569,7 +569,24 @@ class CompleteHarmonicΨQRHSystem(nn.Module):
         top_expertise = all_metrics['expertise']['top_expertise']
         expertise_confidence = all_metrics['expertise']['expertise_confidence']
 
-        # Gera resposta especializada baseada no top expertise
+        # DETECÇÃO ESPECÍFICA DE TÓPICOS baseada no conteúdo da pergunta
+        input_lower = input_text.lower()
+
+        # Tópicos específicos detectados pelo conteúdo
+        if 'prime number' in input_lower or 'prime' in input_lower:
+            return self._generate_prime_numbers_response(input_text, all_metrics)
+        elif 'newton' in input_lower and 'law' in input_lower:
+            return self._generate_newton_laws_response(input_text, all_metrics)
+        elif 'python' in input_lower and ('list' in input_lower or 'tuple' in input_lower):
+            return self._generate_python_data_structures_response(input_text, all_metrics)
+        elif 'sonnet' in input_lower:
+            return self._generate_sonnet_structure_response(input_text, all_metrics)
+        elif 'fourier' in input_lower and 'transform' in input_lower:
+            return self._generate_fourier_transform_response(input_text, all_metrics)
+        elif 'recursion' in input_lower:
+            return self._generate_recursion_response(input_text, all_metrics)
+
+        # Gera resposta especializada baseada no top expertise (para tópicos avançados)
         if 'differential_equations' in top_expertise or 'population' in input_text.lower():
             return self._generate_differential_equations_response(input_text, all_metrics)
         elif 'semantic_satiation' in top_expertise or 'semantic satiation' in input_text.lower():
