@@ -294,13 +294,52 @@ class ExpertiseSpectralCalibrator(nn.Module):
 
     def forward(self, x: torch.Tensor, domain_hint: str = None) -> Tuple[torch.Tensor, Dict]:
         """
-        Calibra resposta com expertise específica
+        Calibra resposta com expertise específica usando domain_hint
         """
         batch_size, seq_len, embed_dim = x.shape
 
         # Análise semântica para detectar domínio
         x_mean = x.mean(dim=1)  # [batch, embed_dim]
-        expertise_weights = self.expertise_selector(x_mean)  # [batch, num_expertise]
+        base_expertise_weights = self.expertise_selector(x_mean)  # [batch, num_expertise]
+
+        # Mapeamento de domínios para expertises relevantes
+        domain_to_expertise = {
+            'Mathematics': ['differential_equations', 'mathematical_modeling'],
+            'Applied Mathematics': ['differential_equations', 'population_dynamics', 'mathematical_modeling'],
+            'Programming': ['mathematical_modeling'],  # Algoritmos e lógica
+            'Physics': ['thermodynamics', 'information_theory', 'statistical_mechanics'],
+            'Literature': ['cognitive_linguistics', 'psycholinguistics'],
+            'Linguistics': ['semantic_satiation', 'cognitive_linguistics', 'psycholinguistics'],
+            'Engineering': ['information_theory', 'mathematical_modeling'],
+            'Computer Science': ['information_theory', 'mathematical_modeling'],
+            'Particle Physics': ['gauge_theories', 'differential_geometry', 'field_theory'],
+            'Chemistry': ['thermodynamics', 'statistical_mechanics'],
+            'Biology': ['population_dynamics', 'information_theory'],
+            'General': [],  # Usa apenas análise semântica
+        }
+
+        # Aplica influência do domain_hint se fornecido
+        if domain_hint and domain_hint in domain_to_expertise:
+            relevant_expertises = domain_to_expertise[domain_hint]
+            if relevant_expertises:
+                # Cria pesos de influência baseados no domínio
+                expertise_keys = list(self.expertise_embeddings.keys())
+                domain_influence = torch.zeros_like(base_expertise_weights)
+
+                # Aumenta pesos para expertises relevantes do domínio
+                for expertise in relevant_expertises:
+                    if expertise in expertise_keys:
+                        idx = expertise_keys.index(expertise)
+                        domain_influence[:, idx] = 0.7  # Forte influência do domínio
+
+                # Combina pesos semânticos com influência do domínio
+                # 60% análise semântica + 40% influência do domínio
+                expertise_weights = 0.6 * base_expertise_weights + 0.4 * domain_influence
+                expertise_weights = torch.softmax(expertise_weights, dim=-1)
+            else:
+                expertise_weights = base_expertise_weights
+        else:
+            expertise_weights = base_expertise_weights
 
         # Combina embeddings de expertise baseado nos pesos
         expertise_keys = list(self.expertise_embeddings.keys())
@@ -323,7 +362,9 @@ class ExpertiseSpectralCalibrator(nn.Module):
         calibration_metrics = {
             'top_expertise': max(expertise_contributions, key=expertise_contributions.get),
             'expertise_confidence': max(expertise_contributions.values()),
-            'expertise_distribution': expertise_contributions
+            'expertise_distribution': expertise_contributions,
+            'domain_hint_used': domain_hint if domain_hint else 'None',
+            'domain_influence_applied': domain_hint in domain_to_expertise if domain_hint else False
         }
 
         return enhanced_sequence, calibration_metrics
