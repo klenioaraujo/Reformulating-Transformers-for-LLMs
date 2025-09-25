@@ -16,8 +16,8 @@ WORKDIR /app
 # Copy the entire project
 COPY . /app
 
-# Install dependencies from requirements.txt (skip network-dependent packages)
-RUN python -m pip install --no-cache-dir --index-url https://pypi.org/simple/ numpy scipy torch pandas matplotlib seaborn plotly rich requests
+# Install dependencies from requirements.txt
+RUN python -m pip install --no-cache-dir --index-url https://pypi.org/simple/ -r requirements.txt
 
 # Run integrity setup
 RUN make -f ops/Makefile integrity-setup || echo "Integrity setup completed"

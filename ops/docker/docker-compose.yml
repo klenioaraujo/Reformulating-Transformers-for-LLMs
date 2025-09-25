@@ -4,12 +4,12 @@ services:
   # Serviço principal do ΨQRH Framework
   psiqrh:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ../..
+      dockerfile: ops/docker/Dockerfile
     container_name: psiqrh-transformer
     volumes:
       # Montar código fonte para desenvolvimento
-      - .:/app
+      - ../..:/app
       # Persistir modelos e resultados
       - psiqrh-models:/app/models
       - psiqrh-logs:/app/logs
@@ -29,11 +29,11 @@ services:
   # Serviço para testes e validação
   psiqrh-test:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ../..
+      dockerfile: ops/docker/Dockerfile
     container_name: psiqrh-test
     volumes:
-      - .:/app
+      - ../..:/app
       - psiqrh-test-results:/app/test-results
     environment:
       - PYTHONPATH=/app
@@ -52,11 +52,11 @@ services:
   # Serviço para demonstrações
   psiqrh-demo:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ../..
+      dockerfile: ops/docker/Dockerfile
     container_name: psiqrh-demo
     volumes:
-      - .:/app
+      - ../..:/app
       - psiqrh-demo-output:/app/demo-output
     environment:
       - PYTHONPATH=/app
@@ -77,11 +77,11 @@ services:
   # Serviço para visualizações interativas
   psiqrh-viz:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ../..
+      dockerfile: ops/docker/Dockerfile
     container_name: psiqrh-visualization
     volumes:
-      - .:/app
+      - ../..:/app
       - psiqrh-viz-output:/app/visualizations
     environment:
       - PYTHONPATH=/app

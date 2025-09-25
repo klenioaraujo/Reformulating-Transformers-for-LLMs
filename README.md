@@ -264,7 +264,7 @@ git clone https://github.com/your-username/reformulating-transformers.git
 cd reformulating-transformers
 
 # Build Docker image
-make -f ops/Makefile docker-build
+make build
 
 # Verify installation with test suite
 make test
@@ -272,7 +272,29 @@ make test
 
 **Expected output**: `All tests passed!` with 100% success rate.
 
-### 2.3 First Steps
+### 2.3 Standard Commands
+
+The project now uses intuitive Docker commands:
+
+```bash
+# Build Docker image
+make build
+
+# Start interactive session
+make up
+
+# Run tests
+make test
+
+# Verify epistemic integrity
+make integrity
+
+# Stop and clean up
+make down
+make clean
+```
+
+### 2.4 First Steps
 
 ```bash
 # Interactive development environment
@@ -288,7 +310,7 @@ make help
 make results
 ```
 
-### 2.4 Alternative Installation Methods
+### 2.5 Alternative Installation Methods
 
 #### Option A: Manual Docker Commands
 ```bash
@@ -1767,10 +1789,10 @@ git clone https://github.com/your-username/reformulating-transformers.git
 cd reformulating-transformers
 
 # Build Docker image
-make -f ops/Makefile docker-build
+make build
 
 # Run interactive container
-make -f ops/Makefile docker-run
+make up
 ```
 
 ### 11.3 Available Services
@@ -1821,7 +1843,7 @@ docker-compose up psiqrh-viz
 
 ```bash
 # Build image only
-docker build -t psiqrh-transformer .
+make -f ops/Makefile docker-build
 
 # Run single container
 docker run -it --rm -v $(pwd):/app psiqrh-transformer bash
@@ -1965,13 +1987,13 @@ The project includes a comprehensive Makefile for unified management:
 
 ```bash
 # Build Docker image
-make -f ops/Makefile docker-build
+make build
 
 # Run interactive container
-make -f ops/Makefile docker-run
+make up
 
 # Clean up Docker resources
-make -f ops/Makefile docker-clean
+make clean
 ```
 
 ### Alternative: Direct Docker Commands
@@ -1980,10 +2002,10 @@ For those preferring direct Docker commands:
 
 ```bash
 # Build image directly
-docker build -t psiqrh-core -f ops/docker/Dockerfile .
+make build
 
 # Run container
-docker run -it --rm -p 8000:8000 psiqrh-core
+make up
 ```
 
 **Key Benefits of Docker Deployment:**
