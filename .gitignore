@@ -1,4 +1,4 @@
-# Virtual environments
+cat <<EOL > exclusoes.txt
 /.venv/
 .venv/
 venv/
@@ -7,8 +7,6 @@ ENV/
 env.bak/
 venv.bak/
 .venv_docs/
-
-# Python cache and compiled files
 __pycache__/
 *.py[cod]
 *$py.class
@@ -21,19 +19,11 @@ __pycache__/
 dist/
 build/
 *.egg
-
-# Jupyter Notebook
 .ipynb_checkpoints
-
-# PyCharm
 .idea/
-
-# VS Code
 .vscode/
 *.swp
 *.swo
-
-# OS generated files
 .DS_Store
 .DS_Store?
 ._*
@@ -41,20 +31,14 @@ build/
 .Trashes
 ehthumbs.db
 Thumbs.db
-
-# Log files
 *.log
 *.out
-
-# Temporary files
 *.tmp
 *.temp
 *~
 *.bak
 *.swp
 *.orig
-
-# Coverage reports
 htmlcov/
 .coverage
 .coverage.*
@@ -62,8 +46,6 @@ coverage.xml
 *.cover
 .hypothesis/
 .pytest_cache/
-
-# Environment variables
 .env
 .env.local
 .env.development.local
@@ -72,89 +54,45 @@ coverage.xml
 .venv_docs
 *.venv_docs
 *.env
-
-# Package manager
 pip-log.txt
 pip-delete-this-directory.txt
 .tox/
 .nox/
-
-# Documentation builds
 docs/_build/
 .readthedocs/
-
-# PyInstaller
 *.manifest
 *.spec
-
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Unit test / coverage reports
-.coverage
-.pytest_cache/
 nosetests.xml
 coverage.xml
 *.cover
 .hypothesis/
-
-# Translations
+.pytest_cache/
 *.mo
 *.pot
-
-# Local configuration files
 local_settings.py
 instance/
 .webassets-cache
-
-# Scrapy stuff
 .scrapy
-
-# Sphinx documentation
 docs/_build/
-
-# PyBuilder
 target/
-
-# IPython
 profile_default/
 ipython_config.py
-
-# Celery beat schedule file
 celerybeat-schedule
-
-# SageMath parsed files
 *.sage.py
-
-# Spyder project settings
 .spyderproject
 .spyproject
-
-# Rope project settings
 .ropeproject
-
-# mkdocs documentation
 /site
-
-# mypy
 .mypy_cache/
 .dmypy.json
 dmypy.json
-
-
-# Directorio para rascunhos e documentos de trabalho
 rascunhos/
-
-# GLS (General Living Systems) environment and data files
+construction_technical_manual/ 
 gls_env/
 *.gls
-#gls_analysis_history.json
 gls_visualizations/
 gls/gls_habitat_current_state.gls
 gls/gls_habitat_visualization.gls
-
-# E-book configuration - ignore everything except HTML build, specific PDF and README
 e-book/*
 !e-book/_build/
 !e-book/_build/html/
@@ -165,3 +103,4 @@ e-book/*
 !e-book/STARFLEET_Unified_Complete_Archive.pdf
 !e-book/README.md
 !e-book/e-book.pdf
+EOL

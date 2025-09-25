@@ -1,0 +1,52 @@
+{
+  "validation_timestamp": "2025-09-25T07:46:07.439573",
+  "system_info": {
+    "python_version": "3.12.7 (main, Jun 18 2025, 13:16:51) [GCC 14.2.0]",
+    "torch_version": "2.8.0+cu128",
+    "cuda_available": false,
+    "device_count": 0
+  },
+  "test_summary": {
+    "total_tests": 4,
+    "passed_tests": 0,
+    "failed_tests": 4,
+    "success_rate_percent": 0.0
+  },
+  "detailed_results": {
+    "Core QRH Layer": {
+      "status": "FAIL",
+      "execution_time_s": 0.016451597213745117,
+      "memory_usage": {
+        "cpu_memory_mb": 487.03125,
+        "gpu_memory_mb": 0
+      },
+      "tensor_health": null,
+      "output_shape": null,
+      "error": "No module named 'src'",
+      "traceback": "Traceback (most recent call last):\n  File \"/home/padilha/trabalhos/Reformulating_Transformers/data/test_logs/comprehensive_validation_runner.py\", line 47, in test_core_qrh\n    from src.core.qrh_layer import QRHLayer, QRHConfig\nModuleNotFoundError: No module named 'src'\n"
+    },
+    "Spectral Filter": {
+      "status": "FAIL",
+      "execution_time_s": 0.0001049041748046875,
+      "error": "No module named 'src'",
+      "traceback": "Traceback (most recent call last):\n  File \"/home/padilha/trabalhos/Reformulating_Transformers/data/test_logs/comprehensive_validation_runner.py\", line 102, in test_spectral_filter\n    from src.fractal.spectral_filter import SpectralFilter\nModuleNotFoundError: No module named 'src'\n"
+    },
+    "\u03a8QRH Integration": {
+      "status": "FAIL",
+      "execution_time_s": 0.00010085105895996094,
+      "error": "No module named 'src'",
+      "traceback": "Traceback (most recent call last):\n  File \"/home/padilha/trabalhos/Reformulating_Transformers/data/test_logs/comprehensive_validation_runner.py\", line 136, in test_psiqrh_integration\n    from src.core.\u03a8QRH import QRHFactory\nModuleNotFoundError: No module named 'src'\n"
+    },
+    "System Initialization": {
+      "status": "FAIL",
+      "execution_time_s": 0.00014710426330566406,
+      "error": "No module named 'src'",
+      "traceback": "Traceback (most recent call last):\n  File \"/home/padilha/trabalhos/Reformulating_Transformers/data/test_logs/comprehensive_validation_runner.py\", line 170, in test_system_initialization\n    from src.core.negentropy_transformer_block import NegentropyTransformerBlock\nModuleNotFoundError: No module named 'src'\n"
+    }
+  },
+  "criteria_met": {
+    "min_success_rate_95_percent": false,
+    "no_nan_inf_detected": true,
+    "all_imports_successful": false
+  }
+}

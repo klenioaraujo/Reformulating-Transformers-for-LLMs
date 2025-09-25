@@ -17,7 +17,7 @@ def test_qrh_core():
     try:
         # Test 1: Import core QRH
         print("1️⃣ Testing QRH import...")
-        from qrh_layer import QRHLayer, QRHConfig
+        from src.core.qrh_layer import QRHLayer, QRHConfig
         print("✅ QRH Layer imported successfully")
 
         # Test 2: Create QRH config
@@ -74,7 +74,7 @@ def test_optimized_components():
     try:
         # Test optimized imports
         print("1️⃣ Testing optimized imports...")
-        from optimized_components import (
+        from src.core.optimized_components import (
             OptimizedSemanticConfig, OptimizedContinuumConfig,
             OptimizedResonanceConfig, FastContradictionDetector
         )
@@ -123,7 +123,7 @@ def test_production_system():
 
     try:
         print("1️⃣ Testing production imports...")
-        from production_system import ProductionSemanticQRH, ProductionConfig, ProductionMode
+        from src.core.production_system import ProductionSemanticQRH, ProductionConfig, ProductionMode
         print("✅ Production system imported")
 
         print("2️⃣ Creating production config...")
