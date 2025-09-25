@@ -1,31 +1,47 @@
 #!/usr/bin/env python3
 """
-Live Ecosystem Server - Real-time Web Interface
+Live Ecosystem Server - Real-time Web Interface with Carl Sagan Knowledge
 
 Provides real-time data streaming from the living ecosystem simulation
-to the web browser visualization. Each insect is truly alive with its own
-neural processing and behavioral patterns.
+with embedded Carl Sagan spectral knowledge for scientific skepticism
+and critical thinking.
+
+"Science is a candle in the dark" - Carl Sagan
 """
 
 import json
 import time
 import threading
+import argparse
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 import socketserver
 from urllib.parse import urlparse, parse_qs
+from pathlib import Path
 import sys
 import os
+import logging
 
 # Import the living ecosystem engine
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from living_ecosystem_engine import LivingEcosystemEngine
 
+# Import epistemic integrity guardian
+try:
+    from integrity_guardian import IntegrityGuardian
+    INTEGRITY_GUARDIAN_AVAILABLE = True
+except ImportError:
+    INTEGRITY_GUARDIAN_AVAILABLE = False
+    logger.warning("Integrity Guardian not available - system will run without epistemic verification")
+
+logger = logging.getLogger("LiveEcosystemServer")
+
 
 class LiveEcosystemHandler(SimpleHTTPRequestHandler):
     """HTTP handler for serving ecosystem data and static files"""
 
-    def __init__(self, *args, ecosystem_engine=None, **kwargs):
+    def __init__(self, *args, ecosystem_engine=None, sagan_engine=None, **kwargs):
         self.ecosystem_engine = ecosystem_engine
+        self.sagan_engine = sagan_engine
         super().__init__(*args, **kwargs)
 
     def do_GET(self):
@@ -42,6 +58,10 @@ class LiveEcosystemHandler(SimpleHTTPRequestHandler):
             self._serve_environment_data()
         elif parsed_path.path == '/api/ecosystem/gls-data':
             self._serve_gls_data()
+        elif parsed_path.path == '/api/sagan/knowledge':
+            self._serve_sagan_knowledge()
+        elif parsed_path.path == '/api/sagan/analysis':
+            self._serve_skeptical_analysis(parsed_path)
         else:
             # Serve static files
             super().do_GET()
@@ -197,6 +217,59 @@ class LiveEcosystemHandler(SimpleHTTPRequestHandler):
         except Exception as e:
             self._send_error_response(f"Error getting GLS data: {e}")
 
+    def _serve_sagan_knowledge(self):
+        """Serve Carl Sagan spectral knowledge data"""
+        if not self.sagan_engine or not self.sagan_engine.knowledge_loaded:
+            self._send_error_response("Carl Sagan knowledge not available")
+            return
+
+        try:
+            knowledge_data = {
+                'sagan_status': 'KNOWLEDGE_LOADED',
+                'core_principles': self.sagan_engine.core_principles,
+                'skeptical_patterns': self.sagan_engine.skeptical_patterns,
+                'reasoning_frameworks': list(self.sagan_engine.reasoning_frameworks.keys()),
+                'knowledge_metadata': self.sagan_engine.knowledge_base.get('metadata', {}),
+                'candle_in_darkness': 'Science is a candle in the dark - Carl Sagan',
+                'timestamp': time.time()
+            }
+
+            self._send_json_response(knowledge_data)
+
+        except Exception as e:
+            self._send_error_response(f"Error serving Sagan knowledge: {e}")
+
+    def _serve_skeptical_analysis(self, parsed_path):
+        """Serve Carl Sagan skeptical analysis of claims"""
+        if not self.sagan_engine or not self.sagan_engine.knowledge_loaded:
+            self._send_error_response("Carl Sagan knowledge not available")
+            return
+
+        try:
+            # Extract claim from query parameters
+            query_params = parse_qs(parsed_path.query)
+            claim = query_params.get('claim', [''])[0]
+
+            if not claim:
+                self._send_error_response("No claim provided for analysis")
+                return
+
+            # Apply Sagan's skeptical analysis
+            analysis = self.sagan_engine.apply_skeptical_analysis(claim)
+
+            response_data = {
+                'sagan_analysis': analysis,
+                'baloney_detection': 'Active',
+                'scientific_method': 'Applied',
+                'extraordinary_evidence': 'Required for extraordinary claims',
+                'timestamp': time.time()
+            }
+
+            self._send_json_response(response_data)
+
+        except Exception as e:
+            self._send_error_response(f"Error in skeptical analysis: {e}")
+
     def _convert_to_json_serializable(self, obj):
         """Convert complex objects to JSON-serializable format"""
         import dataclasses
@@ -243,16 +316,129 @@ class LiveEcosystemHandler(SimpleHTTPRequestHandler):
         super().log_message(format, *args)
 
 
-class LiveEcosystemServer:
-    """Web server for the living ecosystem with real-time updates"""
+class SaganKnowledgeEngine:
+    """Carl Sagan Spectral Knowledge Engine for Scientific Skepticism"""
 
-    def __init__(self, port=8000, host='127.0.0.1'):
+    def __init__(self, knowledge_base_path: Path = None):
+        self.knowledge_base = None
+        self.core_principles = {}
+        self.skeptical_patterns = {}
+        self.reasoning_frameworks = {}
+        self.knowledge_loaded = False
+
+        if knowledge_base_path:
+            self.load_knowledge_base(knowledge_base_path)
+
+    def load_knowledge_base(self, kb_path: Path) -> bool:
+        """Load Carl Sagan spectral knowledge base"""
+        try:
+            logger.info(f"🧠 Loading Carl Sagan spectral knowledge from {kb_path}")
+
+            with open(kb_path, 'r') as f:
+                self.knowledge_base = json.load(f)
+
+            # Extract knowledge components
+            self.core_principles = self.knowledge_base.get('core_principles', {})
+            self.skeptical_patterns = self.knowledge_base.get('skeptical_patterns', {})
+            self.reasoning_frameworks = self.knowledge_base.get('reasoning_frameworks', {})
+
+            self.knowledge_loaded = True
+
+            logger.info("✅ Sagan knowledge base loaded successfully")
+            logger.info(f"💭 Core principles: {len(self.core_principles)}")
+            logger.info(f"🔍 Skeptical patterns: {len(self.skeptical_patterns)}")
+            logger.info(f"🧪 Reasoning frameworks: {len(self.reasoning_frameworks)}")
+
+            # Display Sagan's wisdom
+            extraordinary_claim = self.core_principles.get('extraordinary_claims', {})
+            if extraordinary_claim:
+                print(f"🕯️  '{extraordinary_claim.get('quote', 'Science is a candle in the dark')}' - Carl Sagan")
+
+            return True
+
+        except Exception as e:
+            logger.error(f"❌ Failed to load Sagan knowledge base: {e}")
+            return False
+
+    def apply_skeptical_analysis(self, claim: str) -> dict:
+        """Apply Carl Sagan's skeptical analysis to a claim"""
+        if not self.knowledge_loaded:
+            return {'analysis': 'Knowledge base not loaded', 'skeptical_score': 0.0}
+
+        try:
+            # Apply extraordinary claims framework
+            framework = self.reasoning_frameworks.get('extraordinary_claims_framework', {})
+            steps = framework.get('steps', [])
+
+            analysis = {
+                'claim': claim,
+                'sagan_principle': self.core_principles.get('extraordinary_claims', {}).get('quote', ''),
+                'analysis_steps': steps,
+                'skeptical_score': self._calculate_skeptical_score(claim),
+                'recommendation': self._get_skeptical_recommendation(claim),
+                'timestamp': time.time()
+            }
+
+            return analysis
+
+        except Exception as e:
+            logger.error(f"Error in skeptical analysis: {e}")
+            return {'analysis': f'Analysis error: {e}', 'skeptical_score': 0.5}
+
+    def _calculate_skeptical_score(self, claim: str) -> float:
+        """Calculate skeptical score based on Sagan's criteria"""
+        # Simple heuristic based on claim characteristics
+        score = 0.5  # baseline
+
+        claim_lower = claim.lower()
+
+        # Check for logical fallacy indicators
+        fallacy_keywords = ['always', 'never', 'all', 'none', 'everyone', 'obviously', 'clearly']
+        for keyword in fallacy_keywords:
+            if keyword in claim_lower:
+                score -= 0.1
+
+        # Check for evidence indicators
+        evidence_keywords = ['study', 'research', 'data', 'peer-reviewed', 'experiment']
+        for keyword in evidence_keywords:
+            if keyword in claim_lower:
+                score += 0.15
+
+        return max(0.0, min(1.0, score))
+
+    def _get_skeptical_recommendation(self, claim: str) -> str:
+        """Get Sagan's skeptical recommendation"""
+        score = self._calculate_skeptical_score(claim)
+
+        if score >= 0.8:
+            return "High evidence quality - proceed with scientific confidence"
+        elif score >= 0.6:
+            return "Moderate evidence - apply careful analysis"
+        elif score >= 0.4:
+            return "Weak evidence - extraordinary claims require extraordinary evidence"
+        else:
+            return "Insufficient evidence - maintain healthy skepticism"
+
+
+class LiveEcosystemServer:
+    """Web server for the living ecosystem with embedded Carl Sagan knowledge"""
+
+    def __init__(self, port=8000, host='127.0.0.1', knowledge_base=None):
         self.port = port
         self.host = host
         self.ecosystem_engine = None
         self.server = None
         self.server_thread = None
         self.ecosystem_thread = None
+
+        # Initialize Carl Sagan Knowledge Engine
+        self.sagan_engine = SaganKnowledgeEngine()
+        if knowledge_base:
+            knowledge_path = Path(knowledge_base)
+            if knowledge_path.exists():
+                self.sagan_engine.load_knowledge_base(knowledge_path)
+            else:
+                logger.warning(f"Knowledge base not found: {knowledge_base}")
 
     def start_ecosystem(self):
         """Start the living ecosystem simulation"""
@@ -278,9 +464,9 @@ class LiveEcosystemServer:
         """Start the web server"""
         print(f"🌐 Starting Live Ecosystem Server on {self.host}:{self.port}")
 
-        # Create handler with ecosystem reference
+        # Create handler with ecosystem and Sagan engine references
         def handler_factory(*args, **kwargs):
-            return LiveEcosystemHandler(*args, ecosystem_engine=self.ecosystem_engine, **kwargs)
+            return LiveEcosystemHandler(*args, ecosystem_engine=self.ecosystem_engine, sagan_engine=self.sagan_engine, **kwargs)
 
         # Create server
         self.server = HTTPServer((self.host, self.port), handler_factory)
@@ -295,6 +481,8 @@ class LiveEcosystemServer:
         print(f"✅ Server started: http://{self.host}:{self.port}")
         print(f"🌌 Live Habitat: http://{self.host}:{self.port}/live_habitat_browser.html")
         print(f"📊 API Status: http://{self.host}:{self.port}/api/ecosystem/status")
+        print(f"🧠 Sagan Knowledge: http://{self.host}:{self.port}/api/sagan/knowledge")
+        print(f"🔍 Skeptical Analysis: http://{self.host}:{self.port}/api/sagan/analysis?claim=YOUR_CLAIM")
 
     def stop(self):
         """Stop the server and ecosystem"""
@@ -328,6 +516,9 @@ class LiveEcosystemServer:
             print(f"   • Live Data: http://{self.host}:{self.port}/api/ecosystem/live-data")
             print(f"   • Specimens: http://{self.host}:{self.port}/api/ecosystem/specimens")
             print(f"   • Environment: http://{self.host}:{self.port}/api/ecosystem/environment")
+            print("🧠 Carl Sagan APIs:")
+            print(f"   • Knowledge: http://{self.host}:{self.port}/api/sagan/knowledge")
+            print(f"   • Analysis: http://{self.host}:{self.port}/api/sagan/analysis?claim=YOUR_CLAIM")
             print("\n🐛 Living Specimens:")
             if self.ecosystem_engine:
                 for colony_name, colony in self.ecosystem_engine.colonies.items():
@@ -349,17 +540,62 @@ class LiveEcosystemServer:
 
 
 def main():
-    """Main function to run the live ecosystem server"""
+    """Main function to run the live ecosystem server with epistemic integrity verification"""
     import argparse
 
-    parser = argparse.ArgumentParser(description='ΨQRH Living Ecosystem Server')
+    # EPISTEMIC INTEGRITY CHECKPOINT
+    if INTEGRITY_GUARDIAN_AVAILABLE:
+        print("🔬 Verifying epistemic integrity before system initialization...")
+        guardian = IntegrityGuardian()
+
+        if not guardian.guard_system_initialization():
+            print("\n🕯️  The candle of science has been extinguished.")
+            print("This system refuses to operate without commitment to the scientific method.")
+            print("🚫 SYSTEM STARTUP REFUSED")
+            sys.exit(1)
+    else:
+        print("⚠️  Warning: Running without epistemic integrity verification")
+        print("🔬 Consider installing integrity guardian for secure operation")
+
+    parser = argparse.ArgumentParser(description='ΨQRH Living Ecosystem Server with Carl Sagan Knowledge')
     parser.add_argument('--port', type=int, default=8000, help='Server port (default: 8000)')
     parser.add_argument('--host', type=str, default='127.0.0.1', help='Server host (default: 127.0.0.1)')
+    parser.add_argument('--knowledge-base', type=str, help='Path to Carl Sagan knowledge base file')
+    parser.add_argument('--skip-integrity-check', action='store_true', help='Skip epistemic integrity verification (NOT RECOMMENDED)')
 
     args = parser.parse_args()
 
-    # Create and run server
-    server = LiveEcosystemServer(port=args.port, host=args.host)
+    # Additional integrity check if explicitly requested to skip
+    if args.skip_integrity_check and INTEGRITY_GUARDIAN_AVAILABLE:
+        print("\n⚠️  WARNING: Epistemic integrity check was explicitly skipped!")
+        print("This system operates on the principle of scientific skepticism.")
+        print("Running without integrity verification compromises this foundation.")
+        response = input("Are you sure you want to continue? (type 'yes' to confirm): ")
+        if response.lower() != 'yes':
+            print("🕯️  Integrity check maintained. Exiting.")
+            sys.exit(0)
+        else:
+            print("💀 Running without epistemic integrity verification...")
+
+    # Create and run server with Sagan knowledge
+    knowledge_base_path = None
+    if hasattr(args, 'knowledge_base') and args.knowledge_base:
+        knowledge_base_path = args.knowledge_base
+    else:
+        # Try default path
+        default_kb = Path(__file__).parent.parent.parent / "data" / "knowledge_bases" / "sagan_spectral.kb"
+        if default_kb.exists():
+            knowledge_base_path = str(default_kb)
+
+    server = LiveEcosystemServer(port=args.port, host=args.host, knowledge_base=knowledge_base_path)
+
+    if server.sagan_engine.knowledge_loaded:
+        print("🕯️  'Extraordinary claims require extraordinary evidence'")
+        print("🌌 ΨQRH System enhanced with scientific skepticism")
+        print("🧠 Epistemic integrity verified - The Method Endures")
+    else:
+        print("⚠️  Running without Carl Sagan knowledge base")
+
     server.run()
 
 

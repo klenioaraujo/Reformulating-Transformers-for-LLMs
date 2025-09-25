@@ -6,7 +6,7 @@ Test QRH Layer normalization improvements
 import torch
 import numpy as np
 import time
-from qrh_layer import QRHLayer, QRHConfig, QuaternionLayerNorm
+from core.qrh_layer import QRHLayer, QRHConfig, QuaternionLayerNorm
 
 def test_quaternion_layer_norm():
     """Test QuaternionLayerNorm independently"""

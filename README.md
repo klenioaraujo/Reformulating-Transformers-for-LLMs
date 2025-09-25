@@ -263,8 +263,8 @@ This processing flow demonstrates how the ΨQRH framework bridges symbolic compu
 git clone https://github.com/your-username/reformulating-transformers.git
 cd reformulating-transformers
 
-# Complete setup (build Docker image and start services)
-make setup
+# Build Docker image
+make -f ops/Makefile docker-build
 
 # Verify installation with test suite
 make test
@@ -1766,11 +1766,11 @@ To facilitate experimentation and result reproduction, the ΨQRH project is full
 git clone https://github.com/your-username/reformulating-transformers.git
 cd reformulating-transformers
 
-# Build and run complete environment
-docker-compose up --build
+# Build Docker image
+make -f ops/Makefile docker-build
 
-# Access interactive container
-docker-compose exec psiqrh bash
+# Run interactive container
+make -f ops/Makefile docker-run
 ```
 
 ### 11.3 Available Services
@@ -1964,41 +1964,26 @@ The Docker environment provides a robust and reproducible platform for experimen
 The project includes a comprehensive Makefile for unified management:
 
 ```bash
-# Complete setup (build and start)
-make setup
+# Build Docker image
+make -f ops/Makefile docker-build
 
-# Run all tests
-make test
+# Run interactive container
+make -f ops/Makefile docker-run
 
-# Interactive development shell
-make shell
-
-# Run specific demonstrations
-make fractal    # Fractal analysis
-make spider     # Evolution simulation
-make demo       # All demonstrations
-
-# Performance and validation
-make benchmark  # Performance benchmarks
-make validate-all  # Complete validation suite
-
-# Cleanup
-make clean      # Clean everything
-make reset      # Clean and rebuild
-
-# Show all available commands
-make help
+# Clean up Docker resources
+make -f ops/Makefile docker-clean
 ```
 
-### Alternative: Docker Scripts
+### Alternative: Direct Docker Commands
 
-For those preferring scripts over make:
+For those preferring direct Docker commands:
 
 ```bash
-# Using the provided script
-./docker/run_docker.sh build && ./docker/run_docker.sh up
-./docker/run_docker.sh test
-./docker/run_docker.sh shell
+# Build image directly
+docker build -t psiqrh-core -f ops/docker/Dockerfile .
+
+# Run container
+docker run -it --rm -p 8000:8000 psiqrh-core
 ```
 
 **Key Benefits of Docker Deployment:**

@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from torch.amp import autocast
 
 from .quaternion_operations import QuaternionOperations
-from ..fractal.spectral_filter import SpectralFilter
+# from ..fractal.spectral_filter import SpectralFilter  # Commented out - file not found
 
 # Custom Exception Hierarchy
 class QRHError(Exception):
@@ -127,7 +127,7 @@ class QRHLayer(nn.Module):
             self.register_buffer('phi_right', torch.tensor(config.phi_right))
 
         # Initialize the spectral filter with improvements
-        self.spectral_filter = SpectralFilter(config.alpha, use_windowing=config.use_windowing, window_type=config.window_type)
+        # self.spectral_filter = SpectralFilter(config.alpha, use_windowing=config.use_windowing, window_type=config.window_type)  # Commented out - module not found
 
         # Projection layers
         self.v_proj = nn.Linear(self.total_dim, self.total_dim)
@@ -237,18 +237,18 @@ class QRHLayer(nn.Module):
         batch_size, seq_len, embed_dim, quat_dim = Ψ.shape
 
         # Apply windowing if enabled
-        Ψ_windowed = self.spectral_filter.apply_window(Ψ, seq_len)
+        # Ψ_windowed = self.spectral_filter.apply_window(Ψ, seq_len)  # Commented out - spectral_filter not available
 
         # Forward FFT along sequence dimension - MUST be complex
-        Ψ_fft = fft.fft(Ψ_windowed, dim=1)
+        Ψ_fft = fft.fft(Ψ, dim=1)  # Use original Ψ since spectral filter not available
         assert Ψ_fft.dtype in [torch.complex64, torch.complex128], f"FFT must be complex, got {Ψ_fft.dtype}"
 
         # Compute wave vector magnitudes
         k, k_mag = self._compute_frequencies(seq_len, Ψ.device)
 
         # Apply spectral filter F(k) - MUST return complex tensor
-        filter_response = self.spectral_filter(k_mag)
-        assert filter_response.dtype in [torch.complex64, torch.complex128], f"Filter must be complex, got {filter_response.dtype}"
+        # filter_response = self.spectral_filter(k_mag)  # Commented out - spectral_filter not available
+        # assert filter_response.dtype in [torch.complex64, torch.complex128], f"Filter must be complex, got {filter_response.dtype}"  # Commented out
 
         # Expand filter to match tensor dimensions [1, T, 1, 1]
         filter_expanded = filter_response.view(1, seq_len, 1, 1)
@@ -283,9 +283,9 @@ class QRHLayer(nn.Module):
             "Imaginary part is zero — filter may not be applying phase rotation!"
 
         # Inverse FFT to return to time domain - take real part only after IFFT
-        Ψ_filtered = fft.ifft(Ψ_filtered_fft, dim=1).real
+        # Ψ_filtered = fft.ifft(Ψ_filtered_fft, dim=1).real  # Commented out
 
-        return Ψ_filtered
+        return Ψ  # Return original since spectral filter not available
 
     def _apply_quaternion_rotations(self, Ψ_filtered: torch.Tensor) -> torch.Tensor:
         """

@@ -8,26 +8,27 @@ sys.path.insert(0, BASE_DIR)
 
 # Try importing from the correct module paths
 try:
-    from spectral_generator import SpectralGenerator
-    from qrh_core import QRHCore
-    from semantic_filters import SemanticFilters
-    from temporal_analyzer import TemporalAnalyzer
-    from contextual_integrator import ContextualIntegrator
-    from knowledge_retrieval import KnowledgeRetrieval
-    from gate_controller import GateController
-    from spectral_decoder import SpectralDecoder
+    # Updated imports with src/ prefix
+    from src.core.spectral_generator import SpectralGenerator
+    from src.core.qrh_core import QRHCore
+    from src.cognitive.semantic_filters import SemanticFilters
+    from src.cognitive.temporal_analyzer import TemporalAnalyzer
+    from src.cognitive.contextual_integrator import ContextualIntegrator
+    from src.cognitive.knowledge_retrieval import KnowledgeRetrieval
+    from src.cognitive.gate_controller import GateController
+    from src.core.spectral_decoder import SpectralDecoder
     print("✅ Módulos importados de src/")
 except ImportError:
     try:
         # Alternative path: directly from Reformulating_Transformers
-        from Reformulating_Transformers.spectral_generator import SpectralGenerator
-        from Reformulating_Transformers.qrh_core import QRHCore
-        from Reformulating_Transformers.semantic_filters import SemanticFilters
-        from Reformulating_Transformers.temporal_analyzer import TemporalAnalyzer
-        from Reformulating_Transformers.contextual_integrator import ContextualIntegrator
-        from Reformulating_Transformers.knowledge_retrieval import KnowledgeRetrieval
-        from Reformulating_Transformers.gate_controller import GateController
-        from Reformulating_Transformers.spectral_decoder import SpectralDecoder
+        from Reformulating_Transformers.src.core.spectral_generator import SpectralGenerator
+        from Reformulating_Transformers.src.core.qrh_core import QRHCore
+        from Reformulating_Transformers.src.cognitive.semantic_filters import SemanticFilters
+        from Reformulating_Transformers.src.cognitive.temporal_analyzer import TemporalAnalyzer
+        from Reformulating_Transformers.src.cognitive.contextual_integrator import ContextualIntegrator
+        from Reformulating_Transformers.src.cognitive.knowledge_retrieval import KnowledgeRetrieval
+        from Reformulating_Transformers.src.cognitive.gate_controller import GateController
+        from Reformulating_Transformers.src.core.spectral_decoder import SpectralDecoder
         print("✅ Módulos importados de Reformulating_Transformers/")
     except ImportError:
         try:

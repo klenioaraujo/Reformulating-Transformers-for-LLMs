@@ -10,11 +10,11 @@ import time
 import gc
 from typing import Dict, Any
 
-from qrh_layer import QRHLayer, QRHConfig
-from negentropy_transformer_block import NegentropyTransformerBlock
-from navigator_agent import NavigatorAgent
-from seal_protocol import SealProtocol
-from audit_log import AuditLog
+from core.qrh_layer import QRHLayer, QRHConfig
+from core.negentropy_transformer_block import NegentropyTransformerBlock
+from cognitive.navigator_agent import NavigatorAgent
+# from src.conceptual.seal_protocol import SealProtocol  # Commented out - file not found
+# from src.core.audit_log import AuditLog  # Commented out - file not found
 
 def test_large_scale_processing():
     """Test with large data volumes"""

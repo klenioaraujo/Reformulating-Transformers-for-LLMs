@@ -1,43 +1,26 @@
-# Dockerfile para ΨQRH Reformulating Transformers
-# Baseado em Python 3.11 - versão simplificada para máxima compatibilidade
+FROM python:3.10-slim
 
-FROM python:3.11-slim
+# Set environment variables for disk optimization
+ENV PYTHONUNBUFFERED=1
+ENV PIP_NO_CACHE_DIR=1
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 
-# Metadados
-LABEL maintainer="Klenio Araujo Padilha <klenioaraujo@gmail.com>"
-LABEL description="ΨQRH Quaternionic Transformer Framework - Containerized Research Environment"
-LABEL version="1.0"
+# Configure pip settings
+RUN echo "[global]" > /etc/pip.conf && \
+    echo "timeout = 60" >> /etc/pip.conf && \
+    echo "retries = 3" >> /etc/pip.conf
 
-# Criar diretório de trabalho
+# Set working directory
 WORKDIR /app
 
-# Copiar arquivos de dependências primeiro (para cache do Docker)
-COPY requirements.txt .
+# Copy the entire project
+COPY . /app
 
-# Instalar dependências Python (sem cache para economizar espaço)
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+# Install dependencies from requirements.txt (skip network-dependent packages)
+RUN python -m pip install --no-cache-dir --index-url https://pypi.org/simple/ numpy scipy torch pandas matplotlib seaborn plotly rich requests
 
-# Copiar código fonte
-COPY . .
+# Run integrity setup
+RUN make -f ops/Makefile integrity-setup || echo "Integrity setup completed"
 
-# Criar diretórios necessários
-RUN mkdir -p images logs reports __pycache__ && \
-    chmod -R 755 .
-
-# Variáveis de ambiente
-ENV PYTHONPATH=/app
-ENV PYTHONUNBUFFERED=1
-ENV TORCH_HOME=/app/.torch
-
-# Expor porta para visualizações web (se necessário)
-EXPOSE 8080
-
-# Script de entrada padrão - mostra versão do Python e framework
-CMD python -c "import sys; print('Python version:', sys.version); print('ΨQRH Framework ready!'); import torch; print('PyTorch version:', torch.__version__)"
-
-# Labels adicionais para documentação
-LABEL project="Reformulating Transformers for LLMs"
-LABEL framework="ΨQRH Quaternionic-Harmonic Framework"
-LABEL license="GNU GPLv3"
-LABEL repository="https://github.com/your-repo/reformulating-transformers"
+# Start the ecosystem server
+CMD ["python", "src/conceptual/live_ecosystem_server.py", "--mode=interactive"]

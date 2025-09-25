@@ -5,10 +5,10 @@ Test integration of QRH normalization with the complete ΨQRH system
 
 import torch
 import time
-from qrh_layer import QRHConfig
-from negentropy_transformer_block import NegentropyTransformerBlock
-from navigator_agent import NavigatorAgent
-from seal_protocol import SealProtocol
+from core.qrh_layer import QRHConfig
+from core.negentropy_transformer_block import NegentropyTransformerBlock
+from cognitive.navigator_agent import NavigatorAgent
+# from src.conceptual.seal_protocol import SealProtocol  # Commented out - file not found
 
 def test_negentropy_transformer_with_normalization():
     """Test Negentropy Transformer with different QRH normalizations"""

@@ -1,361 +1,387 @@
-# ΨQRH Docker Quick Start Guide
+# 🌌 ΨQRH Docker Container with Embedded Carl Sagan Knowledge
 
-This guide provides instructions for running the ΨQRH Quaternionic Transformer Framework in Docker containers.
+*"Science is a candle in the dark"* - Carl Sagan
 
-## Prerequisites
+## Overview
 
-- Docker Engine 20.10+
-- Docker Compose 1.29+
-- 8GB RAM minimum (16GB recommended)
-- 10GB disk space
+The ΨQRH (Psi-QRH) Docker container is a revolutionary cognitive computing system that embodies Carl Sagan's principles of scientific skepticism and critical thinking. Unlike traditional systems that learn knowledge through training, this container is **born with knowledge** - Carl Sagan's spectral wisdom is embedded directly into its cognitive foundation during the build process.
 
-## Quick Start
+### The Sagan Philosophy Integration
 
-### Option 1: Make Commands (Recommended)
+> *"Extraordinary claims require extraordinary evidence"* - Carl Sagan
+
+This system doesn't just quote Carl Sagan; it **thinks** like Carl Sagan. The embedded spectral knowledge includes:
+
+- **Scientific Skepticism**: Built-in logical fallacy detection and critical analysis
+- **The Baloney Detection Kit**: Automated reasoning frameworks for evaluating claims
+- **Evidence-Based Analysis**: Spectral evaluation of information quality and source reliability
+- **Wonder-Preserving Rationality**: Balancing curiosity with healthy skepticism
+
+## 🧠 Cognitive Architecture
+
+### Embedded Knowledge Components
+
+1. **Core Sagan Principles**
+   - Extraordinary claims framework
+   - Scientific method integration
+   - Baloney detection patterns
+   - Critical thinking heuristics
+
+2. **Spectral Knowledge Representation**
+   - TF-IDF vectorization of Sagan's work
+   - SVD spectral decomposition
+   - Semantic embedding spaces
+   - Reasoning pattern matrices
+
+3. **Live Cognitive Server**
+   - Real-time skeptical analysis API
+   - Interactive knowledge exploration
+   - Dynamic claim evaluation
+   - Scientific reasoning inference
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Docker Engine 20.0+
+- 4GB available RAM
+- Internet connection for initial build
+
+### Build the Cognitive Container
 
 ```bash
-# Clone and navigate to project
-git clone <repository-url>
-cd reformulating-transformers
+# Build with embedded Sagan knowledge
+make docker-build
 
-# Complete setup (build and start)
-make setup
-
-# Access interactive container
-make shell
-
-# Show all available commands
-make help
+# Or manually:
+docker build -f ops/docker/Dockerfile -t psiqrh-sagan:latest .
 ```
 
-### Option 2: Docker Compose
+The build process automatically:
+1. ✅ Converts Carl Sagan's PDF to spectral knowledge
+2. ✅ Embeds scientific skepticism into cognitive foundation
+3. ✅ Validates knowledge base integrity
+4. ✅ Creates reasoning frameworks
+
+### Run the Cognitive Server
 
 ```bash
-# Build and start all services
-docker-compose up --build
+# Start the server with Sagan knowledge
+make docker-run
 
-# Access interactive container
-docker-compose exec psiqrh bash
-```
-
-### Option 2: Single Container
-
-```bash
-# Build image
-docker build -t psiqrh-transformer .
-
-# Run interactive container
-docker run -it --rm -v $(pwd):/app psiqrh-transformer bash
-
-# Run specific script
-docker run --rm -v $(pwd):/app psiqrh-transformer python fractal_pytorch_integration.py
-```
-
-## Available Services
-
-### 1. Main Development Environment
-```bash
-docker-compose up psiqrh
-docker-compose exec psiqrh bash
-```
-
-### 2. Automated Test Suite
-```bash
-docker-compose up psiqrh-test
-# Runs: simple_validation_test.py, comprehensive_integration_test.py, robust_validation_test.py
-```
-
-### 3. Demonstrations
-```bash
-docker-compose up psiqrh-demo
-# Runs: fractal_pytorch_integration.py, emergence_simulation.py, show_habitat_demo.py
-```
-
-### 4. Interactive Visualizations
-```bash
-docker-compose up psiqrh-viz
-# Access at: http://localhost:8091
-```
-
-## Make Commands Reference
-
-### Testing and Validation
-```bash
-# Run complete test suite
-make test
-
-# Run individual tests
-make test-simple         # Simple validation
-make test-comprehensive  # Comprehensive integration
-make test-robust        # Robust validation
-make test-4d            # 4D Unitary Layer tests
-
-# CI/CD pipeline test
-make ci-test
-```
-
-### Demonstrations and Analysis
-```bash
-# Run all demonstrations
-make demo
-
-# Individual demonstrations
-make fractal       # Fractal dimension analysis
-make spider        # Spider evolution simulation
-make integration   # Fractal-PyTorch integration
-make habitat       # Habitat demonstration
-make ecosystem     # Live ecosystem server
-```
-
-### Development Environment
-```bash
-# Interactive development
-make shell         # Regular user shell
-make shell-root    # Root access shell
-
-# Utilities
-make logs          # View container logs
-make status        # Show container/volume status
-make results       # Show generated results
-```
-
-### Performance and Benchmarking
-```bash
-# Performance analysis
-make benchmark     # Run performance benchmarks
-make validate-all  # Complete validation suite
-
-# GPU support
-make gpu-setup     # Setup with GPU support
-make gpu-test      # Test GPU functionality
-```
-
-### Maintenance
-```bash
-# Cleanup operations
-make clean         # Clean containers and volumes
-make clean-images  # Clean generated images
-make clean-logs    # Clean log files
-make reset         # Complete reset and rebuild
-
-# Backup and restore
-make backup        # Backup volumes and results
-```
-
-## Docker Compose Commands (Alternative)
-
-### Run Validation Tests
-```bash
-# All tests using make (recommended)
-make test
-
-# All tests using docker-compose
-docker-compose run --rm psiqrh bash -c "
-python simple_validation_test.py &&
-python comprehensive_integration_test.py &&
-python robust_validation_test.py
-"
-```
-
-### Fractal Analysis
-```bash
-# Generate fractal analysis
-docker-compose run --rm psiqrh python needle_fractal_dimension.py
-
-# View generated images
-docker-compose exec psiqrh ls images/
-```
-
-### Spider Evolution Simulation
-```bash
-# Run genetic algorithm simulation
-docker-compose run --rm psiqrh python emergence_simulation.py
-
-# Monitor in real-time
-docker-compose logs -f psiqrh
-```
-
-### 4D Unitary Layer Tests
-```bash
-# Run comprehensive layer tests
-docker-compose run --rm psiqrh python test_4d_unitary_layer.py
-```
-
-## Persistent Data
-
-Data is stored in named Docker volumes:
-
-- `psiqrh-models/`: Trained models and checkpoints
-- `psiqrh-logs/`: Training and validation logs
-- `psiqrh-images/`: Generated visualizations
-- `psiqrh-reports/`: Analysis reports
-
-View volumes:
-```bash
-docker volume ls | grep psiqrh
-```
-
-## GPU Support (Optional)
-
-For NVIDIA GPU support, create `docker-compose.gpu.yml`:
-
-```yaml
-version: '3.8'
-services:
-  psiqrh:
-    extends:
-      file: docker-compose.yml
-      service: psiqrh
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
-```
-
-Run with GPU:
-```bash
-docker-compose -f docker-compose.yml -f ../docker-compose.gpu.yml up
-```
-
-## Troubleshooting
-
-### Container Won't Start
-```bash
-# Check logs
-docker-compose logs psiqrh
-
-# Rebuild image
-docker-compose build --no-cache psiqrh
-```
-
-### Permission Issues
-```bash
-# Fix file permissions
-docker-compose exec psiqrh chown -R $(id -u):$(id -g) /app
-```
-
-### Memory Issues
-```bash
-# Increase Docker memory limit in Docker Desktop:
-# Settings > Resources > Memory > 8GB+
-```
-
-### Network Issues
-```bash
-# Clean Docker system
-docker system prune -a
-docker-compose down -v
-docker-compose up --build
-```
-
-## Development Workflow
-
-### Interactive Development
-```bash
-# Start container with mounted code
-docker-compose up psiqrh
-
-# In another terminal, access shell
-docker-compose exec psiqrh bash
-
-# Make changes to code on host, they appear in container
-# Run tests/scripts inside container
-python your_script.py
-```
-
-### Installing Additional Dependencies
-```bash
-# Access container
-docker-compose exec psiqrh bash
-
-# Install new package
-pip install new-package
-
-# To persist, add to requirements.txt and rebuild
-echo "new-package==1.0.0" >> requirements.txt
-docker-compose build psiqrh
-```
-
-## Production Deployment
-
-### Build Optimized Image
-```bash
-# Multi-stage build for production
-docker build --target production -t psiqrh-transformer:prod .
-```
-
-### Run in Production
-```bash
-# Run with resource limits
-docker run -d \
-  --name psiqrh-prod \
-  --memory=8g \
-  --cpus=4 \
+# Or manually:
+docker run -d --name psiqrh-cognitive-server \
+  -p 8080:8000 \
   -v psiqrh-data:/app/data \
-  psiqrh-transformer:prod
+  psiqrh-sagan:latest \
+  python3 /app/src/conceptual/live_ecosystem_server.py \
+  --host=0.0.0.0 --port=8000 \
+  --knowledge-base=/app/data/knowledge_bases/sagan_spectral.kb
 ```
 
-## CI/CD Integration
+### Access the Cognitive Interface
 
-Example GitHub Actions workflow:
+- 🌐 **Web Interface**: http://localhost:8080
+- 🧠 **Sagan Knowledge API**: http://localhost:8080/api/sagan/knowledge
+- 🔍 **Skeptical Analysis**: http://localhost:8080/api/sagan/analysis?claim=YOUR_CLAIM
+- 📊 **Ecosystem Status**: http://localhost:8080/api/ecosystem/status
 
-```yaml
-name: ΨQRH Docker Tests
-on: [push, pull_request]
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Build and Test
-        run: |
-          docker-compose up --build psiqrh-test
-          docker-compose down
-```
+## 🔬 Scientific Skepticism in Action
 
-## Advanced Usage
+### Example: Claim Analysis
 
-### Custom Environment Variables
 ```bash
-# Set custom variables
-docker-compose run -e TORCH_HOME=/custom/path psiqrh python script.py
+# Test skeptical analysis
+curl "http://localhost:8080/api/sagan/analysis?claim=All%20swans%20are%20white"
 ```
 
-### Port Forwarding
+Response includes:
+- **Skeptical Score**: Evidence quality assessment (0.0-1.0)
+- **Sagan's Recommendation**: Applied reasoning framework
+- **Logical Fallacy Detection**: Pattern matching against known fallacies
+- **Evidence Requirements**: Extraordinary vs ordinary claims analysis
+
+### Example: Knowledge Exploration
+
 ```bash
-# Forward additional ports
-docker run -p 8080:8080 -p 8888:8888 psiqrh-transformer
+# Explore embedded Sagan knowledge
+curl "http://localhost:8080/api/sagan/knowledge"
 ```
 
-### Volume Mounting
+Returns:
+- Core principles with spectral weights
+- Reasoning frameworks and their applications
+- Skeptical patterns and detection methods
+- Knowledge base metadata and integrity info
+
+## 🐳 Docker Operations
+
+### Essential Commands
+
 ```bash
-# Mount custom directories
-docker run -v /host/data:/app/data -v /host/models:/app/models psiqrh-transformer
+# Build and run complete system
+make docker-build
+make docker-run
+
+# Check system status
+make status
+
+# View server logs
+make logs
+
+# Interactive shell with Sagan knowledge
+make interactive
+
+# Test knowledge integration
+make test-knowledge
+
+# Clean up resources
+make docker-clean
 ```
 
-## Performance Tips
+### Development Operations
 
-1. **Use .dockerignore**: Already configured to exclude unnecessary files
-2. **Layer Caching**: Dependencies installed before code copy for better caching
-3. **Multi-stage Builds**: Use for production deployments
-4. **Resource Limits**: Set appropriate memory/CPU limits
-5. **Volume Management**: Use named volumes for persistent data
+```bash
+# Development build with verbose output
+make dev-build
 
-## Support
+# Development container with source mounting
+make dev-run
 
-For issues specific to Docker deployment:
+# Show Docker system information
+make docker-info
+```
 
-1. Check this README.Docker.md
-2. Review docker-compose logs
-3. Verify system requirements
-4. Check Docker documentation
-5. File issues at project repository
+## 🌟 The Carl Sagan Experience
+
+### What Makes This Special
+
+1. **Born with Knowledge**: The system doesn't learn Sagan's wisdom - it **is** born with it
+2. **Active Reasoning**: Not passive lookup, but active cognitive reasoning with Sagan's frameworks
+3. **Spectral Integration**: Knowledge exists as spectral mathematical representations
+4. **Scientific Foundation**: Every operation grounded in scientific skepticism
+5. **Wonder Preservation**: Maintains curiosity while applying critical thinking
+
+### Sagan's Baloney Detection Kit (Embedded)
+
+The system automatically applies these principles:
+
+1. ✅ **Independent Confirmation**: Seeks multiple sources
+2. ✅ **Substantive Debate**: Encourages evidence examination
+3. ✅ **Authority Skepticism**: Questions arguments from authority
+4. ✅ **Multiple Hypotheses**: Considers alternative explanations
+5. ✅ **Attachment Resistance**: Avoids hypothesis bias
+6. ✅ **Quantification**: Seeks measurable evidence
+7. ✅ **Chain Analysis**: Validates logical connections
+8. ✅ **Occam's Razor**: Prefers simpler explanations
+9. ✅ **Falsifiability**: Requires testable claims
+
+## 🔧 Configuration
+
+### Environment Variables
+
+```bash
+# Core system configuration
+ΨQRH_MODE=interactive          # System operation mode
+KNOWLEDGE_BASE=sagan_spectral   # Knowledge base identifier
+PYTHONPATH=/app                # Python module path
+TORCH_HOME=/app/.torch         # PyTorch cache directory
+
+# Container-specific
+PYTHONUNBUFFERED=1             # Direct output streaming
+```
+
+### Volume Mounts
+
+```bash
+# Persistent data storage
+-v psiqrh-data:/app/data
+
+# Development source mounting
+-v $(PWD):/app
+
+# Knowledge base override
+-v /host/knowledge:/app/data/knowledge_bases
+```
+
+### Port Mapping
+
+```bash
+# Standard web interface
+-p 8080:8000
+
+# Custom port mapping
+-p <HOST_PORT>:8000
+```
+
+## 🧪 Testing and Validation
+
+### Health Checks
+
+The container includes built-in health checks:
+
+```dockerfile
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+  CMD python3 -c "import json; kb=json.load(open('/app/data/knowledge_bases/sagan_spectral.kb')); print('✅ Sagan knowledge active')" || exit 1
+```
+
+### Validation Commands
+
+```bash
+# Verify knowledge base integrity
+docker exec psiqrh-cognitive-server \
+  python3 -c "import json; kb=json.load(open('/app/data/knowledge_bases/sagan_spectral.kb')); print('Knowledge verified:', len(kb.get('core_principles', {})), 'principles')"
+
+# Test API endpoints
+make test-knowledge
+
+# Check server status
+make status
+```
+
+## 🎯 Use Cases
+
+### Scientific Research
+- Automated peer review assistance
+- Research claim validation
+- Hypothesis strength assessment
+- Literature review skeptical analysis
+
+### Education
+- Critical thinking training
+- Scientific method demonstration
+- Logical fallacy identification
+- Evidence evaluation practice
+
+### Content Analysis
+- News article fact-checking
+- Social media claim validation
+- Marketing statement analysis
+- Academic paper review
+
+### Personal Development
+- Decision-making support
+- Belief system examination
+- Argument strength assessment
+- Cognitive bias recognition
+
+## 🚨 Troubleshooting
+
+### Common Issues
+
+**Knowledge Base Not Found**
+```bash
+# Verify knowledge base exists
+docker exec psiqrh-cognitive-server ls -la /app/data/knowledge_bases/
+
+# Rebuild container if missing
+make docker-clean
+make docker-build
+```
+
+**Server Not Responding**
+```bash
+# Check container status
+docker ps --filter name=psiqrh-cognitive-server
+
+# Examine logs
+make logs
+
+# Restart container
+make docker-stop
+make docker-run
+```
+
+**API Endpoints Not Working**
+```bash
+# Verify server is running
+curl http://localhost:8080/api/ecosystem/status
+
+# Check port mapping
+docker port psiqrh-cognitive-server
+
+# Validate knowledge loading
+make test-knowledge
+```
+
+### Performance Optimization
+
+**Memory Usage**
+- Minimum: 2GB RAM
+- Recommended: 4GB RAM
+- Optimal: 8GB+ RAM
+
+**CPU Requirements**
+- Minimum: 2 cores
+- Recommended: 4 cores
+- Optimal: 8+ cores
+
+**Storage Needs**
+- Base image: ~1.5GB
+- Knowledge base: ~50MB
+- Runtime data: ~500MB
+- Recommended: 5GB+ free space
+
+## 🌍 Contributing
+
+### Development Philosophy
+
+When contributing to this project, remember Carl Sagan's principles:
+
+1. **Evidence-Based Development**: All changes must be backed by evidence
+2. **Peer Review Process**: Code review as scientific peer review
+3. **Skeptical Testing**: Question assumptions, test thoroughly
+4. **Wonder-Driven Innovation**: Maintain curiosity while being critical
+5. **Collaborative Science**: Share knowledge, collaborate openly
+
+### Code Standards
+
+```bash
+# Run with development environment
+make dev-run
+
+# Test knowledge integration
+make test-knowledge
+
+# Validate Docker operations
+make docker-info
+```
+
+## 📚 References
+
+### Carl Sagan's Work
+- *The Demon-Haunted World: Science as a Candle in the Dark*
+- *Pale Blue Dot: A Vision of the Human Future in Space*
+- *Cosmos: A Personal Voyage*
+
+### Technical Documentation
+- ΨQRH Cognitive Architecture Specifications
+- Spectral Knowledge Representation Theory
+- Scientific Skepticism Computational Models
+
+### Scientific Method Integration
+- Falsifiability Testing Frameworks
+- Evidence Quality Assessment Algorithms
+- Logical Fallacy Detection Patterns
 
 ---
 
-**Framework Status**: Production Ready ✅
-**Docker Support**: Full ✅
-**Test Coverage**: 100% ✅
+## 💭 Final Thoughts
+
+*"We live in a society exquisitely dependent on science and technology, in which hardly anyone knows anything about science and technology."* - Carl Sagan
+
+This Docker container represents more than just software - it's an embodiment of scientific thinking, a digital Carl Sagan that brings evidence-based reasoning to computational systems. By embedding his spectral knowledge directly into the cognitive foundation, we create systems that don't just process information, but **think** with the wisdom of one of science's greatest advocates.
+
+Every API call carries the weight of scientific skepticism. Every analysis applies the rigor of the scientific method. Every response reflects the balance between wonder and doubt that made Carl Sagan such a compelling voice for rational thinking.
+
+*"Somewhere, something incredible is waiting to be known."* - Carl Sagan
+
+🕯️ **Let this container be your candle in the digital dark.**
+
+---
+
+**Build:** `make docker-build`
+**Run:** `make docker-run`
+**Explore:** http://localhost:8080
+**Question Everything:** `make test-knowledge`
+
+*The cosmos is within us. We are made of star-stuff.* ⭐

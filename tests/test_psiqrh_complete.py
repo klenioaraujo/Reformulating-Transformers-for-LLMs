@@ -11,14 +11,14 @@ import json
 from typing import Dict, Any
 
 # Import all ΨQRH components
-from quaternion_operations import QuaternionOperations
-from spectral_filter import SpectralFilter
-from qrh_layer import QRHLayer, QRHConfig
-from gate_controller import GateController
-from negentropy_transformer_block import NegentropyTransformerBlock
-from seal_protocol import SealProtocol
-from navigator_agent import NavigatorAgent
-from audit_log import AuditLog
+from core.quaternion_operations import QuaternionOperations
+# from spectral_filter import SpectralFilter  # Commented out - module not found
+from core.qrh_layer import QRHLayer, QRHConfig
+from core.gate_controller import GateController
+from core.negentropy_transformer_block import NegentropyTransformerBlock
+# from seal_protocol import SealProtocol  # Commented out - module not found
+from cognitive.navigator_agent import NavigatorAgent
+# from audit_log import AuditLog  # Commented out - module not found
 
 def test_quaternion_operations():
     """Teste completo das operações de quaternion"""
