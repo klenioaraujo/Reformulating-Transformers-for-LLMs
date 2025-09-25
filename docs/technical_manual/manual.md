@@ -17,6 +17,8 @@ O sistema de construção é baseado em prompts JSON estruturados que definem a�
 4. **Estrutura de Diretórios**: Toda ação deve atualizar o arquivo `estrutura_diretorios.txt` com a estrutura atual usando `tree -d -L 3`
 5. **Formato de Documentação**: O manual é escrito em Markdown com seções claras, referências a arquivos e explicações técnicas precisas
 6. **Controle de Estado**: O estado de execução é mantido em `construction_technical_manual/state.json`
+7. **Política de Diretório de Testes**: Todos os arquivos de teste (cujo nome contém `test`) devem ser criados exclusivamente no diretório `tests/`. Qualquer tentativa de criar um arquivo de teste em outro lugar será bloqueada pelo `PromptEngineAgent`.
+8. **Templates vs. Instâncias de Prompts**: O diretório `prompts/` contém apenas instâncias de prompts executáveis (com valores concretos). Templates de prompts (com placeholders como `{variavel}`) devem ser armazenados em `templates/` com a extensão `.tpl.json`. O `PromptEngineAgent` irá rejeitar a execução de qualquer prompt que contenha placeholders não resolvidos.
 
 #### Arquivos de Controle
 

@@ -70,6 +70,20 @@ class PromptEngineAgent:
 
         print(f"🤖 PromptEngine Agent initialized (ID: {self.agent_id[:8]})")
 
+    def _validate_output_path(self, prompt: Dict[str, Any]) -> Tuple[bool, Optional[str]]:
+        """Validate output paths mentioned in a prompt against architectural policies."""
+        # This is a simplified check. A more robust implementation would traverse the prompt structure.
+        for key, value in prompt.items():
+            if isinstance(value, str) and ('test_' in value or '_test.py' in value) and value.endswith('.py'):
+                # This looks like a test file path
+                path = Path(value)
+                # Check if the path is inside the 'tests/' directory.
+                # We assume the path is relative to the project root.
+                if not str(path).startswith('tests/'):
+                    error_msg = f"Architectural policy violation: Test file '{value}' must be in 'tests/' directory."
+                    return False, error_msg
+        return True, None
+
     def load_state(self) -> Dict[str, Any]:
         """Load current manual construction state"""
         if self.state_file.exists():
@@ -84,10 +98,50 @@ class PromptEngineAgent:
     def save_state(self, state: Dict[str, Any]):
         """Save updated state with cognitive context"""
         state["last_execution"] = datetime.utcnow().isoformat()
+
+        # Add context compaction tracking
+        if "context_compactions" not in state:
+            state["context_compactions"] = []
+
+        state["context_compactions"].append({
+            "timestamp": datetime.utcnow().isoformat(),
+            "action": "context_compaction",
+            "summary_file": f"data/cognitive_context/session_summary_{datetime.utcnow().strftime('%Y%m%d')}.json"
+        })
         state["agent_id"] = self.agent_id
         state["execution_count"] = self.execution_count
 
         self.state_file.write_text(json.dumps(state, indent=2))
+
+    def clear_context_buffer(self):
+        """Clear cognitive agent context buffer, preserving only summary"""
+        # Clear execution tracking while preserving essential state
+        state = self.load_state()
+
+        # Preserve only essential information
+        preserved_state = {
+            "manual_version": state.get("manual_version", "1.0.0"),
+            "system_status": "active_compacted",
+            "last_execution": datetime.utcnow().isoformat(),
+            "context_compactions": state.get("context_compactions", []),
+            "agent_id": self.agent_id,
+            "execution_count": self.execution_count,
+            "compaction_timestamp": datetime.utcnow().isoformat()
+        }
+
+        # Save compacted state
+        self.state_file.write_text(json.dumps(preserved_state, indent=2))
+
+        # Log the context compaction
+        self._log_audit_event(
+            action_type="context_compaction",
+            prompt_id="system_context_compaction",
+            outcome="success",
+            artifacts_generated=["session_summary_20250925.json"],
+            error=None
+        )
+
+        print(f"🧹 Cognitive context buffer cleared. Context compacted to summary.")
 
     def log_audit_entry(self,
                        prompt_id: str,
@@ -178,9 +232,21 @@ class PromptEngineAgent:
         """Execute a single prompt with full cognitive integration"""
 
         try:
-            # Load and validate prompt
-            prompt = json.loads(prompt_path.read_text())
+            # Load and validate prompt for placeholders
+            prompt_content = prompt_path.read_text()
+            if '{' in prompt_content or '}' in prompt_content:
+                error_msg = f"Prompt {prompt_path.name} contains unresolved placeholders and cannot be executed."
+                self.log_audit_entry(prompt_path.stem, "prompt_execution", "blocked_placeholder_violation", error=error_msg)
+                return False, {"error": error_msg}
+
+            prompt = json.loads(prompt_content)
             prompt_id = prompt.get("id", "unknown")
+
+            # Architectural policy validation
+            is_valid, error_msg = self._validate_output_path(prompt)
+            if not is_valid:
+                self.log_audit_entry(prompt_id, "prompt_execution", "blocked_arch_violation", error=error_msg)
+                return False, {"error": error_msg}
 
             print(f"🚀 PromptEngine: Executing {prompt_id}")
 

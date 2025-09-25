@@ -21,6 +21,8 @@ import logging
 
 from .agentic_runtime import *
 from .prompt_engine_agent import PromptEngineAgent, create_prompt_engine_agent
+from .autonomous_prompt_generator import AutonomousPromptGenerator, create_autonomous_prompt_generator
+from .architectural_validator import ArchitecturalValidator, create_architectural_validator
 
 logger = logging.getLogger("EnhancedAgenticRuntime")
 
@@ -62,6 +64,10 @@ class EnhancedAgenticRuntime:
 
         # Initialize prompt engine agent
         self.prompt_engine = create_prompt_engine_agent(habitat_mode)
+
+        # Initialize autonomous prompt generator
+        project_root = Path(__file__).parent.parent.parent
+        self.autonomous_generator = create_autonomous_prompt_generator(project_root, self.prompt_engine)
 
         # Reactive system state
         self.reactive_triggers = {}
@@ -293,6 +299,14 @@ Execute the appropriate action based on the current state and trigger context.
 
         self.running = True
 
+        # Start autonomous prompt generator
+        if self.auto_documentation:
+            success = self.autonomous_generator.start_monitoring()
+            if success:
+                logger.info("Autonomous prompt generation started")
+            else:
+                logger.warning("Failed to start autonomous prompt generation")
+
         # Start background prompt processing thread
         self.prompt_thread = threading.Thread(
             target=self._background_prompt_processor,
@@ -309,6 +323,10 @@ Execute the appropriate action based on the current state and trigger context.
             return
 
         self.running = False
+
+        # Stop autonomous prompt generator
+        if self.autonomous_generator:
+            self.autonomous_generator.stop_monitoring()
 
         # Wait for background thread to finish
         if self.prompt_thread and self.prompt_thread.is_alive():
@@ -351,7 +369,8 @@ Execute the appropriate action based on the current state and trigger context.
             },
             "system_state_keys": list(self.system_state.keys()),
             "change_queue_size": self.change_queue.qsize(),
-            "prompt_engine": prompt_agent_status
+            "prompt_engine": prompt_agent_status,
+            "autonomous_generator": self.autonomous_generator.get_status() if self.autonomous_generator else None
         }
 
     def trigger_manual_documentation(self, component_path: str, description: str = "") -> str:
