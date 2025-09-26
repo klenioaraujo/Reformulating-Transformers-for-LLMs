@@ -22,7 +22,7 @@ from dataclasses import dataclass
 
 # Import base classes
 from ΨQRH import QuaternionOperations, SpectralFilter
-from fractal_pytorch_integration import AdaptiveFractalQRHLayer
+from ..fractal.fractal_pytorch_integration import AdaptiveFractalQRHLayer
 
 
 @dataclass

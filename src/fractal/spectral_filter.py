@@ -60,7 +60,11 @@ class SpectralFilter(nn.Module):
         # CORRECTED: Apply both amplitude scaling and phase modulation
         # F(k) = amplitude_scaling * exp(i * phase)
         # This ensures |H(f)|² ∝ f^(-α) giving the correct power law slope
-        filter_response = amplitude_scaling * torch.exp(1j * phase)
+
+        # Create complex filter response using torch.complex for compatibility
+        real_part = amplitude_scaling * torch.cos(phase)
+        imag_part = amplitude_scaling * torch.sin(phase)
+        filter_response = torch.complex(real_part, imag_part)
 
         # Replace invalid values with identity for better precision
         invalid_mask = torch.isnan(filter_response) | torch.isinf(filter_response)
@@ -98,3 +102,92 @@ class SpectralFilter(nn.Module):
         # signal: [batch, seq_len, ...], window: [seq_len]
         window_expanded = window.view(1, seq_len, *(1,) * (signal.dim() - 2))
         return torch.einsum('b... , b... -> b...', signal, window_expanded)
+
+    def text_to_spectrum(self, text: str, target_dim: int = 256, device: str = "cpu") -> torch.Tensor:
+        """
+        Converte texto para representação espectral usando transformada de Fourier.
+
+        Args:
+            text: Texto de entrada
+            target_dim: Dimensão alvo para o espectro
+            device: Dispositivo de processamento
+
+        Returns:
+            Tensor complexo representando o espectro do texto
+        """
+        # Encoding do texto para sequência numérica
+        char_sequence = [ord(char) / 127.0 - 1.0 for char in text]  # Normalizar para [-1, 1]
+
+        # Pad ou truncar para dimensão alvo
+        if len(char_sequence) > target_dim:
+            char_sequence = char_sequence[:target_dim]
+        else:
+            char_sequence.extend([0.0] * (target_dim - len(char_sequence)))
+
+        # Converter para tensor
+        signal = torch.tensor(char_sequence, dtype=torch.float32, device=device)
+        signal = signal.unsqueeze(0)  # Adicionar batch dimension
+
+        # Aplicar janelamento se configurado
+        if self.use_windowing:
+            signal = self.apply_window(signal, target_dim)
+
+        # Transformada de Fourier para obter espectro
+        spectrum = torch.fft.fft(signal, dim=-1)
+
+        # Aplicar filtro espectral
+        k_mag = torch.abs(torch.fft.fftfreq(target_dim, device=device))
+        k_mag = k_mag.unsqueeze(0)  # Adicionar batch dimension
+
+        # Ensure filter is on the same device
+        if hasattr(self, 'k_min'):
+            if self.k_min.device != k_mag.device:
+                self.k_min = self.k_min.to(k_mag.device)
+                self.k_max = self.k_max.to(k_mag.device)
+
+        filter_response = self.forward(k_mag)
+        filtered_spectrum = spectrum * filter_response
+
+        return filtered_spectrum
+
+    def spectrum_to_text(self, spectrum: torch.Tensor, original_text: str = "") -> str:
+        """
+        Converte espectro de volta para representação textual.
+
+        Args:
+            spectrum: Tensor complexo do espectro
+            original_text: Texto original para contexto
+
+        Returns:
+            Texto interpretado do espectro processado
+        """
+        # Transformada inversa para recuperar sinal temporal
+        signal = torch.fft.ifft(spectrum, dim=-1).real
+
+        # Estatísticas espectrais
+        spectrum_stats = {
+            'magnitude_mean': torch.abs(spectrum).mean().item(),
+            'magnitude_std': torch.abs(spectrum).std().item(),
+            'phase_mean': torch.angle(spectrum).mean().item(),
+            'energy': (torch.abs(spectrum) ** 2).sum().item()
+        }
+
+        # Estatísticas do sinal reconstruído
+        signal_stats = {
+            'mean': signal.mean().item(),
+            'std': signal.std().item(),
+            'max': signal.max().item(),
+            'min': signal.min().item()
+        }
+
+        # Gerar resposta interpretativa baseada no processamento espectral
+        response = f"ΨQRH Análise Espectral de '{original_text}':\n\n"
+        response += f"Espectro processado com filtro logarítmico (α={self.alpha:.2f})\n"
+        response += f"Energia espectral: {spectrum_stats['energy']:.3f}\n"
+        response += f"Magnitude média: {spectrum_stats['magnitude_mean']:.3f} ± {spectrum_stats['magnitude_std']:.3f}\n"
+        response += f"Fase média: {spectrum_stats['phase_mean']:.3f} rad\n"
+        response += f"Sinal reconstruído: μ={signal_stats['mean']:.3f}, σ={signal_stats['std']:.3f}\n"
+        response += f"Windowing: {'Ativo' if self.use_windowing else 'Inativo'} ({self.window_type})\n"
+        response += f"Transformação espectral aplicada com {spectrum.shape[-1]} componentes de frequência."
+
+        return response
