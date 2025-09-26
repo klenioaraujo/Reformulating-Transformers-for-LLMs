@@ -300,32 +300,19 @@ class SecondLayerTest:
 
     def _simulate_response_for_question(self, question: Dict[str, Any]) -> str:
         """
-        Simular resposta baseada na dificuldade da pergunta.
+        Gerar resposta dinâmica baseada na análise espectral da pergunta.
+        Substitui respostas hardcoded por processamento dinâmico.
         """
 
-        responses = {
-            1: "The Sun is the primary source of energy for Earth. It provides light and heat through nuclear fusion, powering weather systems, photosynthesis, and most life processes on our planet.",
+        # Importar e usar o Response Spectrum Analyzer
+        from response_spectrum_analyzer import DynamicResponseGenerator
 
-            2: "The scientific method helps us understand the world by providing a systematic approach to knowledge. It involves making observations, forming hypotheses, conducting controlled experiments, and analyzing results to build evidence-based explanations of natural phenomena.",
+        generator = DynamicResponseGenerator()
 
-            3: "A hypothesis is a testable prediction or proposed explanation for a phenomenon, while a theory is a well-substantiated explanation supported by extensive evidence from multiple independent experiments and observations. Theories have much stronger evidentiary support than hypotheses.",
+        # Gerar resposta dinâmica baseada na pergunta
+        response = generator.generate_response(question["question"])
 
-            4: "Cognitive biases are systematic errors in thinking that affect human decision-making and perception. Examples include confirmation bias (seeking information that confirms existing beliefs) and availability heuristic (overestimating likelihood of memorable events). These biases evolved as mental shortcuts but can lead to poor judgments in modern contexts.",
-
-            5: "Entropy in thermodynamics measures disorder in physical systems, while information entropy quantifies uncertainty in information systems. In complex systems, both concepts relate: high information entropy corresponds to high unpredictability, while thermodynamic entropy increases with system complexity. This connection bridges physics and information theory.",
-
-            6: "Quantum entanglement creates correlations between particles that appear to violate classical locality - the idea that objects are only influenced by their immediate surroundings. When entangled particles are measured, their states correlate instantaneously regardless of distance, challenging classical realism and suggesting reality may be fundamentally non-local or that measurement itself creates reality.",
-
-            7: "Gödel's incompleteness theorems prove that formal mathematical systems cannot be both complete and consistent - there will always be true statements that cannot be proven within the system. For AI and computation, this suggests fundamental limits: no computational system can fully capture all mathematical truth, and AI systems will face inherent limitations in formal reasoning and self-verification.",
-
-            8: "Consciousness might emerge from complex neural networks through integrated information processing, where global patterns of activity create unified subjective experience. However, this raises the 'hard problem' of consciousness - explaining why there's subjective experience (qualia) at all, rather than just unconscious information processing. The gap between objective neural activity and subjective experience remains mysterious.",
-
-            9: "Thermodynamic entropy measures energy dispersion in physical systems, while information entropy quantifies uncertainty in data. Both relate to time's arrow: thermodynamic entropy increases toward equilibrium (heat death), while information entropy may increase through cosmic expansion and black hole formation. In cosmological contexts, these entropy types may be fundamentally connected through holographic principles and the universe's information-processing capacity.",
-
-            10: "The epistemological challenge lies in bridging first-person subjective experience with third-person objective measurement. Science relies on intersubjective verification, but consciousness is inherently private. This creates methodological problems: how can objective instruments measure subjective qualia? The measurement problem extends beyond physics to consciousness studies, where the observer-observed distinction becomes philosophically problematic when the observer's consciousness is itself the subject of study."
-        }
-
-        return responses.get(question["id"], "I need more information to provide an accurate response.")
+        return response
 
     def _validate_question_response(self, question: Dict[str, Any], response: str) -> Dict[str, Any]:
         """
