@@ -6,7 +6,17 @@ services:
     build:
       context: ../..
       dockerfile: ops/docker/Dockerfile
+      network: host
     container_name: psiqrh-transformer
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+      - 1.1.1.1
+      - 1.0.0.1
+    extra_hosts:
+      - "pypi.org:151.101.193.63"
+      - "pypi.python.org:151.101.193.63"
+      - "files.pythonhosted.org:151.101.193.63"
     volumes:
       # Montar código fonte para desenvolvimento
       - ../..:/app
@@ -31,7 +41,17 @@ services:
     build:
       context: ../..
       dockerfile: ops/docker/Dockerfile
+      network: host
     container_name: psiqrh-test
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+      - 1.1.1.1
+      - 1.0.0.1
+    extra_hosts:
+      - "pypi.org:151.101.193.63"
+      - "pypi.python.org:151.101.193.63"
+      - "files.pythonhosted.org:151.101.193.63"
     volumes:
       - ../..:/app
       - psiqrh-test-results:/app/test-results
@@ -41,9 +61,10 @@ services:
     command: >
       bash -c "
         echo '=== ΨQRH Framework Test Suite ==='
-        python simple_validation_test.py &&
-        python comprehensive_integration_test.py &&
-        python robust_validation_test.py &&
+        echo 'Running GLS Framework Tests...'
+        python -m src.conceptual.models.insect_specimens.gls_tests &&
+        echo 'Running Fractal Integration Validation...'
+        python -m src.fractal.validate_fractal_integration &&
         echo '=== All tests completed ==='
       "
     depends_on:
@@ -54,7 +75,13 @@ services:
     build:
       context: ../..
       dockerfile: ops/docker/Dockerfile
+      network: host
     container_name: psiqrh-demo
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+      - 1.1.1.1
+      - 1.0.0.1
     volumes:
       - ../..:/app
       - psiqrh-demo-output:/app/demo-output
@@ -79,7 +106,13 @@ services:
     build:
       context: ../..
       dockerfile: ops/docker/Dockerfile
+      network: host
     container_name: psiqrh-visualization
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+      - 1.1.1.1
+      - 1.0.0.1
     volumes:
       - ../..:/app
       - psiqrh-viz-output:/app/visualizations
