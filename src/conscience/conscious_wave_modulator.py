@@ -28,6 +28,9 @@ from typing import Dict, Any, Optional, Union, List, Tuple
 from dataclasses import dataclass, asdict
 import time
 
+# Importar sistema de segurança
+from .secure_Ψcws_protector import create_secure_Ψcws_protector
+
 # File processors imports (with fallbacks)
 try:
     import PyMuPDF as fitz  # pymupdf
