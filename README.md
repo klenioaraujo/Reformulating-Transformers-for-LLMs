@@ -14,7 +14,7 @@
 
 # Reformulating Transformers for LLMs: ΨQRH Framework
 
-**A Quaternionic-Harmonic Framework with Empirical Validation**
+**A Quaternionic-Harmonic AI with Empirical Validation**
 
 ## Abstract
 
