@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Conscious Wave Modulator - Processador de Arquivos para .cwm
+Conscious Wave Modulator - Processador de Arquivos para .Ψcws
 ===========================================================
 
 Converte múltiplos tipos de arquivo (PDF, TXT, SQL, CSV, JSON) para
-formato .cwm (Conscious Wave Modulation) com embedding de ondas caóticas
+formato .Ψcws (Psi Conscious Wave Spectrum) com embedding de ondas caóticas
 e análise de consciência fractal.
 
 Formato .cwm:
@@ -13,7 +13,7 @@ Formato .cwm:
 - Content Metadata: Conteúdo original e clusters semânticos
 - QRH Compatibility: Tensors compatíveis com QRHLayer
 
-Pipeline: Arquivo → Extração → Encoding Consciente → .cwm → QRH Processing
+Pipeline: Arquivo → Extração → Encoding Consciente → .Ψcws → QRH Processing
 """
 
 import torch
@@ -45,9 +45,9 @@ import io
 
 
 @dataclass
-class CWMHeader:
-    """Header structure for .cwm files."""
-    magic_number: str = "CWM1"
+class ΨCWSHeader:
+    """Header structure for .Ψcws files."""
+    magic_number: str = "ΨCWS1"
     version: str = "1.0"
     file_type: str = ""
     content_hash: str = ""
@@ -65,8 +65,8 @@ class CWMHeader:
 
 
 @dataclass
-class CWMSpectralData:
-    """Spectral data structure for .cwm files."""
+class ΨCWSSpectralData:
+    """Spectral data structure for .Ψcws files."""
     wave_embeddings: torch.Tensor = None
     chaotic_trajectories: torch.Tensor = None
     fourier_spectra: torch.Tensor = None
@@ -83,8 +83,8 @@ class CWMSpectralData:
 
 
 @dataclass
-class CWMContentMetadata:
-    """Content metadata structure for .cwm files."""
+class ΨCWSContentMetadata:
+    """Content metadata structure for .Ψcws files."""
     original_source: str = ""
     extracted_text: str = ""
     key_concepts: List[str] = None
@@ -98,32 +98,42 @@ class CWMContentMetadata:
 
 
 @dataclass
-class CWMFile:
-    """Complete .cwm file structure."""
-    header: CWMHeader
-    spectral_data: CWMSpectralData
-    content_metadata: CWMContentMetadata
+class ΨCWSFile:
+    """Complete .Ψcws file structure."""
+    header: ΨCWSHeader
+    spectral_data: ΨCWSSpectralData
+    content_metadata: ΨCWSContentMetadata
     qrh_tensor: torch.Tensor = None  # Pre-computed tensor for QRH
 
     def save(self, file_path: Union[str, Path]):
-        """Save .cwm file to disk."""
+        """Save .Ψcws file to disk."""
         file_path = Path(file_path)
 
-        # Prepare data for serialization
+        # Prepare data for serialization with proper numpy conversion
+        def safe_numpy_convert(tensor):
+            if tensor is None:
+                return None
+            if hasattr(tensor, 'numpy'):
+                return tensor.numpy().tolist()  # Convert to Python list for JSON
+            elif hasattr(tensor, 'tolist'):
+                return tensor.tolist()
+            else:
+                return tensor
+
         data = {
             'header': asdict(self.header),
             'spectral_data': {
-                'wave_embeddings': self.spectral_data.wave_embeddings.numpy() if self.spectral_data.wave_embeddings is not None else None,
-                'chaotic_trajectories': self.spectral_data.chaotic_trajectories.numpy() if self.spectral_data.chaotic_trajectories is not None else None,
-                'fourier_spectra': self.spectral_data.fourier_spectra.numpy() if self.spectral_data.fourier_spectra is not None else None,
+                'wave_embeddings': safe_numpy_convert(self.spectral_data.wave_embeddings),
+                'chaotic_trajectories': safe_numpy_convert(self.spectral_data.chaotic_trajectories),
+                'fourier_spectra': safe_numpy_convert(self.spectral_data.fourier_spectra),
                 'consciousness_metrics': self.spectral_data.consciousness_metrics
             },
             'content_metadata': asdict(self.content_metadata),
-            'qrh_tensor': self.qrh_tensor.numpy() if self.qrh_tensor is not None else None
+            'qrh_tensor': safe_numpy_convert(self.qrh_tensor)
         }
 
         # Compress and save
-        json_data = json.dumps(data, indent=2)
+        json_data = json.dumps(data, indent=2, ensure_ascii=False)
         compressed_data = gzip.compress(json_data.encode('utf-8'))
 
         with open(file_path, 'wb') as f:
@@ -131,7 +141,7 @@ class CWMFile:
 
     @classmethod
     def load(cls, file_path: Union[str, Path]) -> 'CWMFile':
-        """Load .cwm file from disk."""
+        """Load .Ψcws file from disk."""
         file_path = Path(file_path)
 
         with open(file_path, 'rb') as f:
@@ -140,23 +150,24 @@ class CWMFile:
         json_data = gzip.decompress(compressed_data).decode('utf-8')
         data = json.loads(json_data)
 
-        # Reconstruct tensors
-        header = CWMHeader(**data['header'])
+        # Safe tensor reconstruction
+        def safe_tensor_convert(data_array):
+            if data_array is None:
+                return None
+            return torch.tensor(data_array, dtype=torch.float32)
 
-        spectral_data = CWMSpectralData()
-        if data['spectral_data']['wave_embeddings'] is not None:
-            spectral_data.wave_embeddings = torch.from_numpy(np.array(data['spectral_data']['wave_embeddings']))
-        if data['spectral_data']['chaotic_trajectories'] is not None:
-            spectral_data.chaotic_trajectories = torch.from_numpy(np.array(data['spectral_data']['chaotic_trajectories']))
-        if data['spectral_data']['fourier_spectra'] is not None:
-            spectral_data.fourier_spectra = torch.from_numpy(np.array(data['spectral_data']['fourier_spectra']))
+        # Reconstruct tensors
+        header = ΨCWSHeader(**data['header'])
+
+        spectral_data = ΨCWSSpectralData()
+        spectral_data.wave_embeddings = safe_tensor_convert(data['spectral_data']['wave_embeddings'])
+        spectral_data.chaotic_trajectories = safe_tensor_convert(data['spectral_data']['chaotic_trajectories'])
+        spectral_data.fourier_spectra = safe_tensor_convert(data['spectral_data']['fourier_spectra'])
         spectral_data.consciousness_metrics = data['spectral_data']['consciousness_metrics']
 
-        content_metadata = CWMContentMetadata(**data['content_metadata'])
+        content_metadata = ΨCWSContentMetadata(**data['content_metadata'])
 
-        qrh_tensor = None
-        if data['qrh_tensor'] is not None:
-            qrh_tensor = torch.from_numpy(np.array(data['qrh_tensor']))
+        qrh_tensor = safe_tensor_convert(data['qrh_tensor'])
 
         return cls(header, spectral_data, content_metadata, qrh_tensor)
 
@@ -164,7 +175,7 @@ class CWMFile:
 class ConsciousWaveModulator:
     """
     Modulator de ondas conscientes que converte arquivos múltiplos
-    para formato .cwm com embedding caótico e análise fractal.
+    para formato .Ψcws com embedding caótico e análise fractal.
     """
 
     def __init__(self, config: Dict[str, Any] = None):
@@ -210,20 +221,20 @@ class ConsciousWaveModulator:
             'chaotic_r': 3.9,
             'embedding_dim': 256,
             'sequence_length': 64,
-            'cache_dir': 'data/cwm_cache',
+            'cache_dir': 'data/Ψcws_cache',
             'compression': True,
             'auto_cleanup': True
         }
 
-    def process_file(self, file_path: Union[str, Path]) -> CWMFile:
+    def process_file(self, file_path: Union[str, Path]) -> ΨCWSFile:
         """
-        Process any supported file to .cwm format.
+        Process any supported file to .Ψcws format.
 
         Args:
             file_path: Path to the input file
 
         Returns:
-            CWMFile object
+            ΨCWSFile object
         """
         file_path = Path(file_path)
 
@@ -247,15 +258,15 @@ class ConsciousWaveModulator:
         # Extract content
         extracted_text = self.processors[file_type](file_path)
 
-        # Create .cwm file
-        cwm_file = self._create_cwm_file(file_path, extracted_text, file_type)
+        # Create .Ψcws file
+        Ψcws_file = self._create_Ψcws_file(file_path, extracted_text, file_type)
 
         # Cache the result
         if self.config.get('cache_enabled', True):
-            cwm_file.save(cache_path)
+            Ψcws_file.save(cache_path)
             print(f"💾 Cached to: {cache_path.name}")
 
-        return cwm_file
+        return Ψcws_file
 
     def _get_cache_path(self, file_path: Path) -> Path:
         """Generate cache path for a file."""
@@ -264,20 +275,20 @@ class ConsciousWaveModulator:
         hash_input = f"{file_path.absolute()}_{file_stat.st_mtime}"
         file_hash = hashlib.md5(hash_input.encode()).hexdigest()[:16]
 
-        cache_name = f"{file_hash}_{file_path.stem}.cwm"
+        cache_name = f"{file_hash}_{file_path.stem}.Ψcws"
         return self.cache_dir / cache_name
 
-    def _create_cwm_file(
+    def _create_Ψcws_file(
         self,
         file_path: Path,
         extracted_text: str,
         file_type: str
-    ) -> CWMFile:
-        """Create .cwm file from extracted text."""
+    ) -> ΨCWSFile:
+        """Create .Ψcws file from extracted text."""
 
         # Create header
         content_hash = hashlib.sha256(extracted_text.encode()).hexdigest()
-        header = CWMHeader(
+        header = ΨCWSHeader(
             file_type=file_type,
             content_hash=content_hash,
             timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -306,7 +317,7 @@ class ConsciousWaveModulator:
         )
 
         # Create spectral data
-        spectral_data = CWMSpectralData(
+        spectral_data = ΨCWSSpectralData(
             wave_embeddings=wave_embeddings,
             chaotic_trajectories=chaotic_trajectories,
             fourier_spectra=fourier_spectra,
@@ -318,7 +329,7 @@ class ConsciousWaveModulator:
         semantic_clusters = self._generate_semantic_clusters(extracted_text)
 
         # Create content metadata
-        content_metadata = CWMContentMetadata(
+        content_metadata = ΨCWSContentMetadata(
             original_source=str(file_path),
             extracted_text=extracted_text[:10000],  # Limit size
             key_concepts=key_concepts,
@@ -328,7 +339,7 @@ class ConsciousWaveModulator:
         # Generate QRH-compatible tensor
         qrh_tensor = self._generate_qrh_tensor(wave_embeddings, chaotic_trajectories)
 
-        return CWMFile(header, spectral_data, content_metadata, qrh_tensor)
+        return ΨCWSFile(header, spectral_data, content_metadata, qrh_tensor)
 
     def _generate_wave_embeddings(self, text: str) -> torch.Tensor:
         """Generate conscious wave embeddings from text."""
@@ -593,7 +604,7 @@ class ConsciousWaveModulator:
         return text
 
     def batch_convert(self, input_dir: Union[str, Path], output_dir: Union[str, Path] = None):
-        """Batch convert files to CWM format."""
+        """Batch convert files to ΨCWS format."""
         input_dir = Path(input_dir)
 
         if output_dir is None:
@@ -614,9 +625,9 @@ class ConsciousWaveModulator:
         results = []
         for file_path in files_to_process:
             try:
-                cwm_file = self.process_file(file_path)
-                output_path = output_dir / f"{file_path.stem}.cwm"
-                cwm_file.save(output_path)
+                Ψcws_file = self.process_file(file_path)
+                output_path = output_dir / f"{file_path.stem}.Ψcws"
+                Ψcws_file.save(output_path)
                 results.append({'file': file_path.name, 'status': 'success', 'output': output_path.name})
                 print(f"✅ {file_path.name} → {output_path.name}")
             except Exception as e:

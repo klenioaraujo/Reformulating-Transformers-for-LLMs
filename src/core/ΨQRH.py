@@ -22,7 +22,7 @@ class QRHFactory:
         )
         self.qrh_layer = None
         self.enhanced_processor = None  # Enhanced processor for optimized quaternion processing
-        self.consciousness_processor = None  # Fractal consciousness layer for ERP integration
+        self.consciousness_processor = None  # Fractal consciousness layer for ΨQRH integration
 
     def process_text(self, text: str, device: str = "cpu") -> str:
         """
@@ -47,7 +47,7 @@ class QRHFactory:
                 })
 
                 print("🚀 Enhanced QRH Processor integrado com α adaptativo")
-                print("🧠 Fractal Consciousness Layer integrada para análise ERP")
+                print("🧠 Fractal Consciousness Layer integrada para análise ΨQRH")
             except ImportError as e:
                 print(f"⚠️ Consciousness layer not available: {e}")
                 # Fallback para pipeline enhanced sem consciência
@@ -84,11 +84,11 @@ class QRHFactory:
                 if consciousness_analysis:
                     combined_analysis = f"""{enhanced_text}
 
-🧠 ANÁLISE DE CONSCIÊNCIA FRACTAL ERP:
+🧠 ANÁLISE DE CONSCIÊNCIA FRACTAL ΨQRH:
 {consciousness_analysis}
 
 ✨ INTEGRAÇÃO ΨQRH-CONSCIOUSNESS:
-Pipeline completo: Texto → Enhanced α → Quaterniôn → Consciência Fractal → Análise ERP
+Pipeline completo: Texto → Enhanced α → Quaterniôn → Consciência Fractal → Análise ΨQRH
 Estado do sistema: Enhanced Processor + Fractal Consciousness Layer ativos
 """
                     return combined_analysis

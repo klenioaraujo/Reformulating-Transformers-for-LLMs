@@ -4,7 +4,7 @@ Teste de Integração - Pipeline Completo ΨQRH + Consciousness Layer
 =================================================================
 
 Testa a integração completa:
-Texto → Enhanced α → Quaterniôn → Consciência Fractal → Análise ERP
+Texto → Enhanced α → Quaterniôn → Consciência Fractal → Análise ΨQRH
 """
 
 import sys
@@ -43,9 +43,9 @@ def test_consciousness_integration():
         print(result)
 
         # Verificar se consciousness analysis está presente
-        if "ANÁLISE DE CONSCIÊNCIA FRACTAL ERP" in result:
+        if "ANÁLISE DE CONSCIÊNCIA FRACTAL ΨQRH" in result:
             print("\n✅ SUCCESS: Consciousness Layer integrada com sucesso!")
-            print("🧠 Análise fractal ERP detectada no output")
+            print("🧠 Análise fractal ΨQRH detectada no output")
         else:
             print("\n⚠️ WARNING: Consciousness analysis não detectada")
             print("🔄 Pode estar usando fallback ou enhanced-only pipeline")
@@ -124,6 +124,6 @@ if __name__ == "__main__":
 
     if success1 and success2:
         print("\n🎉 INTEGRAÇÃO CONSCIOUSNESS LAYER COMPLETA!")
-        print("💼 Sistema pronto para análises ERP com consciência fractal")
+        print("💼 Sistema pronto para análises ΨQRH com consciência fractal")
     else:
         print("\n⚠️ Ajustes necessários na integração")

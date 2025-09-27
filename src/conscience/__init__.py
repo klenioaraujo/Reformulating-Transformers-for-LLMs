@@ -4,7 +4,7 @@
 ==================================================
 
 Módulo de consciência fractal que implementa matemática avançada de
-dinâmica consciente para sistemas ERP inteligentes.
+dinâmica consciente para sistemas ΨQRH inteligentes.
 
 Componentes principais:
 - FractalConsciousnessProcessor: Engine de processamento consciente
@@ -21,7 +21,7 @@ Equações Fundamentais:
 """
 
 from .fractal_consciousness_processor import FractalConsciousnessProcessor
-from .conscious_wave_modulator import ConsciousWaveModulator, CWMFile
+from .conscious_wave_modulator import ConsciousWaveModulator, ΨCWSFile
 from .consciousness_states import ConsciousnessState, StateClassifier
 from .fractal_field_calculator import FractalFieldCalculator
 from .neural_diffusion_engine import NeuralDiffusionEngine
@@ -34,7 +34,7 @@ __author__ = "ΨQRH Framework Team"
 __all__ = [
     'FractalConsciousnessProcessor',
     'ConsciousWaveModulator',
-    'CWMFile',
+    'ΨCWSFile',
     'ConsciousnessState',
     'StateClassifier',
     'FractalFieldCalculator',
