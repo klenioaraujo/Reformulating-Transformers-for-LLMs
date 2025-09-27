@@ -1,7 +1,7 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17171112.svg)](https://doi.org/10.5281/zenodo.17171112)
 
 
-# Reformulating Transformers for LLMs: A Quaternionic-Harmonic Framework with Empirical Validation
+# Reformulating Transformers for LLMs: A Quaternionic-Harmonic AI with Empirical Validation
 
 **Author**: Klenio Araujo Padilha  
 **Affiliation**: Independent Researcher  
@@ -12,13 +12,13 @@
 
 
 
-# Reformulating Transformers for LLMs: ΨQRH Framework
+# Reformulating Transformers for LLMs: ΨQRH AI
 
 **A Quaternionic-Harmonic AI with Empirical Validation**
 
 ## Abstract
 
-We propose a novel transformer architecture for Large Language Models (LLMs) that integrates the **Quaternionic Recursive Harmonic Wavefunction (ΨQRH)** framework to address computational inefficiency and physical grounding limitations. Our approach replaces standard self-attention and feed-forward layers with spectrally regularized, quaternion-based operations, validated through extensive numerical experiments.
+We propose a novel transformer architecture for Large Language Models (LLMs) that integrates the **Quaternionic Recursive Harmonic Wavefunction (ΨQRH)** AI to address computational inefficiency and physical grounding limitations. Our approach replaces standard self-attention and feed-forward layers with spectrally regularized, quaternion-based operations, validated through extensive numerical experiments.
 
 **Key Achievements:**
 - **25% memory reduction** compared to standard transformers
@@ -29,7 +29,7 @@ We propose a novel transformer architecture for Large Language Models (LLMs) tha
 
 ## Table of Contents
 
-1. [Mathematical Framework](#mathematical-framework)
+1. [Mathematical AI](#mathematical-AI)
 2. [Architecture Overview](#architecture-overview)
 3. [Implementation Details](#implementation-details)
 4. [Test Suites](#test-suites)
@@ -40,7 +40,7 @@ We propose a novel transformer architecture for Large Language Models (LLMs) tha
 9. [Future Work](#future-work)
 10. [References](#references)
 
-## Mathematical Framework
+## Mathematical AI
 
 ### Core Equations
 
@@ -75,7 +75,7 @@ f(λ,t) = I₀ sin(ωt + αλ) e^(i(ωt - kλ + βλ²))
 
 ### Fractal-Consciousness Integration
 
-The ΨQRH framework implements advanced consciousness modeling through:
+The ΨQRH AI implements advanced consciousness modeling through:
 
 ```python
 # Consciousness dynamics equation
@@ -192,7 +192,7 @@ def calculate_adaptive_alpha(text):
 
 ## Test Suites
 
-### Comprehensive Validation Framework
+### Comprehensive Validation AI
 
 #### 1. Core Mathematical Validation
 ```bash
@@ -323,7 +323,7 @@ from src.core.ΨQRH import QRHFactory
 factory = QRHFactory()
 
 # Process text with adaptive alpha
-result = factory.process_text("Hello, this is a test of the ΨQRH framework.")
+result = factory.process_text("Hello, this is a test of the ΨQRH AI.")
 print(f"Processed result: {result}")
 ```
 
@@ -421,7 +421,7 @@ python emergence_simulation.py
 - Ratio: 0.95-1.05 range
 - Preservation: 96%
 
-### Framework Stability
+### AI Stability
 
 **Latest Validation Status:** ✅ **EXCELLENT (100% Success Rate)**
 
@@ -484,7 +484,7 @@ python emergence_simulation.py
 
 1. **AGI Foundation**
    - Consciousness modeling advancements
-   - Ethical AI frameworks
+   - Ethical AI AIs
    - Explainable AI capabilities
 
 2. **Quantum-Classical Hybrid**
@@ -508,7 +508,7 @@ python emergence_simulation.py
 ### Mathematical Foundations
 
 4. **Conway, J. H., & Sloane, N. J. A. (1999).** *Sphere Packings, Lattices and Groups.* Springer.
-5. **Padilha, K. A. (2025).** *Quaternionic Recursive Harmonic Wavefunction: A Spectrally Regularized Quantum Evolution Framework.* arXiv.
+5. **Padilha, K. A. (2025).** *Quaternionic Recursive Harmonic Wavefunction: A Spectrally Regularized Quantum Evolution AI.* arXiv.
 
 ### Related Work
 
