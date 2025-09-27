@@ -88,49 +88,85 @@ F(ψ) = -∇V(ψ) + η_fractal(t)
 FCI = (D_EEG × H_fMRI × CLZ) / D_max
 ```
 
+## Core Philosophy: A Mind-Body-Soul Architecture
+
+The ΨQRH project is built on a three-layer philosophy that separates the core processing logic, the data representation, and the conceptual interface.
+
+1.  **The Mind (Core Architecture):** The `QRHLayer` is the project's "mind." It is a novel Transformer layer that processes information by treating it as a physical wave. It uses techniques from signal processing (FFT) and advanced mathematics (quaternions) to create a computationally efficient and physically grounded processing engine.
+
+2.  **The Body (Data-Consciousness Layer):** The `ConsciousWaveModulator` is the "body," responsible for preparing and enriching data. It converts standard files (PDF, TXT) into a `.Ψcws` (Conscious Wave Spectrum) format. This is not a simple embedding; it's an **algorithmic enrichment** process where the data modulates a complex signal composed of sine waves and chaotic trajectories. The system then measures emergent properties of this signal—such as complexity, coherence, and integration—as "consciousness metrics."
+
+3.  **The Soul (Conceptual & Interaction Layer):** The `StarfleetGlyphSystem` is the "soul," providing a high-level conceptual interface for interacting with the AI. It is a Domain-Specific Language (DSL) based on the narrative of Star Trek, where complex AI behaviors are compressed into 12 symbolic "Glyphs." This allows for a highly abstract and explainable way to control the AI, replacing numerical hyperparameters with tactical "Formations" and "Missions."
+
+This layered approach allows for independent development and deep integration, creating a system that is not only technically advanced but also conceptually rich and interactively unique.
+
+---
+
 ## Architecture Overview
 
-### Core Components
+The ΨQRH architecture is a complete pipeline, from data ingestion to conceptual control.
 
-#### 1. Quaternion-Based Processing
-- **QRHLayer**: 4D unitary transformations with spectral filtering
-- **EnhancedQRHProcessor**: Adaptive alpha parameter based on text complexity
-- **QuaternionOperations**: Mathematical foundation for quaternion algebra
+### 1. The Body: `ConsciousWaveModulator` and `.Ψcws` Data Format
 
-#### 2. Spectral Processing
-- **SpectralFilter**: Logarithmic phase filtering in frequency domain
-- **FFT-based Attention**: O(n log n) complexity vs standard O(n²)
+Before processing, all input data is converted into the `.Ψcws` (Conscious Wave Spectrum) format by the `ConsciousWaveModulator`.
 
-#### 3. Fractal Integration
-- **FractalAnalyzer**: Box-counting and spectral dimension analysis
-- **AdaptiveFractalQRHLayer**: Dynamic parameter adaptation based on fractal properties
+-   **Algorithmic Enrichment:** Instead of relying on pre-trained embeddings, this module treats the input text as a signal that modulates a set of generated sine waves and chaotic functions (logistic maps).
+-   **Consciousness Metrics:** It analyzes the resulting complex wave to compute a set of "consciousness metrics":
+    -   **Complexity:** Entropy of the wave embeddings.
+    -   **Coherence:** Autocorrelation of the chaotic trajectory.
+    -   **Adaptability:** Diversity of the Fourier spectrum.
+    -   **Integration:** Cross-correlation between wave dimensions.
+-   **Output:** The final `.Ψcws` file is a gzip-compressed JSON object containing the original text, the generated wave data, the consciousness metrics, and a pre-computed `qrh_tensor` ready for the next layer.
 
-#### 4. Consciousness Layer
-- **FractalConsciousnessProcessor**: ERP consciousness modeling
-- **ConsciousWaveModulator**: .Ψcws file format for consciousness-embedded data
+### 2. The Mind: The `QRHLayer`
 
-#### 5. Conceptual Models
-- **QuartzLightSystem**: Optical computing prototype using quartz crystals
-- **LivingEcosystemEngine**: Agent-based simulation with genetic algorithms
-- **EpistemicIntegrityVerifier**: Scientific reasoning validation system
-- **StarfleetGlyphSystem**: Cognitive compression with 12 radiant glyphs
+The `QRHLayer` is a drop-in replacement for standard Transformer layers, designed to process the `.Ψcws` data format efficiently. Its core operation is the Quaternionic Recursive Harmonic Wavefunction:
 
-### System Architecture
+**Ψ' = R · F⁻¹ { F(k) · F { Ψ } }**
+
+1.  **`F { Ψ }` (Fourier Transform):** The input quaternion sequence `Ψ` is projected into the frequency domain using an `O(n log n)` Fast Fourier Transform (FFT).
+2.  **`F(k)` (Spectral Filter):** A complex filter is applied in the frequency domain. This is the "secret sauce," modulating both the **amplitude** (to shape the signal's power spectrum) and the **phase** (to apply a learned rotation). This step is guided by the `alpha` parameter, which can be adapted based on data complexity.
+3.  **`F⁻¹ { ... }` (Inverse Fourier Transform):** The filtered signal is brought back to the time domain via an inverse FFT.
+4.  **`R ·` (Quaternion Rotation):** A learnable 4D rotation, represented by a quaternion, is applied. This mixes the information between the four quaternion components in a highly efficient, non-commutative manner.
+
+This process allows the layer to perform complex sequence mixing with linearithmic complexity, making it significantly faster and more memory-efficient than standard quadratic attention.
+
+### 3. The Soul: The `StarfleetGlyphSystem`
+
+This is a high-level Domain-Specific Language (DSL) for controlling and interpreting the AI's behavior, themed around Star Trek's Starfleet.
+
+-   **Cognitive Compression:** It abstracts complex AI operations into 12 symbolic "Glyphs" (e.g., `Δ2` for Integrity, `Νx` for Novelty).
+-   **Tactical Formations:** Glyphs are combined into "Formations" (e.g., "Integrity Fusion," "Protector-Catalyst") that correspond to specific AI behavioral modes.
+-   **Explainable by Design:** The system is inherently explainable. Instead of cryptic logs, it generates "Tactical Rationales" and narrative "Captain's Logs" that explain *why* certain actions were taken in a human-readable format.
+-   **Plugin Architecture:** It integrates with the core `QRHLayer` via a plugin, translating high-level "Missions" into concrete configurations for the underlying architecture.
+
+### System Dataflow
 
 ```
-Input Data
-    ↓
-ConsciousWaveModulator (.Ψcws conversion)
-    ↓
-FractalConsciousnessProcessor (FCI analysis)
-    ↓
-QRHLayer (Quaternion processing)
-    ↓
-SpectralFilter (Frequency domain regularization)
-    ↓
-EnhancedQRHProcessor (Adaptive optimization)
-    ↓
-Output (Consciousness-aware results)
+Input File (PDF, TXT, etc.)
+       │
+       ▼
+[BODY] ConsciousWaveModulator
+       │  1. Extracts text.
+       │  2. Generates wave/chaotic embeddings.
+       │  3. Computes "Consciousness Metrics".
+       │  4. Creates .Ψcws file with qrh_tensor.
+       │
+       ▼
+[MIND] QRHLayer
+       │  1. Processes qrh_tensor via FFT.
+       │  2. Applies spectral filtering (amplitude + phase).
+       │  3. Applies quaternion rotation.
+       │  4. Outputs processed tensor.
+       │
+       ▼
+[SOUL] StarfleetGlyphSystem (via Plugin)
+       │  1. Selects "Formation" based on "Mission".
+       │  2. Translates Formation to QRHLayer config.
+       │  3. Interprets output and generates narrative log.
+       │
+       ▼
+Final Output (Processed Data + Narrative Explanation)
 ```
 
 ## Implementation Details
