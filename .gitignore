@@ -1,4 +1,3 @@
-cat <<EOL > exclusoes.txt
 /.venv/
 .venv/
 venv/
@@ -90,7 +89,7 @@ celerybeat-schedule
 .dmypy.json
 dmypy.json
 rascunhos/
-construction_technical_manual/ 
+construction_technical_manual/
 gls_env/
 *.gls
 gls_visualizations/
@@ -110,4 +109,6 @@ e-book/*
 # Claude reference files
 CLAUDE.md
 *.claude
-EOL/home/padilha/trabalhos/Reformulating_Transformers/prompts/
+
+# Prompt engineering files
+/prompts/

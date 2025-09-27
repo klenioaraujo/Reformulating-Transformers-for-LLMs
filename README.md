@@ -1,3 +1,17 @@
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17171112.svg)](https://doi.org/10.5281/zenodo.17171112)
+
+
+# Reformulating Transformers for LLMs: A Quaternionic-Harmonic Framework with Empirical Validation
+
+**Author**: Klenio Araujo Padilha  
+**Affiliation**: Independent Researcher  
+**Email**: klenioaraujo@gmail.com  
+**Date**: September 2025
+**License**: [GNU GPLv3](LICENSE)
+
+
+
+
 # Reformulating Transformers for LLMs: ΨQRH Framework
 
 **A Quaternionic-Harmonic Framework with Empirical Validation**
