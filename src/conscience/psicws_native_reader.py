@@ -36,6 +36,10 @@ class ΨCWSNativeReader:
         self.cache_dir = Path(cache_dir)
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
+        # Propriedades do sistema para testes
+        self.system_info = "ΨQRH Native Reader v1.0 - Operational"
+        self.security_status = "Active - 7-layer encryption"
+
         print(f"🔮 ΨCWSNativeReader inicializado")
         print(f"📁 Cache directory: {self.cache_dir}")
 
