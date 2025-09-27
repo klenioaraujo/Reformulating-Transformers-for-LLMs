@@ -267,7 +267,7 @@ python src/cognitive/emergence_simulation.py
 
 ```bash
 # Clone repository
-git clone https://github.com/padilha/Reformulating_Transformers.git
+git clone https://github.com/klenioaraujo/Reformulating-Transformers-for-LLMs/
 cd Reformulating_Transformers
 
 # Install dependencies
