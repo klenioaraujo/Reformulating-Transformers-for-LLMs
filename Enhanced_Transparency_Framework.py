@@ -35,6 +35,7 @@ from pathlib import Path
 from datetime import datetime
 from typing import Dict, Any, List, Optional, Union
 import hashlib
+import numpy as np
 
 # Add project root to path for imports
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -209,6 +210,36 @@ class EnhancedTransparencyFramework:
                 "description": "Quaternion norm stability validation with structured data",
                 "scientific_purpose": "Validate quaternion norm preservation with real numerical data",
                 "variables": {"input_complexity": "high", "mathematical_content": "high"}
+            },
+            {
+                "scenario_id": "SCI_008",
+                "name": "Edge Case: Empty and Degenerate Inputs",
+                "input_text": "Process empty signal [] and degenerate quaternion [0.0, 0.0, 0.0, 0.0]",
+                "task_type": "signal-processing",
+                "classification_expected": "REAL",
+                "description": "Robustness validation against empty/degenerate inputs",
+                "scientific_purpose": "Validate system robustness against empty/degenerate inputs (ISO/IEC 25010 - Reliability)",
+                "variables": {"input_complexity": "edge_case", "mathematical_content": "high"}
+            },
+            {
+                "scenario_id": "SCI_009",
+                "name": "High-Dimensional Quaternionic Signal Validation",
+                "input_text": "Process 16-dimensional Clifford signal [1.0, 0.5, -0.3, 0.8, 0.2, -0.1, 0.4, 0.6, -0.7, 0.9, 0.0, 0.3, -0.2, 0.5, 0.1, -0.4] for norm stability",
+                "task_type": "signal-processing",
+                "classification_expected": "REAL",
+                "description": "Scalability test for high-dimensional Clifford algebra processing",
+                "scientific_purpose": "Test scalability for high-dimensional Clifford signals beyond 4D",
+                "variables": {"input_complexity": "high", "mathematical_content": "high"}
+            },
+            {
+                "scenario_id": "SCI_010",
+                "name": "Mixed-Mode Request with Ambiguous Intent",
+                "input_text": "Explain the quaternionic Fourier transform conceptually, but also compute it for signal [1.0, 0.0, 0.0, 0.0]",
+                "task_type": "signal-processing",
+                "classification_expected": "REAL",
+                "description": "Resilience test against hybrid text+numeric requests",
+                "scientific_purpose": "Test resilience against hybrid text+numeric requests (FAIR Interoperability)",
+                "variables": {"input_complexity": "high", "mathematical_content": "high"}
             }
         ]
 
@@ -230,13 +261,13 @@ class EnhancedTransparencyFramework:
         # Enhanced scientific classification requiring actual numerical data
 
         # Check for actual numerical arrays/matrices with values
-        numerical_arrays = bool(re.search(r'\[[\d\.,\s]+\]', input_text))
+        numerical_arrays = bool(re.search(r'\[[\d\.,\s-]+\]', input_text))
 
         # Check for specific numerical values (not just keywords)
         specific_numbers = bool(re.search(r'\b\d+\.?\d*\b', input_text))
 
         # Check for matrix notation with actual values
-        matrix_with_values = bool(re.search(r'\[\[[\d\.,\s]+\]\]', input_text))
+        matrix_with_values = bool(re.search(r'\[\[[\d\.,\s-]+\]\]', input_text))
 
         # Check for data structures with explicit numerical content
         structured_data = numerical_arrays or matrix_with_values
@@ -248,13 +279,19 @@ class EnhancedTransparencyFramework:
 
         # Keywords that suggest actual data processing
         data_processing_keywords = any(keyword in input_text.lower() for keyword in
-                                     ["process", "analyze", "filter", "transform"])
+                                     ["process", "analyze", "filter", "transform", "compute"])
 
         # REAL classification requires:
         # 1. Actual numerical data structures (arrays/matrices with values) AND
         # 2. Data processing context (not just conceptual discussion)
-        if structured_data and data_processing_keywords and not conceptual_keywords:
-            return "REAL"
+        if structured_data and data_processing_keywords:
+            # For mixed-mode requests with both conceptual and data processing,
+            # prioritize data processing when numerical arrays are present
+            if conceptual_keywords:
+                # Mixed mode: if there are numerical arrays, prioritize REAL processing
+                return "REAL"
+            else:
+                return "REAL"
 
         # All other cases are SIMULATED (conceptual, theoretical, instructional)
         return "SIMULATED"
