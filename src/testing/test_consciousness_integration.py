@@ -9,7 +9,7 @@ Texto → Enhanced α → Quaterniôn → Consciência Fractal → Análise ΨQR
 
 import sys
 import os
-sys.path.append('/home/padilha/trabalhos/Reformulating_Transformers')
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'core'))
 
 def test_consciousness_integration():
     print("🧠 TESTE DE INTEGRAÇÃO ΨQRH + CONSCIOUSNESS LAYER")
@@ -17,7 +17,7 @@ def test_consciousness_integration():
 
     try:
         # Importar QRHFactory
-        from src.core.ΨQRH import QRHFactory
+        from ΨQRH import QRHFactory
 
         # Criar factory
         factory = QRHFactory()
@@ -75,7 +75,9 @@ def test_consciousness_processor_direct():
     print("=" * 50)
 
     try:
-        from src.conscience import create_consciousness_processor
+        import sys
+        sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'conscience'))
+        from fractal_consciousness_processor import FractalConsciousnessProcessor
         import torch
 
         # Configuração de teste
@@ -85,7 +87,7 @@ def test_consciousness_processor_direct():
         }
 
         # Criar processor
-        consciousness = create_consciousness_processor(config)
+        consciousness = FractalConsciousnessProcessor(config)
 
         # Input de teste
         test_input = torch.randn(1, 256)  # [batch, embedding_dim]

@@ -72,7 +72,7 @@ class ΨCWSSecurityValidator:
             security_layer = ΨCWSSecurityLayer()
 
             # Test data
-            test_data = b"ΨCWS encryption test data for layer validation"
+            test_data = b"CWS encryption test data for layer validation"
 
             # Test each layer individually
             layers = [
