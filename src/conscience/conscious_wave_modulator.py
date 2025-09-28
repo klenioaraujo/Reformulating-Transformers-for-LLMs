@@ -143,7 +143,7 @@ class ΨCWSFile:
             f.write(compressed_data)
 
     @classmethod
-    def load(cls, file_path: Union[str, Path]) -> 'CWMFile':
+    def load(cls, file_path: Union[str, Path]) -> 'ΨCWSFile':
         """Load .Ψcws file from disk."""
         file_path = Path(file_path)
 
@@ -206,13 +206,13 @@ class ConsciousWaveModulator:
         }
 
         # Cache for processed files
-        self.cache_dir = Path(config.get('cache_dir', 'data/cwm_cache'))
+        self.cache_dir = Path(config.get('cache_dir', 'data/Ψcws'))
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
         print(f"🌊 ConsciousWaveModulator inicializado")
         print(f"   Embedding dim: {self.embedding_dim}")
         print(f"   Sequence length: {self.sequence_length}")
-        print(f"   Cache dir: {self.cache_dir}")
+        print(f"   ModelCWS: {self.cache_dir}")
 
     def _default_config(self) -> Dict[str, Any]:
         """Default configuration for the modulator."""
@@ -224,7 +224,7 @@ class ConsciousWaveModulator:
             'chaotic_r': 3.9,
             'embedding_dim': 256,
             'sequence_length': 64,
-            'cache_dir': 'data/Ψcws_cache',
+            'cache_dir': 'data/Ψcws',
             'compression': True,
             'auto_cleanup': True
         }
@@ -248,7 +248,7 @@ class ConsciousWaveModulator:
         cache_path = self._get_cache_path(file_path)
         if cache_path.exists():
             print(f"📋 Loading from cache: {cache_path.name}")
-            return CWMFile.load(cache_path)
+            return ΨCWSFile.load(cache_path)
 
         # Detect file type and process
         file_type = file_path.suffix.lower().lstrip('.')

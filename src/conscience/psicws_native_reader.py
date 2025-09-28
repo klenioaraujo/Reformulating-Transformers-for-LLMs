@@ -26,7 +26,7 @@ class ΨCWSNativeReader:
     - Operacionalidade garantida
     """
 
-    def __init__(self, cache_dir: str = "data/Ψcws_cache"):
+    def __init__(self, cache_dir: str = "data/Ψcws"):
         """
         Inicializa o leitor nativo.
 
@@ -41,7 +41,7 @@ class ΨCWSNativeReader:
         self.security_status = "Active - 7-layer encryption"
 
         print(f"🔮 ΨCWSNativeReader inicializado")
-        print(f"📁 Cache directory: {self.cache_dir}")
+        print(f"📁 ModelCWS: {self.cache_dir}")
 
     def discover_files(self) -> List[Path]:
         """
@@ -246,7 +246,7 @@ class ΨCWSNativeReader:
         health = self.check_cache_health()
         available = self.list_available()
 
-        print(f"📁 Diretório: {health['cache_directory']}")
+        print(f"📁 ModelCWS: {health['cache_directory']}")
         print(f"📄 Total de arquivos: {health['total_files']}")
         print(f"✅ Arquivos válidos: {health['valid_files']}")
         print(f"❌ Arquivos inválidos: {health['invalid_files']}")

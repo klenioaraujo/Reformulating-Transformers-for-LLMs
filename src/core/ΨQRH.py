@@ -53,8 +53,11 @@ class QRHFactory:
                     consciousness_input = self._prepare_consciousness_input(text, device)
                     # Processar através da dinâmica consciente
                     consciousness_results = self.consciousness_processor(consciousness_input)
-                    # Gerar relatório de consciência
-                    consciousness_analysis = self.consciousness_processor.get_consciousness_report(consciousness_results)
+                    # Gerar relatório de consciência - garantir que é string
+                    if isinstance(consciousness_results, dict):
+                        consciousness_analysis = self.consciousness_processor.get_consciousness_report(consciousness_results)
+                    else:
+                        consciousness_analysis = str(consciousness_results)
                 except Exception as e:
                     print(f"Consciousness processing error: {e}")
                     consciousness_analysis = "Análise de consciência não disponível nesta sessão"

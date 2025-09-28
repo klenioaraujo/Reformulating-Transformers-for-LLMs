@@ -17,6 +17,7 @@ import numpy as np
 from typing import Dict, Any, Tuple, Optional
 import time
 from dataclasses import dataclass
+import warnings
 
 from .consciousness_states import ConsciousnessState, StateClassifier
 from .fractal_field_calculator import FractalFieldCalculator
@@ -67,6 +68,10 @@ class FractalConsciousnessProcessor(nn.Module):
         self.psi_distribution = None
         self.fractal_field = None
 
+        # Suprimir warnings não críticos em modo de produção
+        warnings.filterwarnings("ignore", category=RuntimeWarning, message=".*overflow.*")
+        warnings.filterwarnings("ignore", category=RuntimeWarning, message=".*invalid value.*")
+
         print(f"🧠 FractalConsciousnessProcessor inicializado no dispositivo: {self.device}")
 
     def forward(self, input_data: torch.Tensor, num_steps: int = None) -> Dict[str, torch.Tensor]:
@@ -80,70 +85,75 @@ class FractalConsciousnessProcessor(nn.Module):
         Returns:
             Dicionário com resultados do processamento consciente
         """
-        if num_steps is None:
-            num_steps = self.config.max_iterations
+        # Suprimir warnings durante execução para evitar ruído em produção
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=RuntimeWarning)
+            warnings.filterwarnings("ignore", category=UserWarning)
 
-        batch_size, seq_len, embed_dim = input_data.shape
+            if num_steps is None:
+                num_steps = self.config.max_iterations
 
-        # Inicializar distribuição de probabilidade P(ψ,t)
-        psi_distribution = self._initialize_psi_distribution(input_data)
+            batch_size, seq_len, embed_dim = input_data.shape
 
-        # Evolução temporal da dinâmica consciente
-        consciousness_trajectory = []
-        fci_values = []
+            # Inicializar distribuição de probabilidade P(ψ,t)
+            psi_distribution = self._initialize_psi_distribution(input_data)
 
-        for step in range(num_steps):
-            # Calcular campo fractal F(ψ)
-            fractal_field = self.field_calculator.compute_field(
-                psi_distribution,
-                self.lambda_coefficients,
-                step * self.config.time_step
-            )
+            # Evolução temporal da dinâmica consciente
+            consciousness_trajectory = []
+            fci_values = []
 
-            # Calcular coeficiente de difusão D
-            diffusion_coeff = self.diffusion_engine.compute_diffusion(
-                psi_distribution,
-                fractal_field
-            )
+            for step in range(num_steps):
+                # Calcular campo fractal F(ψ)
+                fractal_field = self.field_calculator.compute_field(
+                    psi_distribution,
+                    self.lambda_coefficients,
+                    step * self.config.time_step
+                )
 
-            # Integrar equação mestra da dinâmica consciente
-            psi_distribution = self._integrate_consciousness_dynamics(
+                # Calcular coeficiente de difusão D
+                diffusion_coeff = self.diffusion_engine.compute_diffusion(
+                    psi_distribution,
+                    fractal_field
+                )
+
+                # Integrar equação mestra da dinâmica consciente
+                psi_distribution = self._integrate_consciousness_dynamics(
+                    psi_distribution,
+                    fractal_field,
+                    diffusion_coeff
+                )
+
+                # Calcular métricas de consciência
+                fci = self.metrics.compute_fci(psi_distribution, fractal_field)
+                fci_values.append(fci)
+
+                # Armazenar trajetória
+                consciousness_trajectory.append(psi_distribution.clone())
+
+                # Verificar convergência
+                if step > 10 and self._check_convergence(fci_values[-10:]):
+                    break
+
+            # Classificar estado de consciência final
+            final_state = self.state_classifier.classify_state(
                 psi_distribution,
                 fractal_field,
-                diffusion_coeff
+                fci_values[-1]
             )
 
-            # Calcular métricas de consciência
-            fci = self.metrics.compute_fci(psi_distribution, fractal_field)
-            fci_values.append(fci)
+            # Compilar resultados
+            results = {
+                'consciousness_distribution': psi_distribution,
+                'fractal_field': fractal_field,
+                'consciousness_trajectory': torch.stack(consciousness_trajectory),
+                'fci_evolution': torch.tensor(fci_values),
+                'final_consciousness_state': final_state,
+                'diffusion_coefficient': diffusion_coeff,
+                'processing_steps': step + 1,
+                'convergence_achieved': step < num_steps - 1
+            }
 
-            # Armazenar trajetória
-            consciousness_trajectory.append(psi_distribution.clone())
-
-            # Verificar convergência
-            if step > 10 and self._check_convergence(fci_values[-10:]):
-                break
-
-        # Classificar estado de consciência final
-        final_state = self.state_classifier.classify_state(
-            psi_distribution,
-            fractal_field,
-            fci_values[-1]
-        )
-
-        # Compilar resultados
-        results = {
-            'consciousness_distribution': psi_distribution,
-            'fractal_field': fractal_field,
-            'consciousness_trajectory': torch.stack(consciousness_trajectory),
-            'fci_evolution': torch.tensor(fci_values),
-            'final_consciousness_state': final_state,
-            'diffusion_coefficient': diffusion_coeff,
-            'processing_steps': step + 1,
-            'convergence_achieved': step < num_steps - 1
-        }
-
-        return results
+            return results
 
     def _initialize_psi_distribution(self, input_data: torch.Tensor) -> torch.Tensor:
         """

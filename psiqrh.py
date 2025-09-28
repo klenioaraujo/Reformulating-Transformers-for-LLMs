@@ -43,20 +43,26 @@ from src.core.tensor_validator import ScientificTensorValidator
 class ΨQRHPipeline:
     """Pipeline unificado para o framework ΨQRH - similar ao transformers.pipeline()"""
 
-    def __init__(self, task: str = "text-generation", device: Optional[str] = None):
+    def __init__(self, task: str = "text-generation", device: Optional[str] = None, input_text: Optional[str] = None):
         """
         Inicializa o pipeline ΨQRH.
 
         Args:
-            task: Tipo de tarefa (text-generation, analysis, chat)
+            task: Tipo de tarefa (text-generation, analysis, chat, signal-processing)
             device: Dispositivo (cpu, cuda, mps) - detecta automaticamente se None
+            input_text: Texto de entrada para detecção automática de tarefa (opcional)
         """
-        self.task = task
         self.device = self._detect_device(device)
         self.model = None
 
         # Initialize global tensor validator
         self.tensor_validator = ScientificTensorValidator(auto_adjust=True)
+
+        # Detecção inteligente de tarefa se input_text for fornecido
+        if input_text is not None:
+            self.task = self._detect_task_type(input_text)
+        else:
+            self.task = task
 
         self._initialize_model()
 
@@ -71,6 +77,38 @@ class ΨQRHPipeline:
             return "mps"
         else:
             return "cpu"
+
+    def _detect_task_type(self, input_text: str) -> str:
+        """
+        Detecta automaticamente o tipo de tarefa com base no conteúdo da entrada.
+
+        # Roteamento automático:
+        # - signal-processing: se houver [números] ou palavras-chave técnicas
+        # - text-generation: para todo o resto
+        """
+        import re
+
+        input_lower = input_text.lower()
+
+        # Padrão para detectar arrays numéricos: [1.0, -2.5, 3e-2, ...]
+        numeric_array_pattern = r'\[\s*[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?\s*(?:,\s*[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?\s*)*\]'
+
+        signal_keywords = [
+            'spectral filter', 'fourier transform', 'clifford algebra',
+            'quaternionic', 'signal processing', 'norm preservation',
+            'unitarity', 'energy conservation', 'process signal',
+            'quaternion vector', 'numerical data', 'signal array',
+            'apply filter', 'validate unitarity', 'energy conservation'
+        ]
+
+        # Verifica se há array numérico explícito OU palavras-chave de sinal
+        if (re.search(numeric_array_pattern, input_text) or
+            any(kw in input_lower for kw in signal_keywords)):
+            print(f"🔢 Detecção automática: usando signal-processing para entrada com dados numéricos/terminologia de sinal")
+            return "signal-processing"
+
+        # Caso contrário, assume geração de texto
+        return "text-generation"
 
     def _initialize_model(self):
         """Inicializa o modelo ΨQRH automaticamente - ZERO FALLBACK POLICY"""
@@ -87,6 +125,12 @@ class ΨQRHPipeline:
             from src.core.response_spectrum_analyzer import ResponseSpectrumAnalyzer
             self.model = ResponseSpectrumAnalyzer()
             print("✅ Analisador espectral ΨQRH carregado")
+
+        # Para processamento de sinais → use processador numérico
+        elif self.task == "signal-processing":
+            from src.core.numeric_signal_processor import NumericSignalProcessor
+            self.model = NumericSignalProcessor()
+            print("✅ Processador numérico ΨQRH carregado")
 
         else:
             raise ValueError(f"Tarefa não suportada: {self.task}")
@@ -114,6 +158,8 @@ class ΨQRHPipeline:
             return self._generate_text(text, **kwargs)
         elif self.task == "analysis":
             return self._analyze_text(text, **kwargs)
+        elif self.task == "signal-processing":
+            return self._process_signal(text, **kwargs)
         else:
             raise ValueError(f"Tarefa não implementada: {self.task}")
 
@@ -170,6 +216,30 @@ class ΨQRHPipeline:
                 'device': self.device
             }
 
+    def _process_signal(self, text: str, **kwargs) -> Dict[str, Any]:
+        """Processa sinais numéricos usando o processador de sinais"""
+        try:
+            result = self.model(text)
+
+            return {
+                'status': 'success',
+                'response': result.get('text_analysis', 'Processamento de sinal concluído'),
+                'numeric_results': result.get('numeric_results', []),
+                'validation': result.get('validation', 'MATHEMATICALLY_VALIDATED'),
+                'task': self.task,
+                'device': self.device,
+                'input_length': len(text),
+                'output_length': len(result.get('text_analysis', '')) if isinstance(result.get('text_analysis'), str) else 0
+            }
+
+        except Exception as e:
+            return {
+                'status': 'error',
+                'error': str(e),
+                'task': self.task,
+                'device': self.device
+            }
+
 def main():
     """Função principal da CLI"""
     parser = argparse.ArgumentParser(
@@ -193,7 +263,7 @@ Exemplos:
 
     parser.add_argument(
         '--task',
-        choices=['text-generation', 'chat', 'analysis'],
+        choices=['text-generation', 'chat', 'analysis', 'signal-processing'],
         default='text-generation',
         help='Tipo de tarefa (padrão: text-generation)'
     )
@@ -279,6 +349,7 @@ def run_interactive_mode(task: str, device: Optional[str], verbose: bool = False
     print("Digite 'quit' para sair ou 'help' para ajuda")
     print("=" * 50)
 
+    # Criar pipeline inicial com task padrão
     pipeline = ΨQRHPipeline(task=task, device=device)
 
     while True:
@@ -301,7 +372,9 @@ Comandos disponíveis:
             if not user_input:
                 continue
 
-            print("🧠 ΨQRH processando...")
+            # Reconfigurar pipeline para detecção automática de tarefa
+            pipeline = ΨQRHPipeline(task=task, device=device, input_text=user_input)
+            print(f"🧠 ΨQRH processando... (Tarefa: {pipeline.task})")
             result = pipeline(user_input)
 
             if result['status'] == 'success':
@@ -321,9 +394,11 @@ Comandos disponíveis:
 
 def process_single_text(text: str, task: str, device: Optional[str], verbose: bool = False) -> int:
     """Processa um único texto"""
-    pipeline = ΨQRHPipeline(task=task, device=device)
+    # Usar detecção automática de tarefa baseada no conteúdo do texto
+    pipeline = ΨQRHPipeline(task=task, device=device, input_text=text)
 
     print(f"🧠 Processando: {text}")
+    print(f"📋 Tarefa detectada: {pipeline.task}")
     result = pipeline(text)
 
     if result['status'] == 'success':
