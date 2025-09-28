@@ -34,7 +34,7 @@ class FFTCache:
     def get(self, key: Tuple, compute_func: Callable[[], torch.Tensor]) -> torch.Tensor:
         if key in self.cache:
             return self.cache[key]
-        
+
         if len(self.cache) >= self.max_size:
             # Evict the first item added (FIFO)
             self.cache.pop(next(iter(self.cache)))
@@ -411,7 +411,7 @@ class QRHLayer(nn.Module):
         health_report = {}
         with torch.no_grad():
             output = self.forward(x)
-            
+
             # 1. Energy Conservation Test
             input_energy = torch.norm(x).item()
             output_energy = torch.norm(output).item()

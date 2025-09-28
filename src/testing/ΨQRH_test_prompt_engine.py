@@ -132,7 +132,7 @@ class ΨQRHTestPromptEngine:
             # Test QRH Factory
             factory = self.components.get('qrh_factory')
             if factory:
-                test_text = "ΨQRH test prompt for consciousness analysis"
+                test_text = "QRH test prompt for consciousness analysis"
                 result = factory.process_text(test_text)
 
                 results['tests'].append({
@@ -181,7 +181,7 @@ class ΨQRHTestPromptEngine:
             protector = self.components.get('security_protector')
             if protector:
                 # Test data encryption/decryption
-                test_data = b"ΨQRH security test data for 7-layer encryption"
+                test_data = b"QRH security test data for 7-layer encryption"
 
                 # Test encryption
                 start_time = time.time()
@@ -233,8 +233,8 @@ class ΨQRHTestPromptEngine:
 
         try:
             # Create test file
-            test_content = "ΨQRH test content for file operations and consciousness analysis"
-            test_file = Path("test_ΨQRH_content.txt")
+            test_content = "QRH test content for file operations and consciousness analysis"
+            test_file = Path("test_QRH_content.txt")
 
             with open(test_file, 'w') as f:
                 f.write(test_content)
@@ -392,7 +392,7 @@ class ΨQRHTestPromptEngine:
 
         try:
             # Test end-to-end pipeline
-            test_text = "Integration test for ΨQRH architecture components"
+            test_text = "Integration test for QRH architecture components"
 
             # Process through QRH factory
             factory = self.components.get('qrh_factory')
@@ -472,7 +472,10 @@ class ΨQRHTestPromptEngine:
                 passed_tests += category_passed
                 failed_tests += (category_tests - category_passed)
 
-        report.append(f"Summary: {passed_tests}/{total_tests} tests passed ({passed_tests/total_tests*100:.1f}%)")
+        if total_tests > 0:
+            report.append(f"Summary: {passed_tests}/{total_tests} tests passed ({passed_tests/total_tests*100:.1f}%)")
+        else:
+            report.append("Summary: No tests were executed")
         report.append("")
 
         # Detailed results

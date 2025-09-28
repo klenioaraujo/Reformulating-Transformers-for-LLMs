@@ -1,0 +1,69 @@
+{
+  "pipeline_name": "ΨQRH Real Data Flow Tracer",
+  "timestamp": "2025-09-28T07:15:53.353254",
+  "input_text": "O sistema ΨQRH demonstra eficiência superior em processamento quaternônico",
+  "steps": [
+    {
+      "step_number": 1,
+      "step_name": "entrada_texto",
+      "description": "Captura do texto de entrada do usuário.",
+      "timestamp": "2025-09-28T07:15:53.353321",
+      "input_data": "O sistema ΨQRH demonstra eficiência superior em processamento quaternônico",
+      "output_data": "O sistema ΨQRH demonstra eficiência superior em processamento quaternônico",
+      "variables": {
+        "texto_bruto": "O sistema ΨQRH demonstra eficiência superior em processamento quaternônico"
+      }
+    },
+    {
+      "step_number": 2,
+      "step_name": "inicializacao_pipeline",
+      "description": "Instanciação e configuração do ΨQRHPipeline real.",
+      "timestamp": "2025-09-28T07:15:53.394059",
+      "input_data": "O sistema ΨQRH demonstra eficiência superior em processamento quaternônico",
+      "output_data": "<psiqrh.ΨQRHPipeline object at 0x719e2d09ca40>",
+      "processing_time": 0.040718793869018555,
+      "variables": {
+        "task": "text-generation",
+        "device": "cpu",
+        "model_type": "QRHFactory"
+      }
+    },
+    {
+      "step_number": 3,
+      "step_name": "execucao_pipeline",
+      "description": "Chamada principal ao pipeline (método __call__), que executa o process_text interno.",
+      "timestamp": "2025-09-28T07:15:53.407812",
+      "input_data": {
+        "text": "O sistema ΨQRH demonstra eficiência superior em processamento quaternônico"
+      },
+      "output_data": {
+        "status": "error",
+        "error": "invalid syntax (conscious_wave_modulator.py, line 35)",
+        "task": "text-generation",
+        "device": "cpu"
+      },
+      "processing_time": 0.013722419738769531,
+      "variables": {
+        "status": "error",
+        "input_length": null,
+        "output_length": null
+      }
+    },
+    {
+      "step_number": 4,
+      "step_name": "resultado_final",
+      "description": "O texto final processado e retornado pelo pipeline.",
+      "timestamp": "2025-09-28T07:15:53.407822",
+      "input_data": {
+        "status": "error",
+        "error": "invalid syntax (conscious_wave_modulator.py, line 35)",
+        "task": "text-generation",
+        "device": "cpu"
+      },
+      "output_data": "",
+      "variables": {
+        "texto_final": ""
+      }
+    }
+  ]
+}

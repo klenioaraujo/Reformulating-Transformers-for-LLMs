@@ -146,32 +146,30 @@ class ΨQRHEvaluationEngine:
             self.logger.info("ΨQRH model loaded successfully")
 
         except ImportError as e:
-            self.logger.warning(f"Could not import ΨQRH model: {e}")
-            # Fallback to mock implementation for testing
-            self.qrh_model = MockQRHModel(self.model_config)
+            self.logger.error(f"Could not import ΨQRH model: {e}")
+            raise ImportError("ΨQRH core components are required. No fallback available.")
 
     def _load_fractal_analyzer(self):
         """Load fractal dimension analyzer."""
         try:
-            from src.fractal.needle_fractal_dimension import FractalDimensionCalculator
-            self.fractal_analyzer = FractalDimensionCalculator()
+            from src.fractal.needle_fractal_dimension import FractalGenerator
+            self.fractal_analyzer = FractalGenerator()
             self.logger.info("Fractal analyzer loaded successfully")
-        except ImportError:
-            self.logger.warning("Fractal analyzer not available, using fallback")
-            self.fractal_analyzer = MockFractalAnalyzer()
+        except ImportError as e:
+            self.logger.error(f"Fractal analyzer not available: {e}")
+            raise ImportError("Fractal analyzer is required. No fallback available.")
 
     def _load_spectral_processor(self):
         """Load spectral filtering processor."""
         try:
-            from src.core.spectral_filter import SpectralProcessor
-            self.spectral_processor = SpectralProcessor(
-                alpha=self.model_config['alpha'],
-                device=self.device
+            from src.fractal.spectral_filter import SpectralFilter
+            self.spectral_processor = SpectralFilter(
+                alpha=self.model_config['alpha']
             )
             self.logger.info("Spectral processor loaded successfully")
-        except ImportError:
-            self.logger.warning("Spectral processor not available, using fallback")
-            self.spectral_processor = MockSpectralProcessor()
+        except ImportError as e:
+            self.logger.error(f"Spectral processor not available: {e}")
+            raise ImportError("Spectral processor is required. No fallback available.")
 
     def process_text(self,
                     text: str,
@@ -191,8 +189,8 @@ class ΨQRHEvaluationEngine:
         try:
             self.logger.debug(f"Processing text: {text[:100]}...")
 
-            # Step 1: Fractal dimension analysis
-            fractal_dim = self.fractal_analyzer.calculate_dimension(text)
+            # Step 1: Fractal dimension analysis using real calculation
+            fractal_dim = self._calculate_text_fractal_dimension(text)
 
             # Step 2: Derive wave parameters from fractal dimension
             wave_params = self._derive_wave_parameters(fractal_dim)
@@ -354,6 +352,47 @@ class ΨQRHEvaluationEngine:
             'quaternion_norm': quaternion_norm,
             'spectral_coherence': spectral_coherence
         }
+
+    def _calculate_text_fractal_dimension(self, text: str) -> float:
+        """Calculate fractal dimension of text using box counting method"""
+        if not text:
+            return 1.0
+
+        # Convert text to spatial coordinates
+        import numpy as np
+
+        char_positions = []
+        for i, char in enumerate(text):
+            x = i % 100  # Wrap to create 2D pattern
+            y = ord(char) % 100
+            char_positions.append([x, y])
+
+        if len(char_positions) < 10:
+            return 1.0 + len(char_positions) / 100
+
+        positions = np.array(char_positions)
+
+        # Box counting algorithm
+        box_sizes = [1, 2, 4, 8, 16, 32]
+        counts = []
+
+        for box_size in box_sizes:
+            x_boxes = positions[:, 0] // box_size
+            y_boxes = positions[:, 1] // box_size
+            unique_boxes = len(set(zip(x_boxes, y_boxes)))
+            counts.append(unique_boxes)
+
+        # Calculate fractal dimension from slope
+        log_sizes = np.log(box_sizes)
+        log_counts = np.log(np.maximum(counts, 1))
+
+        if len(log_sizes) < 2:
+            return 1.5
+
+        slope = np.polyfit(log_sizes, log_counts, 1)[0]
+        fractal_dim = -slope
+
+        return max(1.0, min(fractal_dim, 3.0))
 
     def get_helm_client(self):
         """Get HELM-compatible client interface."""
@@ -525,36 +564,7 @@ class LMEvalAdapter:
         return self.engine.device
 
 
-# Mock implementations for fallback when ΨQRH components are not available
-
-class MockQRHModel:
-    """Mock ΨQRH model for testing when real implementation is not available."""
-
-    def __init__(self, config):
-        self.config = config
-
-    def __call__(self, x):
-        # Return input with some noise to simulate processing
-        return x + 0.1 * torch.randn_like(x)
-
-
-class MockFractalAnalyzer:
-    """Mock fractal analyzer for testing."""
-
-    def calculate_dimension(self, text: str) -> float:
-        # Simple mock: base dimension on text complexity
-        unique_words = len(set(text.lower().split()))
-        total_words = len(text.split())
-        complexity = unique_words / max(total_words, 1)
-        return 1.0 + complexity  # Range roughly 1.0 to 2.0
-
-
-class MockSpectralProcessor:
-    """Mock spectral processor for testing."""
-
-    def filter(self, tensor: torch.Tensor, alpha: float) -> torch.Tensor:
-        # Simple filtering: apply mild smoothing
-        return tensor * (1.0 + 0.1 * alpha * torch.randn_like(tensor))
+# Real ΨQRH implementations only - no mock fallbacks
 
 
 if __name__ == "__main__":

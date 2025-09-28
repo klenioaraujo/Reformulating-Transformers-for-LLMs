@@ -1,15 +1,20 @@
 import torch
 
+
 class QuaternionOperations:
     """Utility class for quaternion operations"""
 
+
+
     @staticmethod
+
     def multiply(q1: torch.Tensor, q2: torch.Tensor) -> torch.Tensor:
         """
         Multiplies two quaternions: q1 * q2.
 
         Args:
             q1, q2: Tensors of shape [..., 4] (w, x, y, z)
+
         Returns:
             Quaternion product of shape [..., 4]
         """
@@ -25,9 +30,8 @@ class QuaternionOperations:
         return torch.stack([w, x, y, z], dim=-1)
 
     @staticmethod
-    def create_unit_quaternion(theta: torch.Tensor,
-                              omega: torch.Tensor,
-                              phi: torch.Tensor) -> torch.Tensor:
+
+    def create_unit_quaternion(theta: torch.Tensor, omega: torch.Tensor, phi: torch.Tensor) -> torch.Tensor:
         """Creates a unit quaternion from angles"""
         cos_theta_2 = torch.cos(theta / 2)
         sin_theta_2 = torch.sin(theta / 2)
@@ -44,9 +48,8 @@ class QuaternionOperations:
         ], dim=-1)
 
     @staticmethod
-    def create_unit_quaternion_batch(theta: torch.Tensor,
-                                     omega: torch.Tensor,
-                                     phi: torch.Tensor) -> torch.Tensor:
+
+    def create_unit_quaternion_batch(theta: torch.Tensor, omega: torch.Tensor, phi: torch.Tensor) -> torch.Tensor:
         """Creates a batch of unit quaternions from angle tensors."""
         cos_theta_2 = torch.cos(theta / 2)
         sin_theta_2 = torch.sin(theta / 2)

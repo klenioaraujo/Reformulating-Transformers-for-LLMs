@@ -2,15 +2,11 @@ import torch
 import yaml
 import sys
 from typing import Optional
-
-
-# Import the classes from the new modules to maintain the public signature
 from .quaternion_operations import QuaternionOperations
 from ..fractal.spectral_filter import SpectralFilter
 from .qrh_layer import QRHLayer, QRHConfig
 from .gate_controller import GateController
 from .negentropy_transformer_block import NegentropyTransformerBlock
-
 
 class QRHFactory:
     def __init__(self):
@@ -25,34 +21,24 @@ class QRHFactory:
         self.consciousness_processor = None  # Fractal consciousness layer for ΨQRH integration
 
     def process_text(self, text: str, device: str = "cpu") -> str:
-        """
-        Processa texto através do Enhanced Pipeline: Texto → α adaptativo → Quaterniôn → FFT → Análise
-
-        ΨQRH-PROMPT-ENGINE: Integração do EnhancedQRHProcessor mantendo compatibilidade
-        """
+        """ Processa texto através do Enhanced Pipeline: Texto → α adaptativo → Quaterniôn → FFT → Análise ΨQRH-PROMPT-ENGINE: Integração do EnhancedQRHProcessor mantendo compatibilidade """
         # Inicializar Enhanced Processor e Consciousness Layer se necessário
         if self.enhanced_processor is None or self.consciousness_processor is None:
             try:
                 from .enhanced_qrh_processor import EnhancedQRHProcessor
                 from ..conscience import create_consciousness_processor
-
-                self.enhanced_processor = EnhancedQRHProcessor(
-                    embed_dim=self.config.embed_dim,
-                    device=device
-                )
-
+                self.enhanced_processor = EnhancedQRHProcessor(embed_dim=self.config.embed_dim, device=device)
                 self.consciousness_processor = create_consciousness_processor({
                     'embedding_dim': self.config.embed_dim * 4,  # Match QRH dimensions
                     'device': device
                 })
-
-                print("🚀 Enhanced QRH Processor integrado com α adaptativo")
-                print("🧠 Fractal Consciousness Layer integrada para análise ΨQRH")
+                print("Enhanced QRH Processor integrado com α adaptativo")
+                print("Fractal Consciousness Layer integrada para análise ΨQRH")
             except ImportError as e:
-                print(f"⚠️ Consciousness layer not available: {e}")
-                # Fallback para pipeline enhanced sem consciência
-                if self.enhanced_processor is None:
-                    return self._process_text_original(text, device)
+                print(f"Consciousness layer not available: {e}")
+        # Fallback para pipeline enhanced sem consciência
+        if self.enhanced_processor is None:
+            return self._process_text_original(text, device)
 
         # Pipeline Enhanced com Consciousness Layer
         try:
@@ -65,30 +51,22 @@ class QRHFactory:
                 try:
                     # Converter texto para tensor compatível com consciousness processor
                     consciousness_input = self._prepare_consciousness_input(text, device)
-
                     # Processar através da dinâmica consciente
                     consciousness_results = self.consciousness_processor(consciousness_input)
-
                     # Gerar relatório de consciência
                     consciousness_analysis = self.consciousness_processor.get_consciousness_report(consciousness_results)
-
                 except Exception as e:
-                    print(f"⚠️ Consciousness processing error: {e}")
-                    consciousness_analysis = "🧠 Análise de consciência não disponível nesta sessão"
+                    print(f"Consciousness processing error: {e}")
+                    consciousness_analysis = "Análise de consciência não disponível nesta sessão"
 
             # 3. Combinar análises Enhanced + Consciousness
             if 'text_analysis' in enhanced_result:
                 enhanced_text = enhanced_result['text_analysis']
-
                 # Integrar análise de consciência
                 if consciousness_analysis:
                     combined_analysis = f"""{enhanced_text}
-
-🧠 ANÁLISE DE CONSCIÊNCIA FRACTAL ΨQRH:
-{consciousness_analysis}
-
-✨ INTEGRAÇÃO ΨQRH-CONSCIOUSNESS:
-Pipeline completo: Texto → Enhanced α → Quaterniôn → Consciência Fractal → Análise ΨQRH
+ANÁLISE DE CONSCIÊNCIA FRACTAL ΨQRH: {consciousness_analysis}
+✨ INTEGRAÇÃO ΨQRH-CONSCIOUSNESS: Pipeline completo: Texto → Enhanced α → Quaterniôn → Consciência Fractal → Análise ΨQRH
 Estado do sistema: Enhanced Processor + Fractal Consciousness Layer ativos
 """
                     return combined_analysis
@@ -99,43 +77,35 @@ Estado do sistema: Enhanced Processor + Fractal Consciousness Layer ativos
                 return self._process_text_original(text, device)
 
         except Exception as e:
-            print(f"⚠️ Enhanced processor error, using fallback: {e}")
+            print(f"Enhanced processor error, using fallback: {e}")
             return self._process_text_original(text, device)
-
     def _process_text_original(self, text: str, device: str = "cpu") -> str:
         """Pipeline original como fallback"""
         if self.qrh_layer is None:
             self.qrh_layer = QRHLayer(self.config)
-            if device == "cuda":
-                self.qrh_layer = self.qrh_layer.cuda()
-            elif device == "mps":
-                self.qrh_layer = self.qrh_layer.to(torch.device("mps"))
+        if device == "cuda":
+            self.qrh_layer = self.qrh_layer.cuda()
+        elif device == "mps":
+            self.qrh_layer = self.qrh_layer.to(torch.device("mps"))
 
         # Pipeline ΨQRH Original: Texto → Espectro → Quaterniôn → Texto
-
         # 1. Converter texto para espectro usando SpectralFilter
         spectrum = self.qrh_layer.spectral_filter.text_to_spectrum(text, target_dim=4 * self.config.embed_dim, device=device)
-
         # 2. Adaptar espectro para formato do QRHLayer
         quaternion_input = self._adapt_spectrum_to_qrh(spectrum, device)
-
         # 3. Processar com QRHLayer (transformação quaterniônica)
         with torch.no_grad():
             quaternion_output = self.qrh_layer(quaternion_input)
-
         # 4. Converter saída quaterniônica de volta para espectro
         output_spectrum = self._adapt_qrh_to_spectrum(quaternion_output)
-
         # 5. Converter espectro para texto usando SpectralFilter
         output_text = self.qrh_layer.spectral_filter.spectrum_to_text(output_spectrum, text)
-
         return output_text
 
     def _adapt_spectrum_to_qrh(self, spectrum: torch.Tensor, device: str) -> torch.Tensor:
         """Adapta espectro complexo para formato do QRHLayer"""
         # spectrum shape: [batch, spectrum_dim] (complexo)
         # QRHLayer espera: [batch, seq_len, 4 * embed_dim] (real)
-
         batch_size = spectrum.shape[0]
         spectrum_dim = spectrum.shape[1]
 
@@ -150,13 +120,11 @@ Estado do sistema: Enhanced Processor + Fractal Consciousness Layer ativos
         seq_len = min(32, spectrum_dim // (2 * self.config.embed_dim))
         if seq_len == 0:
             seq_len = 1
-
         embed_dim_4 = 4 * self.config.embed_dim
 
         # Redimensionar e pad se necessário
         flat = combined.flatten(start_dim=1)  # [batch, spectrum_dim * 2]
         target_size = seq_len * embed_dim_4
-
         if flat.shape[1] > target_size:
             flat = flat[:, :target_size]
         else:
@@ -165,13 +133,11 @@ Estado do sistema: Enhanced Processor + Fractal Consciousness Layer ativos
 
         # Reshape para formato QRHLayer
         quaternion_tensor = flat.view(batch_size, seq_len, embed_dim_4)
-
         return quaternion_tensor
 
     def _adapt_qrh_to_spectrum(self, quaternion_output: torch.Tensor) -> torch.Tensor:
         """Converte saída do QRHLayer de volta para formato espectral"""
         # quaternion_output shape: [batch, seq_len, 4 * embed_dim]
-
         batch_size = quaternion_output.shape[0]
         flat = quaternion_output.flatten(start_dim=1)  # [batch, seq_len * 4 * embed_dim]
 
@@ -182,15 +148,12 @@ Estado do sistema: Enhanced Processor + Fractal Consciousness Layer ativos
 
         # Reconstituir tensor complexo
         spectrum = torch.complex(real_flat, imag_flat)
-
         return spectrum
 
     def _prepare_consciousness_input(self, text: str, device: str) -> torch.Tensor:
-        """
-        Prepara entrada de texto para o consciousness processor.
-
-        Converte texto para tensor compatível com as dimensões esperadas
-        pelo FractalConsciousnessProcessor (embedding_dim * 4).
+        """ Prepara entrada de texto para o consciousness processor.
+        Converte texto para tensor compatível com as dimensões esperadas pelo
+        FractalConsciousnessProcessor (embedding_dim * 4).
 
         Args:
             text: Texto de entrada
@@ -225,7 +188,6 @@ Estado do sistema: Enhanced Processor + Fractal Consciousness Layer ativos
             consciousness_tensor = consciousness_tensor.cuda()
         elif device == "mps":
             consciousness_tensor = consciousness_tensor.to(torch.device("mps"))
-
         return consciousness_tensor
 
     def _text_to_tensor(self, text: str, device: str) -> torch.Tensor:
@@ -245,12 +207,10 @@ Estado do sistema: Enhanced Processor + Fractal Consciousness Layer ativos
             tensor_data.append([0.0] * embed_dim)
 
         tensor = torch.tensor([tensor_data], dtype=torch.float32)
-
         if device == "cuda":
             tensor = tensor.cuda()
         elif device == "mps":
             tensor = tensor.to(torch.device("mps"))
-
         return tensor
 
     def _tensor_to_text(self, tensor: torch.Tensor, original_text: str) -> str:
@@ -262,7 +222,6 @@ Estado do sistema: Enhanced Processor + Fractal Consciousness Layer ativos
             'max': tensor.max().item(),
             'min': tensor.min().item()
         }
-
         # Gerar resposta baseada no processamento quaterniônico
         response = f"Análise ΨQRH de '{original_text}':\n\n"
         response += f"Processamento quaterniônico completado.\n"
@@ -270,7 +229,6 @@ Estado do sistema: Enhanced Processor + Fractal Consciousness Layer ativos
         response += f"desvio={tensor_stats['std']:.3f}\n"
         response += f"Transformação aplicada com {tensor.shape[1]} sequências "
         response += f"e {tensor.shape[2]} dimensões quaterniônicas."
-
         return response
 
     @staticmethod
@@ -283,11 +241,9 @@ Estado do sistema: Enhanced Processor + Fractal Consciousness Layer ativos
         layer = QRHLayer(config)
         return layer.to(config.device)
 
-
 def example_yaml_usage(config_path: str = "configs/qrh_config.yaml"):
     """Example: Loading config from YAML and running the layer."""
     print(f"--- Running YAML-based Usage Example from '{config_path}' ---")
-    
     # 1. Load config from YAML file
     try:
         with open(config_path) as f:
@@ -310,16 +266,14 @@ def example_yaml_usage(config_path: str = "configs/qrh_config.yaml"):
 
     # 4. Initialize layer and move to device
     layer = QRHLayer(config).to(device)
-    
+
     # 5. Create dummy data and run forward pass
     x = torch.randn(2, 32, 4 * config.embed_dim, device=device)
     output = layer(x)
-
     print(f"Successfully ran layer configured from YAML on device: {output.device}")
     print(f"Input shape: {x.shape}, Output shape: {output.shape}")
     print("----------------------------------------------------------\n")
     return output
-
 
 # The main execution block for usage examples and tests
 if __name__ == "__main__":
@@ -330,5 +284,6 @@ if __name__ == "__main__":
     print("--- Testing QRHFactory ---")
     layer = QRHFactory.create_qrh_layer(config_file, device='cuda' if torch.cuda.is_available() else 'cpu')
     print(f"QRHFactory created layer on device: {layer.config.device}")
-
     example_yaml_usage(config_path=config_file)
+
+ 
