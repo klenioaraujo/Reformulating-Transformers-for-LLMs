@@ -233,7 +233,7 @@ class ScutigeraColeoptrata_PsiQRH(PsiQRHBase):
 
         # Import required ΨQRH components
         try:
-            sys.path.append('/home/padilha/trabalhos/Reformulating Transformers')
+            sys.path.append('s/Reformulating Transformers')
             from qrh_layer import QRHLayer
             from quaternion_operations import QuaternionOperations
 

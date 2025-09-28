@@ -668,6 +668,6 @@ if __name__ == "__main__":
         plt.legend()
 
         plt.tight_layout()
-        plt.savefig('/home/padilha/trabalhos/Reformulating Transformers/fractal_pytorch_integration_results.png',
+        plt.savefig('s/Reformulating Transformers/fractal_pytorch_integration_results.png',
                    dpi=300, bbox_inches='tight')
         print("\nVisualization saved as 'fractal_pytorch_integration_results.png'")

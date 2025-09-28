@@ -37,7 +37,7 @@ class TestReport:
 class TestReporter:
     """Gerador de relatórios de teste"""
 
-    def __init__(self, output_dir: str = "/home/padilha/trabalhos/Reformulating_Transformers/tmp"):
+    def __init__(self, output_dir: str = "tmp"):
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(exist_ok=True)
 

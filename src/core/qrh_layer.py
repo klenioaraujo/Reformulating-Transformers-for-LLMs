@@ -131,7 +131,7 @@ class QRHLayer(nn.Module):
             self.register_buffer('phi_right', torch.tensor(config.phi_right))
 
         # Initialize the spectral filter with improvements
-        self.spectral_filter = SpectralFilter(config.alpha, use_windowing=config.use_windowing, window_type=config.window_type)
+        # self.spectral_filter = SpectralFilter(config.alpha, use_windowing=config.use_windowing, window_type=config.window_type)
 
         # Projection layers
         self.v_proj = nn.Linear(self.total_dim, self.total_dim)
@@ -182,7 +182,7 @@ class QRHLayer(nn.Module):
             k = 2 * math.pi * freqs.view(1, seq_len, 1)
 
             # CORRECTION: Enhanced numerical stability with sqrt(k² + ε)
-            k_mag = torch.sqrt(k**2 + self.spectral_filter.epsilon)
+            k_mag = torch.sqrt(k**2 + 1e-8)
 
             return k, k_mag
         else:
@@ -193,7 +193,7 @@ class QRHLayer(nn.Module):
             # Calculate wave vector magnitude with enhanced stability
             k_squared = sum(k_i**2 for k_i in k_mesh)
             # CORRECTION: Better numerical stability
-            k_mag = torch.sqrt(k_squared + self.spectral_filter.epsilon)
+            k_mag = torch.sqrt(k_squared + 1e-8)
 
             return k_mesh, k_mag
 

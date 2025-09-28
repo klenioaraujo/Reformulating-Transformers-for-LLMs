@@ -12,7 +12,7 @@ import time
 from pathlib import Path
 
 # Add src to path for imports
-sys.path.append(str(Path(__file__).parent.parent))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 def test_basic_security():
     """Test basic security functionality."""

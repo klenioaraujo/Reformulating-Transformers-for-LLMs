@@ -562,7 +562,7 @@ if __name__ == "__main__":
                 ha='center', va='bottom', fontweight='bold')
 
     plt.tight_layout()
-    plt.savefig('/home/padilha/trabalhos/Reformulating Transformers/validation_results.png',
+    plt.savefig('s/Reformulating Transformers/validation_results.png',
                 dpi=300, bbox_inches='tight')
 
     print(f"\nValidation visualization saved as 'validation_results.png'")

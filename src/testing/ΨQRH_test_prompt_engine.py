@@ -22,7 +22,9 @@ import torch
 import numpy as np
 
 # Add src to path for imports
-sys.path.append(str(Path(__file__).parent.parent))
+project_root = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(project_root))
+sys.path.insert(0, str(project_root / "src"))
 
 class ΨQRHTestPromptEngine:
     """Advanced testing engine for ΨQRH architecture."""
@@ -55,9 +57,9 @@ class ΨQRHTestPromptEngine:
 
         try:
             # Core components
-            from src.core.ΨQRH import QRHFactory
-            from src.core.qrh_layer import QRHLayer
-            from src.core.quaternion_operations import QuaternionOperations
+            from core.ΨQRH import QRHFactory
+            from core.qrh_layer import QRHLayer
+            from core.quaternion_operations import QuaternionOperations
 
             self.components['qrh_factory'] = QRHFactory()
             self.components['quaternion_ops'] = QuaternionOperations()
@@ -68,8 +70,8 @@ class ΨQRHTestPromptEngine:
 
         try:
             # Conscience components
-            from src.conscience.conscious_wave_modulator import ConsciousWaveModulator
-            from src.conscience.secure_Ψcws_protector import create_secure_Ψcws_protector
+            from conscience.conscious_wave_modulator import ConsciousWaveModulator
+            from conscience.secure_Ψcws_protector import create_secure_Ψcws_protector
 
             self.components['wave_modulator'] = ConsciousWaveModulator()
             self.components['security_protector'] = create_secure_Ψcws_protector()
@@ -80,7 +82,7 @@ class ΨQRHTestPromptEngine:
 
         try:
             # Fractal components
-            from src.fractal.spectral_filter import SpectralFilter
+            from fractal.spectral_filter import SpectralFilter
 
             self.components['spectral_filter'] = SpectralFilter()
             print("✅ Fractal components initialized")
@@ -496,7 +498,7 @@ class ΨQRHTestPromptEngine:
 
         return "\n".join(report)
 
-    def save_test_results(self, output_path: str = "ΨQRH_test_report.json"):
+    def save_test_results(self, output_path: str = "tmp/ΨQRH_test_report.json"):
         """Save test results to JSON file."""
         with open(output_path, 'w') as f:
             json.dump(self.test_results, f, indent=2)

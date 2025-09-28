@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import Dict, Any, List
 
 # Add src to path for imports
-sys.path.append(str(Path(__file__).parent.parent))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 class ΨQRHCompleteTestRunner:
     """Master test runner for complete ΨQRH system validation."""
@@ -339,7 +339,7 @@ class ΨQRHCompleteTestRunner:
 
         return "\n".join(report)
 
-    def save_detailed_results(self, output_dir: str = "test_results"):
+    def save_detailed_results(self, output_dir: str = "tmp"):
         """Save detailed test results to files."""
         output_path = Path(output_dir)
         output_path.mkdir(exist_ok=True)

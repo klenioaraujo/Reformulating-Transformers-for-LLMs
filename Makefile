@@ -1,7 +1,7 @@
 # ΨQRH — Makefile
 # Run from project root: make build, make up, etc.
 
-.PHONY: build up down test clean integrity convert-pdf Ψcws-stats demo-pdf-Ψcws list-Ψcws test-native-reader convert-wiki-topic list-wiki-topics convert-all-wiki-topics
+.PHONY: build up down test clean integrity convert-pdf Ψcws-stats demo-pdf-Ψcws list-Ψcws test-native-reader convert-wiki-topic list-wiki-topics convert-all-wiki-topics test-ΨQRH test-math
 
 build:
 	docker-compose -f ops/docker/docker-compose.yml build
@@ -115,3 +115,23 @@ demo-wiki-conversion:
 	@echo "🎬 Demo: Converting Consciousness (Wikipedia topic)"
 	@make convert-wiki-topic TOPIC=consciousness
 	@make analyze-Ψcws-consciousness
+
+# Test ΨQRH architecture with comprehensive test suite
+test-ΨQRH:
+	@echo "🧪 Running ΨQRH Comprehensive Test Suite..."
+	@python3 -m src.testing.ΨQRH_test_prompt_engine
+
+# Run advanced mathematical tests
+test-math:
+	@echo "🧮 Running Advanced Mathematical Tests..."
+	@python3 -c "\
+import sys; \
+sys.path.insert(0, '.'); \
+sys.path.insert(0, 'src'); \
+from src.testing.advanced_mathematical_tests import AdvancedMathematicalTests; \
+from src.core.qrh_layer import QRHConfig; \
+config = QRHConfig(embed_dim=64); \
+math_tests = AdvancedMathematicalTests(config); \
+results = math_tests.run_dynamic_comprehensive_validation(); \
+print(f'✅ Mathematical tests completed: {len(results)} tests run'); \
+"

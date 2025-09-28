@@ -29,7 +29,7 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('/home/padilha/trabalhos/Reformulating_Transformers/tmp/testing.log'),
+        logging.FileHandler('tmp/testing.log'),
         logging.StreamHandler()
     ]
 )
@@ -102,7 +102,7 @@ def run_complete_test_suite():
         else:
             logger.info("❌ STATUS: REQUER MELHORIAS SIGNIFICATIVAS")
 
-        logger.info(f"📁 Relatórios disponíveis em: /home/padilha/trabalhos/Reformulating_Transformers/tmp/")
+        logger.info(f"📁 Relatórios disponíveis em: tmp/")
         logger.info("=" * 60)
 
         return {
@@ -147,10 +147,10 @@ def main():
         else:
             print("🔧 ΨQRH requer melhorias antes de qualquer implantação")
 
-        print(f"📁 Verifique os relatórios completos em: /home/padilha/trabalhos/Reformulating_Transformers/tmp/")
+        print(f"📁 Verifique os relatórios completos em: tmp/")
     else:
         print(f"\n❌ Erro durante os testes: {results['error']}")
-        print("📋 Verifique o arquivo de log para detalhes: /home/padilha/trabalhos/Reformulating_Transformers/tmp/testing.log")
+        print("📋 Verifique o arquivo de log para detalhes: tmp/testing.log")
 
 if __name__ == "__main__":
     main()

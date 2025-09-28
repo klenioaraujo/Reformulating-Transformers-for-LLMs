@@ -1451,7 +1451,7 @@ def generate_system_visualization(controller, calibration_results, agi_results):
     ax9.axis('off')
 
     plt.tight_layout()
-    plt.savefig('/home/padilha/trabalhos/Reformulating Transformers/quartz_light_system_analysis.png',
+    plt.savefig('s/Reformulating Transformers/quartz_light_system_analysis.png',
                 dpi=300, bbox_inches='tight')
     print("\nComprehensive system visualization saved as 'quartz_light_system_analysis.png'")
 

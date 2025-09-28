@@ -18,7 +18,7 @@ sys.path.append(str(Path(__file__).parent / 'src'))
 def test_pdf_to_cwm():
     """Testa conversão do PDF específico para .cwm"""
 
-    pdf_path = Path("/home/padilha/trabalhos/Reformulating_Transformers/src/conceptual/models/d41d8cd98f00b204e9800998ecf8427e.pdf")
+    pdf_path = Path("s/Reformulating_Transformers/src/conceptual/models/d41d8cd98f00b204e9800998ecf8427e.pdf")
 
     print("🔮 ΨQRH PDF→CWM Conversion Test")
     print("=" * 50)

@@ -491,7 +491,7 @@ class PSIQRHStarfleetBridge:
         return output, receipt
 '''
 
-    with open("/home/padilha/trabalhos/Reformulating_Transformers/psiqrh_starfleet_plugin.py", "w") as f:
+    with open("s/Reformulating_Transformers/psiqrh_starfleet_plugin.py", "w") as f:
         f.write(plugin_code)
 
     print("✅ ΨQRH Starfleet Plugin created: psiqrh_starfleet_plugin.py")

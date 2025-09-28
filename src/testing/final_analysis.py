@@ -45,7 +45,7 @@ class FinalAnalysisEngine:
 
     def __init__(self, config_path: str = "config.yaml"):
         self.config_path = Path(config_path)
-        self.output_dir = Path("/home/padilha/trabalhos/Reformulating_Transformers/tmp")
+        self.output_dir = Path("tmp")
         self.output_dir.mkdir(exist_ok=True)
 
         # Carregar configuração

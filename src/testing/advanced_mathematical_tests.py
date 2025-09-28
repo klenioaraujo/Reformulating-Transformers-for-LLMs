@@ -17,8 +17,12 @@ from datetime import datetime
 import math
 import random
 
-from core.qrh_layer import QRHLayer, QRHConfig
-from core.quaternion_operations import QuaternionOperations
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
+from src.core.qrh_layer import QRHLayer, QRHConfig
+from src.core.quaternion_operations import QuaternionOperations
 
 logger = logging.getLogger(__name__)
 

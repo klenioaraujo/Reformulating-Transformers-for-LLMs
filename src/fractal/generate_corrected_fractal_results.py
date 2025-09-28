@@ -277,7 +277,7 @@ def generate_corrected_fractal_results():
             bbox=dict(boxstyle="round,pad=0.5", facecolor='lightgreen', alpha=0.8))
 
     plt.tight_layout(rect=[0, 0.03, 1, 0.96])
-    plt.savefig('/home/padilha/trabalhos/Reformulating Transformers/corrected_fractal_integration_results.png',
+    plt.savefig('s/Reformulating Transformers/corrected_fractal_integration_results.png',
                 dpi=300, bbox_inches='tight')
 
     print("Updated fractal integration results saved!")
