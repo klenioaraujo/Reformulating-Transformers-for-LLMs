@@ -37,6 +37,9 @@ from typing import Optional, List, Dict, Any
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE_DIR)
 
+# Import tensor validator
+from src.core.tensor_validator import ScientificTensorValidator
+
 class ΨQRHPipeline:
     """Pipeline unificado para o framework ΨQRH - similar ao transformers.pipeline()"""
 
@@ -51,6 +54,10 @@ class ΨQRHPipeline:
         self.task = task
         self.device = self._detect_device(device)
         self.model = None
+
+        # Initialize global tensor validator
+        self.tensor_validator = ScientificTensorValidator(auto_adjust=True)
+
         self._initialize_model()
 
     def _detect_device(self, device: Optional[str]) -> str:
@@ -84,6 +91,14 @@ class ΨQRHPipeline:
         else:
             raise ValueError(f"Tarefa não suportada: {self.task}")
 
+    def _validate_tensor_output(self, tensor: torch.Tensor, operation_name: str) -> torch.Tensor:
+        """Validates tensor output from pipeline operations."""
+        try:
+            return self.tensor_validator.validate_for_operation(tensor, operation_name)
+        except ValueError as e:
+            print(f"⚠️  Tensor validation warning in {operation_name}: {e}")
+            return tensor
+
     def __call__(self, text: str, **kwargs) -> Dict[str, Any]:
         """
         Processa texto através do pipeline ΨQRH.
@@ -108,13 +123,17 @@ class ΨQRHPipeline:
             # Processar texto através do pipeline ΨQRH: texto → QRHLayer → saída
             processed_output = self.model.process_text(text, device=self.device)
 
+            # Validate tensor output if applicable
+            if isinstance(processed_output, torch.Tensor):
+                processed_output = self._validate_tensor_output(processed_output, "pipeline_output")
+
             return {
                 'status': 'success',
                 'response': processed_output,
                 'task': self.task,
                 'device': self.device,
                 'input_length': len(text),
-                'output_length': len(processed_output)
+                'output_length': len(processed_output) if isinstance(processed_output, str) else processed_output.numel()
             }
 
         except Exception as e:
@@ -129,6 +148,10 @@ class ΨQRHPipeline:
         """Analisa texto usando o analisador de espectro"""
         try:
             result = self.model.process_response_request(text)
+
+            # Validate tensor output if applicable
+            if isinstance(result.get('response'), torch.Tensor):
+                result['response'] = self._validate_tensor_output(result['response'], "analysis_output")
 
             return {
                 'status': result['status'],

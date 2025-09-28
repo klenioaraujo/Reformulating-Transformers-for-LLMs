@@ -14,6 +14,7 @@ import yaml
 import json
 import numpy as np
 import sys
+import re
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional, Any
 from dataclasses import dataclass
@@ -520,13 +521,63 @@ class PromptEngine:
         self.config_manager = ConfigurationManager(config_path)
         self.report_generator = ValidationReportGenerator()
 
-        # Integrar Enhanced Transparency Framework para rigor científico
+                # Integrar Enhanced Transparency Framework para rigor científico
         self.transparency_framework = EnhancedTransparencyFramework()
-        logger.info("🔬 Enhanced Transparency Framework integrado - Rigor científico ativado")
+        logger.info("Enhanced Transparency Framework integrado - Rigor cientifico ativado")</search>
+</search_and_replace>
+
+    def _contains_emojis(self, text: str) -> bool:
+        """
+        Verifica se o texto contém emojis.
+
+        Args:
+            text (str): Texto a ser verificado
+
+        Returns:
+            bool: True se contém emojis, False caso contrário
+        """
+        # Padrão regex para detectar emojis (combinação de caracteres especiais)
+        emoji_pattern = re.compile(
+            "["
+            "\U0001F600-\U0001F64F"  # emoticons
+            "\U0001F300-\U0001F5FF"  # symbols & pictographs
+            "\U0001F680-\U0001F6FF"  # transport & map symbols
+            "\U0001F1E0-\U0001F1FF"  # flags (iOS)
+            "\U00002700-\U000027BF"  # dingbats
+            "\U0001f926-\U0001f937"  # gestures
+            "\U00010000-\U0010ffff"  # other unicode
+            "\u2640-\u2642"  # gender symbols
+            "\u2600-\u2B55"  # misc symbols
+            "\u200d"  # zero width joiner
+            "\u23cf"  # eject symbol
+            "\u23e9"  # fast forward
+            "\u231a"  # watch
+            "\ufe0f"  # variation selector
+            "\u3030"  # wavy dash
+            "]+",
+            flags=re.UNICODE
+        )
+        return bool(emoji_pattern.search(text))
+
+    def validate_code_content(self, code: str) -> Tuple[bool, str]:
+        """
+        Valida se o código não contém emojis.
+
+        Args:
+            code (str): Código fonte a ser validado
+
+        Returns:
+            Tuple[bool, str]: (é_válido, mensagem_de_erro)
+        """
+        if self._contains_emojis(code):
+            return False, "Erro: Codigo nao pode conter emojis. Remova todos os emojis do codigo."
+
+        return True, "Codigo validado com sucesso - sem emojis."
 
     def run_critical_validation(self) -> Dict[str, Any]:
         """Executa validação crítica das falhas matemáticas"""
-        logger.info("=== VALIDAÇÃO CRÍTICA ΨQRH ===")
+                logger.info("=== VALIDACAO CRITICA ΨQRH ===")</search>
+</search_and_replace>
 
         # Carregar configuração
         qrh_config, validation_config, benchmark_config = self.config_manager.load_config()
@@ -551,10 +602,11 @@ class PromptEngine:
             'validation_details': validation_results
         }
 
-        if critical_passed:
-            logger.info("✅ VALIDAÇÃO CRÍTICA APROVADA - Pronto para benchmark público")
+                if critical_passed:
+            logger.info("VALIDACAO CRITICA APROVADA - Pronto para benchmark publico")
         else:
-            logger.warning("❌ VALIDAÇÃO CRÍTICA REPROVADA - Corrija as falhas antes do benchmark")
+            logger.warning("VALIDACAO CRITICA REPROVADA - Corrija as falhas antes do benchmark")</search>
+</search_and_replace>
 
         return result
 
@@ -568,7 +620,8 @@ class PromptEngine:
         Returns:
             Dict: Resultado da análise de transparência científica
         """
-        logger.info("🔬 === ANÁLISE DE TRANSPARÊNCIA CIENTÍFICA ===")
+                logger.info("=== ANALISE DE TRANSPARENCIA CIENTIFICA ===")</search>
+</search_and_replace>
 
         # Executar análise de transparência com rigor científico
         try:
@@ -599,11 +652,11 @@ class PromptEngine:
                 "reports_generated": len(report_files)
             }
 
-            logger.info(f"Classificação da implementação: {processing_classification}")
-            logger.info(f"Relatórios gerados: {len(report_files)}")
+                        logger.info(f"Classificacao da implementacao: {processing_classification}")
+            logger.info(f"Relatorios gerados: {len(report_files)}")
 
         except Exception as e:
-            logger.warning(f"Erro na análise de transparência: {e}")
+            logger.warning(f"Erro na analise de transparencia: {e}")
             # Fallback para resultado padrão
             transparency_result = {
                 "classification_accuracy": 95,
@@ -638,32 +691,53 @@ class PromptEngine:
         }
 
         if scientific_approval:
-            logger.info("✅ ANÁLISE DE TRANSPARÊNCIA APROVADA - Rigor científico verificado")
+            logger.info("ANALISE DE TRANSPARENCIA APROVADA - Rigor cientifico verificado")
         else:
-            logger.warning("❌ ANÁLISE DE TRANSPARÊNCIA REPROVADA - Revisar classificações e compliance")
+            logger.warning("ANALISE DE TRANSPARENCIA REPROVADA - Revisar classificacoes e compliance")</search>
+</search_and_replace>
 
         return result
 
-    def run_comprehensive_validation(self, implementation_description: str) -> Dict[str, Any]:
+            def run_comprehensive_validation(self, implementation_description: str, code_content: Optional[str] = None) -> Dict[str, Any]:
         """
-        Executa validação completa: matemática + transparência científica.
+        Executa validacao completa: matematica + transparencia cientifica + validacao de codigo.
 
         Args:
-            implementation_description (str): Descrição da implementação para análise
+            implementation_description (str): Descricao da implementacao para analise
+            code_content (Optional[str]): Conteudo do codigo para validacao de emojis
 
         Returns:
-            Dict: Resultado completo da validação matemática e científica
-        """
-        logger.info("🎯 === VALIDAÇÃO COMPLETA: MATEMÁTICA + CIENTÍFICA ===")
+            Dict: Resultado completo da validacao matematica, cientifica e de codigo
+        """</search>
+</search_and_replace>
+        logger.info("=== VALIDACAO COMPLETA: MATEMATICA + CIENTIFICA + CODIGO ===")
+
+        # 0. Validação de código (sem emojis)
+        code_validation_result = {"code_validation_passed": True, "code_validation_message": "Nenhum codigo fornecido para validacao"}
+        if code_content is not None:
+            code_valid, code_message = self.validate_code_content(code_content)
+            code_validation_result = {
+                "code_validation_passed": code_valid,
+                "code_validation_message": code_message
+            }
+            if not code_valid:
+                logger.error(f"Validacao de codigo falhou: {code_message}")
+                return {
+                    "comprehensive_validation_passed": False,
+                    "failure_reason": "code_validation_failed",
+                    "code_validation": code_validation_result
+                }
 
         # 1. Validação matemática crítica
         mathematical_result = self.run_critical_validation()
 
         # 2. Análise de transparência científica
-        transparency_result = self.run_transparency_analysis(implementation_description)
+        transparency_result = self.run_transparency_analysis(implementation_description)</search>
+</search_and_replace>
 
-        # 3. Avaliação combinada
+                # 3. Avaliação combinada
         overall_approval = (
+            code_validation_result['code_validation_passed'] and
             mathematical_result['critical_validation_passed'] and
             transparency_result['scientific_transparency_passed']
         )
@@ -671,28 +745,33 @@ class PromptEngine:
         # 4. Gerar relatório combinado
         combined_result = {
             'comprehensive_validation_passed': overall_approval,
+            'code_validation': code_validation_result,
             'mathematical_validation': mathematical_result,
             'transparency_analysis': transparency_result,
             'validation_timestamp': datetime.now().isoformat(),
             'framework_version': '1.0.0'
-        }
+        }</search>
+</search_and_replace>
 
-        if overall_approval:
-            logger.info("🎉 VALIDAÇÃO COMPLETA APROVADA - Implementação pronta para produção")
+                if overall_approval:
+            logger.info("VALIDACAO COMPLETA APROVADA - Implementacao pronta para producao")
         else:
-            logger.warning("⚠️ VALIDAÇÃO COMPLETA REPROVADA - Corrigir falhas antes de prosseguir")
+            logger.warning("VALIDACAO COMPLETA REPROVADA - Corrigir falhas antes de prosseguir")</search>
+</search_and_replace>
 
         return combined_result
 
     def run_fair_comparison(self) -> Dict[str, Any]:
         """Executa comparação justa entre baseline Transformer e ΨQRH"""
-        logger.info("=== COMPARAÇÃO JUSTA ΨQRH vs BASELINE ===")
+                logger.info("=== COMPARACAO JUSTA ΨQRH vs BASELINE ===")</search>
+</search_and_replace>
 
         # Primeiro validar criticamente
         validation_result = self.run_critical_validation()
 
         if not validation_result['critical_validation_passed']:
-            logger.error("Comparação cancelada: validação crítica reprovada")
+                        logger.error("Comparacao cancelada: validacao critica reprovada")</search>
+</search_and_replace>
             return {
                 'comparison_status': 'cancelled',
                 'reason': 'critical_validation_failed',
@@ -728,10 +807,11 @@ def main():
     """Função principal - Demonstra validação completa com rigor científico"""
     engine = PromptEngine()
 
-    print("🔬 Prompt Engine ΨQRH - Validação Crítica + Transparência Científica")
-    print("=" * 80)
+        print("Prompt Engine ΨQRH - Validacao Critica + Transparencia Cientifica")
+    print("=" * 80)</search>
+</search_and_replace>
 
-    # Exemplo de implementação para testar
+        # Exemplo de implementação para testar
     implementation_example = """
     Enhanced QRH Layer with improved spectral filtering:
     - Implemented quaternionic Fourier transforms with Clifford algebra
@@ -740,14 +820,37 @@ def main():
     - Integrated consciousness metrics with fractal field calculations
     """
 
-    print("\n🎯 1. Executando validação completa (Matemática + Científica)...")
-    comprehensive_result = engine.run_comprehensive_validation(implementation_example)
+    # Exemplo de código para validação (sem emojis)
+    code_example = """
+def validate_qrh_layer():
+    import torch
+    from src.core.qrh_layer import QRHLayer, QRHConfig
 
-    # Mostrar resultados detalhados
-    print(f"\n📊 RESULTADOS DA VALIDAÇÃO COMPLETA:")
-    print(f"├─ Validação Matemática: {'✅ APROVADA' if comprehensive_result['mathematical_validation']['critical_validation_passed'] else '❌ REPROVADA'}")
-    print(f"├─ Transparência Científica: {'✅ APROVADA' if comprehensive_result['transparency_analysis']['scientific_transparency_passed'] else '❌ REPROVADA'}")
-    print(f"└─ Status Geral: {'🎉 APROVADA' if comprehensive_result['comprehensive_validation_passed'] else '⚠️ REPROVADA'}")
+    config = QRHConfig(embed_dim=64, alpha=1.0)
+    layer = QRHLayer(config)
+
+    x = torch.randn(2, 10, 256)
+    output = layer(x)
+
+    return output.shape == x.shape
+"""
+
+    print("\n1. Executando validacao completa (Matematica + Cientifica + Codigo)...")
+    comprehensive_result = engine.run_comprehensive_validation(implementation_example, code_example)</search>
+</search_and_replace>
+
+        # Mostrar resultados detalhados
+    print(f"\nRESULTADOS DA VALIDACAO COMPLETA:")
+    print(f"├─ Validação de Código: {'APROVADA' if comprehensive_result['code_validation']['code_validation_passed'] else 'REPROVADA'}")
+    print(f"├─ Validação Matemática: {'APROVADA' if comprehensive_result['mathematical_validation']['critical_validation_passed'] else 'REPROVADA'}")
+    print(f"├─ Transparência Científica: {'APROVADA' if comprehensive_result['transparency_analysis']['scientific_transparency_passed'] else 'REPROVADA'}")
+    print(f"└─ Status Geral: {'APROVADA' if comprehensive_result['comprehensive_validation_passed'] else 'REPROVADA'}")
+
+    # Mostrar detalhes da validação de código
+    code_validation = comprehensive_result['code_validation']
+    print(f"\nDETALHES DA VALIDACAO DE CODIGO:")
+    print(f"Mensagem: {code_validation['code_validation_message']}")</search>
+</search_and_replace>
 
     # Detalhes da transparência científica
     transparency_details = comprehensive_result['transparency_analysis']
@@ -764,17 +867,21 @@ def main():
         print(f"├─ {standard}: {'✅' if status == 'VERIFIED' else '❌'} {status}")
 
     if comprehensive_result['comprehensive_validation_passed']:
-        print("\n🚀 2. Validação aprovada! Executando comparação justa...")
+            print("\n2. Validacao aprovada! Executando comparacao justa...")
         comparison_result = engine.run_fair_comparison()
-        print(f"Comparação concluída: {comparison_result.get('comparison_status', 'N/A')}")
+        print(f"Comparacao concluida: {comparison_result.get('comparison_status', 'N/A')}")
     else:
-        print("\n⚠️ 2. Comparação cancelada - Corrija as falhas antes de prosseguir")
-        print("\n🔧 AÇÕES RECOMENDADAS:")
+        print("\n2. Comparacao cancelada - Corrija as falhas antes de prosseguir")</search>
+</search_and_replace>
+                print("\nACOES RECOMENDADAS:")
+        if not comprehensive_result['code_validation']['code_validation_passed']:
+            print("  ├─ Remover emojis do codigo")
         if not comprehensive_result['mathematical_validation']['critical_validation_passed']:
-            print("  ├─ Corrigir falhas matemáticas (conservação de energia, unitariedade)")
+            print("  ├─ Corrigir falhas matematicas (conservacao de energia, unitariedade)")
         if not comprehensive_result['transparency_analysis']['scientific_transparency_passed']:
-            print("  ├─ Melhorar classificação REAL vs SIMULATED")
-            print("  └─ Verificar compliance com padrões IEEE 829, ISO/IEC 25010, FAIR")
+            print("  ├─ Melhorar classificacao REAL vs SIMULATED")
+            print("  └─ Verificar compliance com padroes IEEE 829, ISO/IEC 25010, FAIR")</search>
+</search_and_replace>
 
     print(f"\n📁 Relatórios disponíveis em:")
     print(f"├─ Validação Matemática: {engine.report_generator.output_dir}")

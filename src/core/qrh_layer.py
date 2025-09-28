@@ -10,6 +10,7 @@ from torch.amp import autocast
 
 from .quaternion_operations import QuaternionOperations
 from ..fractal.spectral_filter import SpectralFilter
+from .tensor_validator import ScientificTensorValidator
 
 # Custom Exception Hierarchy
 class QRHError(Exception):
@@ -110,6 +111,9 @@ class QRHLayer(nn.Module):
         self._freq_cache: Dict[Tuple[int, str], torch.Tensor] = {}
         self.fft_cache = FFTCache(max_size=config.fft_cache_size)
 
+        # Initialize scientific tensor validator
+        self.tensor_validator = ScientificTensorValidator(auto_adjust=True)
+
         # Left rotation parameters (learnable or fixed)
         if config.use_learned_rotation:
             self.theta_left = nn.Parameter(torch.tensor(config.theta_left, dtype=torch.float32, requires_grad=True))
@@ -151,6 +155,12 @@ class QRHLayer(nn.Module):
         # Unpack
         q_left, q_right = quaternions[0], quaternions[1]
         return q_left, q_right
+
+    def _safe_reshape(self, x: torch.Tensor, target_shape: tuple, operation_name: str) -> torch.Tensor:
+        """Safe reshape operation with automatic validation and adjustment."""
+        return self.tensor_validator.validate_and_reshape(
+            x, target_shape, f"qrh_{operation_name}"
+        )
 
     def _get_freq_cache(self, seq_len: int, device: torch.device) -> torch.Tensor:
         cache_key = (seq_len, device.type)
@@ -222,7 +232,13 @@ class QRHLayer(nn.Module):
         V = torch.einsum('bij,jk->bik', x, self.v_proj.weight)
         if self.v_proj.bias is not None:
             V = V + self.v_proj.bias
-        return V.view(*x.shape[:-1], 4, self.config.embed_dim).permute(0, 1, 3, 2)
+        # Safe reshape to quaternion format
+        V_reshaped = self._safe_reshape(
+            V,
+            (*x.shape[:-1], 4, self.config.embed_dim),
+            "preprocess_reshape"
+        )
+        return V_reshaped.permute(0, 1, 3, 2)
 
     def _apply_spectral_filtering(self, Ψ: torch.Tensor) -> torch.Tensor:
         """
@@ -304,8 +320,8 @@ class QRHLayer(nn.Module):
 
         batch_size, seq_len, embed_dim, quat_dim = Ψ_filtered.shape
 
-        # Reshape for quaternion operations: [B*T*D, 4]
-        Ψ_flat = Ψ_filtered.reshape(-1, 4)
+        # Safe reshape for quaternion operations: [B*T*D, 4]
+        Ψ_flat = self._safe_reshape(Ψ_filtered, (-1, 4), "quaternion_flatten")
 
         # Apply left rotation: q_left * Ψ
         # Expand q_left to match batch dimensions
@@ -317,8 +333,12 @@ class QRHLayer(nn.Module):
         q_right_expanded = q_right.unsqueeze(0).expand(Ψ_flat.size(0), -1)
         Ψ_rotated_flat = QuaternionOperations.multiply(Ψ_left_rotated, q_right_expanded)
 
-        # Reshape back to original dimensions
-        Ψ_rotated = Ψ_rotated_flat.view(batch_size, seq_len, embed_dim, quat_dim)
+        # Safe reshape back to original dimensions
+        Ψ_rotated = self._safe_reshape(
+            Ψ_rotated_flat,
+            (batch_size, seq_len, embed_dim, quat_dim),
+            "quaternion_unflatten"
+        )
 
         return Ψ_rotated
 
@@ -359,11 +379,16 @@ class QRHLayer(nn.Module):
         """
         batch_size, seq_len, embed_dim, quat_dim = Ψ_normalized.shape
 
-        # Reshape from [B, T, D, 4] to [B, T, 4*D]
-        Ψ_reshaped = Ψ_normalized.permute(0, 1, 3, 2).reshape(batch_size, seq_len, self.total_dim)
+        # Safe reshape from [B, T, D, 4] to [B, T, 4*D]
+        Ψ_reshaped = Ψ_normalized.permute(0, 1, 3, 2)
+        Ψ_flat = self._safe_reshape(
+            Ψ_reshaped,
+            (batch_size, seq_len, self.total_dim),
+            "postprocess_reshape"
+        )
 
         # Apply output projection
-        Ψ_projected = torch.einsum('bij,jk->bik', Ψ_reshaped, self.out_proj.weight)
+        Ψ_projected = torch.einsum('bij,jk->bik', Ψ_flat, self.out_proj.weight)
         if self.out_proj.bias is not None:
             Ψ_projected = Ψ_projected + self.out_proj.bias
 
