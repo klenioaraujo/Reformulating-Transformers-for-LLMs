@@ -133,7 +133,7 @@ class SpectralFilter(nn.Module):
             signal = self.apply_window(signal, target_dim)
 
         # Transformada de Fourier para obter espectro
-        spectrum = torch.fft.fft(signal, dim=-1)
+        spectrum = torch.fft.fft(signal, dim=-1, norm="ortho")
 
         # Aplicar filtro espectral
         k_mag = torch.abs(torch.fft.fftfreq(target_dim, device=device))
@@ -162,7 +162,7 @@ class SpectralFilter(nn.Module):
             Texto interpretado do espectro processado
         """
         # Transformada inversa para recuperar sinal temporal
-        signal = torch.fft.ifft(spectrum, dim=-1).real
+        signal = torch.fft.ifft(spectrum, dim=-1, norm="ortho").real
 
         # Estatísticas espectrais
         spectrum_stats = {

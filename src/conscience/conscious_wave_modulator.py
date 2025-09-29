@@ -401,7 +401,7 @@ class ConsciousWaveModulator:
     def _compute_fourier_spectra(self, wave_embeddings: torch.Tensor) -> torch.Tensor:
         """Compute Fourier spectra of wave embeddings."""
         # Take FFT along sequence dimension
-        fft_result = torch.fft.fft(wave_embeddings, dim=0)
+        fft_result = torch.fft.fft(wave_embeddings, dim=0, norm="ortho")
 
         # Return magnitude spectrum
         magnitude_spectrum = torch.abs(fft_result)

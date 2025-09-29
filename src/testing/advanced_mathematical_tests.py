@@ -162,11 +162,11 @@ class AdvancedMathematicalTests:
                 signal = torch.sin(2 * math.pi * freq * t)
 
                 # Aplicar FFT
-                signal_fft = torch.fft.fft(signal)
+                signal_fft = torch.fft.fft(signal, norm="ortho")
                 k_mag = torch.tensor([freq])
                 filter_response = self.layer.spectral_filter(k_mag)
                 filtered_fft = signal_fft * filter_response
-                filtered_signal = torch.fft.ifft(filtered_fft).real
+                filtered_signal = torch.fft.ifft(filtered_fft, norm="ortho").real
 
                 # Calcular magnitude dinâmica
                 input_energy = torch.norm(signal).item()

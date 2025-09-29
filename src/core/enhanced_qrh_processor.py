@@ -119,7 +119,7 @@ class EnhancedQRHProcessor:
     def _adapt_qrh_to_spectrum(self, q_output: torch.Tensor) -> torch.Tensor:
         """Adapta a saída da QRHLayer de volta para o formato de espectro."""
         # Placeholder
-        return torch.fft.fft(q_output.real).to(self.device)
+        return torch.fft.fft(q_output.real, norm="ortho").to(self.device)
 
     def _advanced_spectral_analysis(self, spectrum: torch.Tensor, text: str, alpha: float) -> str:
         """Realiza uma análise espectral avançada."""

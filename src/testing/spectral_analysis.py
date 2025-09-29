@@ -86,8 +86,8 @@ class SpectralAnalyzer:
                 processed_signal = processed[0, :, 0].cpu()
 
                 # Análise espectral
-                input_fft = torch.fft.fft(signal)
-                output_fft = torch.fft.fft(processed_signal)
+                input_fft = torch.fft.fft(signal, norm="ortho")
+                output_fft = torch.fft.fft(processed_signal, norm="ortho")
 
                 # Encontrar bin da frequência fundamental
                 freq_bins = torch.fft.fftfreq(signal_length, d=1.0)

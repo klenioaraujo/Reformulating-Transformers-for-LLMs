@@ -91,7 +91,7 @@ class NumericSignalProcessor:
 
         # Análise espectral (FFT) com filtro unitário
         if len(array) > 1:
-            spectrum = torch.fft.fft(tensor)
+            spectrum = torch.fft.fft(tensor, norm="ortho")
             filtered_spectrum = self._apply_unitary_filter(spectrum)
             spectral_energy = torch.sum(torch.abs(filtered_spectrum)).item()
             dominant_freq = torch.argmax(torch.abs(filtered_spectrum)).item()
