@@ -25,26 +25,28 @@ class MathematicalValidator:
             # Forward pass
             output = model(x)
 
-            # Calculate norms - use output embeddings for energy calculation
+            # Calculate energies using consistent definition
+            from ..core.utils import compute_energy
+
             # Convert input to embeddings for proper energy calculation
             if hasattr(model, 'token_embedding'):
                 input_embeddings = model.token_embedding(x)
-                input_norm = torch.norm(input_embeddings, p=2).item()
+                input_energy = compute_energy(input_embeddings).sum().item()
             else:
                 # Fallback: use output for both if embeddings not available
-                input_norm = torch.norm(output, p=2).item()
+                input_energy = compute_energy(output).sum().item()
 
-            output_norm = torch.norm(output, p=2).item()
+            output_energy = compute_energy(output).sum().item()
 
             # Calculate conservation ratio
-            conservation_ratio = output_norm / input_norm if input_norm > 0 else 1.0
+            conservation_ratio = output_energy / input_energy if input_energy > 0 else 1.0
 
             # Check if within tolerance
             is_conserved = abs(conservation_ratio - 1.0) <= self.tolerance
 
             return {
-                "input_norm": input_norm,
-                "output_norm": output_norm,
+                "input_energy": input_energy,
+                "output_energy": output_energy,
                 "conservation_ratio": conservation_ratio,
                 "is_conserved": is_conserved,
                 "tolerance": self.tolerance
@@ -175,8 +177,9 @@ class MathematicalValidator:
             fft_consistent = torch.allclose(output, output_reconstructed.real, atol=1e-6)
 
             # Test Parseval's theorem (energy conservation in frequency domain)
-            time_domain_energy = torch.norm(output, p=2).item() ** 2
-            freq_domain_energy = torch.norm(output_fft, p=2).item() ** 2 / output.shape[1]
+            from ..core.utils import compute_energy
+            time_domain_energy = compute_energy(output).sum().item()
+            freq_domain_energy = compute_energy(output_fft).sum().item()
 
             parseval_ratio = freq_domain_energy / time_domain_energy
             parseval_valid = abs(parseval_ratio - 1.0) <= self.tolerance
@@ -261,8 +264,8 @@ class MathematicalValidator:
         # Energy conservation
         ec = validation_results["energy_conservation"]
         report.append(f"Energy Conservation: {'PASS' if ec['is_conserved'] else 'FAIL'}")
-        report.append(f"  Input Norm: {ec['input_norm']:.6f}")
-        report.append(f"  Output Norm: {ec['output_norm']:.6f}")
+        report.append(f"  Input Energy: {ec['input_energy']:.6f}")
+        report.append(f"  Output Energy: {ec['output_energy']:.6f}")
         report.append(f"  Ratio: {ec['conservation_ratio']:.6f} (target: 1.0 ± {ec['tolerance']})")
 
         # Unitarity

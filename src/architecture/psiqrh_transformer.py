@@ -78,7 +78,18 @@ class AdaptiveSpectralFilter(nn.Module):
         filtered_phase = phase + beta_expanded
 
         # Reconstruct complex tensor
-        return filtered_magnitude * torch.exp(1j * filtered_phase)
+        filtered_x = filtered_magnitude * torch.exp(1j * filtered_phase)
+
+        # Preserve Parseval by normalizing energy
+        input_energy = torch.sum(torch.abs(x)**2)
+        output_energy = torch.sum(torch.abs(filtered_x)**2)
+
+        # Avoid division by zero
+        if output_energy > 1e-8:
+            scale = torch.sqrt(input_energy / output_energy)
+            filtered_x = filtered_x * scale
+
+        return filtered_x
 
     def update_alpha(self, new_alpha: torch.Tensor):
         """Update alpha parameter based on fractal analysis"""
@@ -203,9 +214,9 @@ class PsiQRHTransformerBlock(nn.Module):
         x = self.attention_norm(x)
         x = self.self_attention(x, x, x)
 
-        # Apply energy preservation after attention
-        from ..core.utils import energy_preserve
-        x = energy_preserve(residual, x)
+        # Apply energy normalization after attention
+        from ..core.utils import energy_normalize
+        x = energy_normalize(residual, x)
 
         x = residual + self.layer_scale_attention * x
 
@@ -214,8 +225,8 @@ class PsiQRHTransformerBlock(nn.Module):
         x = self.ffn_norm(x)
         x = self.feed_forward(x)
 
-        # Apply energy preservation after feed-forward
-        x = energy_preserve(residual, x)
+        # Apply energy normalization after feed-forward
+        x = energy_normalize(residual, x)
 
         x = residual + self.layer_scale_ffn * x
 
@@ -271,9 +282,9 @@ class PsiQRHTransformer(nn.Module):
         # Project back from quaternion space
         x = self.output_projection(x)
 
-        # Apply global energy preservation
-        from ..core.utils import energy_preserve
-        x = energy_preserve(self.token_embedding(input_ids), x)
+        # Apply global energy normalization
+        from ..core.utils import energy_normalize
+        x = energy_normalize(self.token_embedding(input_ids), x)
 
         return x
 

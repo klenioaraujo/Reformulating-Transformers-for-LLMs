@@ -2,28 +2,45 @@ import torch
 import torch.nn as nn
 
 
-def energy_preserve(x_input: torch.Tensor, x_output: torch.Tensor, epsilon: float = 1e-8) -> torch.Tensor:
+def compute_energy(x: torch.Tensor) -> torch.Tensor:
+    """
+    Computa energia corretamente como ||x||² = soma(x²)
+    Mantém dimensão para broadcasting.
+
+    Args:
+        x: Tensor para calcular energia
+
+    Returns:
+        Tensor de energia com mesma forma exceto última dimensão
+    """
+    return torch.sum(x ** 2, dim=-1, keepdim=True)
+
+
+def energy_normalize(x_input: torch.Tensor, x_output: torch.Tensor, eps: float = 1e-8) -> torch.Tensor:
     """
     Normaliza x_output para ter a mesma energia de x_input.
-    Preserva a direção do sinal, apenas escala a magnitude.
+    Usa raiz quadrada porque energia = ||x||², então escala = sqrt(energia_input / energia_output)
 
     Args:
         x_input: Tensor de entrada para referência de energia
         x_output: Tensor de saída a ser normalizado
-        epsilon: Valor pequeno para evitar divisão por zero
+        eps: Valor pequeno para evitar divisão por zero
 
     Returns:
         Tensor normalizado com mesma energia que x_input
     """
-    # Calcular energias (soma dos quadrados ao longo da última dimensão)
-    input_energy = torch.sum(x_input**2, dim=-1, keepdim=True)
-    output_energy = torch.sum(x_output**2, dim=-1, keepdim=True)
+    energy_input = compute_energy(x_input)
+    energy_output = compute_energy(x_output)
 
     # Evita divisão por zero
-    scale = torch.sqrt(input_energy / (output_energy + epsilon))
-
-    # Aplica escala preservando direção
+    scale = torch.sqrt(energy_input / (energy_output + eps))
     return x_output * scale
+
+
+# Alias para compatibilidade
+def energy_preserve(x_input: torch.Tensor, x_output: torch.Tensor, epsilon: float = 1e-8) -> torch.Tensor:
+    """Alias para energy_normalize para compatibilidade"""
+    return energy_normalize(x_input, x_output, epsilon)
 
 
 def validate_parseval(x_time: torch.Tensor, x_freq: torch.Tensor, tolerance: float = 1e-5) -> bool:
@@ -38,9 +55,15 @@ def validate_parseval(x_time: torch.Tensor, x_freq: torch.Tensor, tolerance: flo
     Returns:
         True se compliant com Parseval, False caso contrário
     """
-    energy_time = torch.sum(x_time.abs()**2)
-    energy_freq = torch.sum(x_freq.abs()**2)
+    energy_time = compute_energy(x_time).sum()
+    energy_freq = compute_energy(x_freq).sum()
     ratio = energy_time / (energy_freq + 1e-8)
+
+    # Validação assertiva para debugging
+    if abs(ratio - 1.0) >= tolerance:
+        print(f"⚠️  Parseval violation: ratio={ratio:.6f}, tolerance={tolerance}")
+        print(f"   Time domain energy: {energy_time:.6f}")
+        print(f"   Freq domain energy: {energy_freq:.6f}")
 
     return abs(ratio - 1.0) < tolerance
 
@@ -64,8 +87,8 @@ def parseval_checkpoint(x_time: torch.Tensor, operation_name: str = "unknown") -
 
     if not is_valid:
         print(f"⚠️  Parseval violation in {operation_name}")
-        energy_time = torch.sum(x_time.abs()**2).item()
-        energy_freq = torch.sum(x_freq.abs()**2).item()
+        energy_time = compute_energy(x_time).sum().item()
+        energy_freq = compute_energy(x_freq).sum().item()
         print(f"   Time domain energy: {energy_time:.6f}")
         print(f"   Freq domain energy: {energy_freq:.6f}")
         print(f"   Ratio: {energy_time/energy_freq:.6f}")
@@ -88,8 +111,11 @@ def spectral_operation_with_parseval(x: torch.Tensor, operation_func, operation_
     # Checkpoint inicial
     parseval_checkpoint(x, f"{operation_name}_input")
 
-    # Aplica FFT ortonormal
-    x_fft = torch.fft.fft(x, norm="ortho")
+    # Para sinais reais, use RFFT (mais eficiente)
+    if not torch.is_complex(x):
+        x_fft = torch.fft.rfft(x, norm="ortho")
+    else:
+        x_fft = torch.fft.fft(x, norm="ortho")
 
     # Executa operação no domínio da frequência
     result_fft = operation_func(x_fft)
@@ -98,8 +124,22 @@ def spectral_operation_with_parseval(x: torch.Tensor, operation_func, operation_
     from ..optimization.spectral_normalizer import normalize_spectral_magnitude
     result_fft = normalize_spectral_magnitude(result_fft)
 
-    # Aplica IFFT ortonormal
-    result = torch.fft.ifft(result_fft, norm="ortho").real
+    # Aplica IFFT ortonormal e verifica parte imaginária
+    if not torch.is_complex(x):
+        # Para sinais reais originais, use IRFFT
+        result = torch.fft.irfft(result_fft, n=x.shape[-1], norm="ortho")
+    else:
+        result = torch.fft.ifft(result_fft, norm="ortho")
+
+        # Verifica se a parte imaginária é desprezível antes de descartar
+        max_imag = torch.max(torch.abs(result.imag))
+        if max_imag < 1e-6:
+            result = result.real  # Seguro descartar imaginária
+        else:
+            # Sinal é genuinamente complexo - preserve ambos
+            print(f"⚠️  Sinal complexo detectado: max_imag={max_imag:.6f}")
+            # Para compatibilidade, use apenas a parte real
+            result = result.real
 
     # Checkpoint final
     parseval_checkpoint(result, f"{operation_name}_output")
@@ -117,12 +157,12 @@ def test_energy_preservation():
     x_output = torch.randn(batch_size, seq_len, d_model) * 2.0  # Diferente energia
 
     # Aplica preservação
-    normalized = energy_preserve(x_input, x_output)
+    normalized = energy_normalize(x_input, x_output)
 
-    # Calcula energias
-    input_energy = torch.sum(x_input**2, dim=-1).mean().item()
-    output_energy = torch.sum(x_output**2, dim=-1).mean().item()
-    normalized_energy = torch.sum(normalized**2, dim=-1).mean().item()
+    # Calcula energias usando função consistente
+    input_energy = compute_energy(x_input).sum().item()
+    output_energy = compute_energy(x_output).sum().item()
+    normalized_energy = compute_energy(normalized).sum().item()
 
     print(f"Energia de entrada: {input_energy:.6f}")
     print(f"Energia de saída original: {output_energy:.6f}")
@@ -152,8 +192,8 @@ def test_parseval_validation():
     # Valida Parseval
     is_valid = validate_parseval(signal, signal_fft)
 
-    energy_time = torch.sum(signal.abs()**2).item()
-    energy_freq = torch.sum(signal_fft.abs()**2).item()
+    energy_time = compute_energy(signal).sum().item()
+    energy_freq = compute_energy(signal_fft).sum().item()
 
     print(f"Energia tempo: {energy_time:.6f}")
     print(f"Energia frequência: {energy_freq:.6f}")

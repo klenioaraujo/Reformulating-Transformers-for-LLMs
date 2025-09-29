@@ -255,8 +255,8 @@ class QRHLayer(nn.Module):
         # Apply windowing if enabled
         # Ψ_windowed = self.spectral_filter.apply_window(Ψ, seq_len)  # Commented out - spectral_filter not available
 
-        # Forward FFT along sequence dimension - MUST be complex
-        Ψ_fft = fft.fft(Ψ, dim=1)  # Use original Ψ since spectral filter not available
+        # Forward FFT along sequence dimension - MUST be complex with orthonormal normalization
+        Ψ_fft = fft.fft(Ψ, dim=1, norm="ortho")  # Use original Ψ since spectral filter not available
         assert Ψ_fft.dtype in [torch.complex64, torch.complex128], f"FFT must be complex, got {Ψ_fft.dtype}"
 
         # Compute wave vector magnitudes
