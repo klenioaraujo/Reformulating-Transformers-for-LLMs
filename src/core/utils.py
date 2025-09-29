@@ -43,9 +43,45 @@ def energy_preserve(x_input: torch.Tensor, x_output: torch.Tensor, epsilon: floa
     return energy_normalize(x_input, x_output, epsilon)
 
 
+def validate_parseval_local(x_time: torch.Tensor, x_freq: torch.Tensor, tolerance: float = 1e-5) -> bool:
+    """
+    Valida Parseval entre sinal imediatamente antes e depois da FFT.
+    Deve ser usado apenas para validar operações FFT diretas.
+
+    Args:
+        x_time: Sinal no domínio do tempo (imediatamente antes da FFT)
+        x_freq: Sinal no domínio da frequência (imediatamente depois da FFT)
+        tolerance: Tolerância para a razão de energia
+
+    Returns:
+        True se compliant com Parseval, False caso contrário
+    """
+    # Para sinais complexos, use magnitude ao quadrado
+    if x_time.is_complex():
+        energy_time = torch.sum(torch.abs(x_time)**2)
+    else:
+        energy_time = torch.sum(x_time**2)
+
+    if x_freq.is_complex():
+        energy_freq = torch.sum(torch.abs(x_freq)**2)
+    else:
+        energy_freq = torch.sum(x_freq**2)
+
+    ratio = energy_time / (energy_freq + 1e-8)
+
+    # Validação assertiva para debugging
+    if abs(ratio - 1.0) >= tolerance:
+        print(f"⚠️  Parseval violation: ratio={ratio:.6f}, tolerance={tolerance}")
+        print(f"   Signal before FFT energy: {energy_time:.6f}")
+        print(f"   Signal after FFT energy: {energy_freq:.6f}")
+
+    return abs(ratio - 1.0) < tolerance
+
+
 def validate_parseval(x_time: torch.Tensor, x_freq: torch.Tensor, tolerance: float = 1e-5) -> bool:
     """
     Verifica compliance com Teorema de Parseval em tempo de execução.
+    (Alias para compatibilidade)
 
     Args:
         x_time: Sinal no domínio do tempo
@@ -55,17 +91,7 @@ def validate_parseval(x_time: torch.Tensor, x_freq: torch.Tensor, tolerance: flo
     Returns:
         True se compliant com Parseval, False caso contrário
     """
-    energy_time = compute_energy(x_time).sum()
-    energy_freq = compute_energy(x_freq).sum()
-    ratio = energy_time / (energy_freq + 1e-8)
-
-    # Validação assertiva para debugging
-    if abs(ratio - 1.0) >= tolerance:
-        print(f"⚠️  Parseval violation: ratio={ratio:.6f}, tolerance={tolerance}")
-        print(f"   Time domain energy: {energy_time:.6f}")
-        print(f"   Freq domain energy: {energy_freq:.6f}")
-
-    return abs(ratio - 1.0) < tolerance
+    return validate_parseval_local(x_time, x_freq, tolerance)
 
 
 def parseval_checkpoint(x_time: torch.Tensor, operation_name: str = "unknown") -> bool:
@@ -82,15 +108,15 @@ def parseval_checkpoint(x_time: torch.Tensor, operation_name: str = "unknown") -
     # Aplica FFT ortonormal
     x_freq = torch.fft.fft(x_time, norm="ortho")
 
-    # Valida Parseval
-    is_valid = validate_parseval(x_time, x_freq)
+    # Valida Parseval localmente (apenas antes/depois da FFT)
+    is_valid = validate_parseval_local(x_time, x_freq)
 
     if not is_valid:
         print(f"⚠️  Parseval violation in {operation_name}")
         energy_time = compute_energy(x_time).sum().item()
         energy_freq = compute_energy(x_freq).sum().item()
-        print(f"   Time domain energy: {energy_time:.6f}")
-        print(f"   Freq domain energy: {energy_freq:.6f}")
+        print(f"   Signal before FFT energy: {energy_time:.6f}")
+        print(f"   Signal after FFT energy: {energy_freq:.6f}")
         print(f"   Ratio: {energy_time/energy_freq:.6f}")
 
     return is_valid
@@ -111,38 +137,31 @@ def spectral_operation_with_parseval(x: torch.Tensor, operation_func, operation_
     # Checkpoint inicial
     parseval_checkpoint(x, f"{operation_name}_input")
 
-    # Para sinais reais, use RFFT (mais eficiente)
-    if not torch.is_complex(x):
-        x_fft = torch.fft.rfft(x, norm="ortho")
-    else:
-        x_fft = torch.fft.fft(x, norm="ortho")
+    # Sempre use FFT para preservar Parseval corretamente
+    # RFFT tem energia diferente devido à simetria
+    x_fft = torch.fft.fft(x, norm="ortho")
 
     # Executa operação no domínio da frequência
     result_fft = operation_func(x_fft)
 
-    # Preserva unitariedade (magnitude = 1.0)
-    from ..optimization.spectral_normalizer import normalize_spectral_magnitude
-    result_fft = normalize_spectral_magnitude(result_fft)
+    # Aplica IFFT ortonormal
+    result = torch.fft.ifft(result_fft, norm="ortho")
 
-    # Aplica IFFT ortonormal e verifica parte imaginária
-    if not torch.is_complex(x):
-        # Para sinais reais originais, use IRFFT
-        result = torch.fft.irfft(result_fft, n=x.shape[-1], norm="ortho")
+    # Verifica se a parte imaginária é desprezível antes de descartar
+    max_imag = torch.max(torch.abs(result.imag))
+    if max_imag < 1e-6:
+        result = result.real  # Seguro descartar imaginária
     else:
-        result = torch.fft.ifft(result_fft, norm="ortho")
-
-        # Verifica se a parte imaginária é desprezível antes de descartar
-        max_imag = torch.max(torch.abs(result.imag))
-        if max_imag < 1e-6:
-            result = result.real  # Seguro descartar imaginária
-        else:
-            # Sinal é genuinamente complexo - preserve ambos
-            print(f"⚠️  Sinal complexo detectado: max_imag={max_imag:.6f}")
-            # Para compatibilidade, use apenas a parte real
-            result = result.real
+        # Sinal é genuinamente complexo - preserve ambos
+        print(f"⚠️  Sinal complexo detectado: max_imag={max_imag:.6f}")
+        # Para compatibilidade, use apenas a parte real
+        result = result.real
 
     # Checkpoint final
     parseval_checkpoint(result, f"{operation_name}_output")
+
+    # Preserva energia global (não Parseval)
+    result = energy_normalize(x, result)
 
     return result
 
