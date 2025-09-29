@@ -302,7 +302,7 @@ class QRHLayer(nn.Module):
             print("Warning: Filter may not be applying significant phase rotation")
 
         # Inverse FFT to return to time domain - take real part only after IFFT
-        Ψ_filtered = torch.fft.ifft(Ψ_filtered_fft, dim=1).real
+        Ψ_filtered = torch.fft.ifft(Ψ_filtered_fft, dim=1, norm="ortho").real
 
         return Ψ_filtered
 

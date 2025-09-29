@@ -94,6 +94,10 @@ def spectral_operation_with_parseval(x: torch.Tensor, operation_func, operation_
     # Executa operação no domínio da frequência
     result_fft = operation_func(x_fft)
 
+    # Preserva unitariedade (magnitude = 1.0)
+    from ..optimization.spectral_normalizer import normalize_spectral_magnitude
+    result_fft = normalize_spectral_magnitude(result_fft)
+
     # Aplica IFFT ortonormal
     result = torch.fft.ifft(result_fft, norm="ortho").real
 

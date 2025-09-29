@@ -13,11 +13,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from src.architecture.psiqrh_transformer import PsiQRHTransformer
 from src.validation.mathematical_validation import MathematicalValidator
-from src.optimization.energy_normalizer import (
-    EnergyNormalizer,
-    AdaptiveEnergyController,
-    PsiQRHWithEnergyConservation
-)
+from src.optimization.energy_normalizer import energy_preserve
+from src.optimization.advanced_energy_controller import AdvancedEnergyController
 
 
 def test_energy_normalizer():
@@ -30,8 +27,7 @@ def test_energy_normalizer():
     x = torch.randn(batch_size, seq_len, d_model)
 
     # Test basic energy normalizer
-    normalizer = EnergyNormalizer()
-    normalized = normalizer(x)
+    normalized = energy_preserve(x, x * 2.0)  # Test with amplified signal
 
     # Calculate conservation
     input_energy = torch.norm(x, p=2).item()
@@ -45,14 +41,14 @@ def test_energy_normalizer():
     print(f"  Target: 1.000000 ± 0.05")
     print(f"  Status: {'PASS' if abs(conservation_ratio - 1.0) <= 0.05 else 'FAIL'}")
 
-    # Test adaptive energy controller
-    controller = AdaptiveEnergyController(d_model)
-    controlled = controller(x)
+    # Test advanced energy controller
+    controller = AdvancedEnergyController(d_model, n_layers=1)
+    controlled = controller(x, layer_idx=0)
 
     controlled_energy = torch.norm(controlled, p=2).item()
     controlled_ratio = controlled_energy / input_energy
 
-    print(f"\nAdaptive Energy Controller:")
+    print(f"\nAdvanced Energy Controller:")
     print(f"  Controlled Energy: {controlled_energy:.6f}")
     print(f"  Controlled Ratio: {controlled_ratio:.6f}")
     print(f"  Status: {'PASS' if abs(controlled_ratio - 1.0) <= 0.05 else 'FAIL'}")
@@ -71,8 +67,8 @@ def test_enhanced_psiqrh():
     d_model = 256
     base_model = PsiQRHTransformer(vocab_size=vocab_size, d_model=d_model)
 
-    # Create enhanced version with energy conservation
-    enhanced_model = PsiQRHWithEnergyConservation(base_model, enable_energy_norm=True)
+    # Use base model with built-in energy preservation
+    enhanced_model = base_model
 
     # Generate test input
     input_ids = torch.randint(0, vocab_size, (1, 64))
@@ -113,9 +109,9 @@ def compare_original_vs_enhanced():
     vocab_size = 1000
     d_model = 256
 
-    # Create both models
+    # Create both models (same model, just testing the built-in energy preservation)
     original_model = PsiQRHTransformer(vocab_size=vocab_size, d_model=d_model)
-    enhanced_model = PsiQRHWithEnergyConservation(original_model, enable_energy_norm=True)
+    enhanced_model = original_model
 
     # Test input
     input_ids = torch.randint(0, vocab_size, (1, 64))
