@@ -11,10 +11,12 @@ import torch.nn as nn
 import sys
 import os
 
-# Add src directory to Python path
+# Add src and configs directories to Python path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'configs'))
 
 from src.architecture.psiqrh_transformer import PsiQRHTransformer
+from examples.config_loader import get_example_config
 from src.validation.mathematical_validation import MathematicalValidator
 from src.optimization.advanced_energy_controller import AdvancedEnergyController
 from src.optimization.energy_normalizer import energy_preserve
@@ -106,28 +108,28 @@ def test_enhanced_psiqrh_energy():
     print("\n=== Teste de ΨQRH com Controle Avançado de Energia ===")
     print("=" * 60)
 
-    # Criar modelo com controle de energia
-    vocab_size = 1000
-    d_model = 256
+    # Load configuration for advanced energy test
+    config = get_example_config("advanced_energy_test.py")
+    print(f"Advanced energy test config: {config.get('vocab_size', 1000)} vocab, {config.get('d_model', 256)} d_model")
 
     print("Criando ΨQRH com controle de energia...")
     model_with_energy = PsiQRHTransformer(
-        vocab_size=vocab_size,
-        d_model=d_model,
-        n_layers=4,  # Menos camadas para teste rápido
-        n_heads=8
+        vocab_size=config.get('vocab_size', 1000),
+        d_model=config.get('d_model', 256),
+        n_layers=config.get('n_layers', 4),  # Menos camadas para teste rápido
+        n_heads=config.get('n_heads', 8)
     )
 
     # Criar modelo sem controle para comparação (mesmo modelo, apenas para comparação)
     model_without_energy = PsiQRHTransformer(
-        vocab_size=vocab_size,
-        d_model=d_model,
-        n_layers=4,
-        n_heads=8
+        vocab_size=config.get('vocab_size', 1000),
+        d_model=config.get('d_model', 256),
+        n_layers=config.get('n_layers', 4),
+        n_heads=config.get('n_heads', 8)
     )
 
     # Dados de teste
-    input_ids = torch.randint(0, vocab_size, (1, 64))
+    input_ids = torch.randint(0, config.get('vocab_size', 1000), (1, 64))
 
     # Testar ambos os modelos
     print("\nTestando modelos...")
@@ -225,7 +227,7 @@ def sci_005_energy_conservation_scenario():
     print("=" * 60)
 
     # Configuração do cenário
-    vocab_size = 5000
+    # Configuration will be loaded inside the loop for each test
     d_model = 512
     seq_lengths = [64, 128, 256]
     batch_sizes = [1, 2, 4]
@@ -236,14 +238,17 @@ def sci_005_energy_conservation_scenario():
         for batch_size in batch_sizes:
             print(f"\nTestando: batch_size={batch_size}, seq_len={seq_len}")
 
+            # Load config for scientific test
+            config = get_example_config("advanced_energy_test.py")
+
             # Criar modelo
             model = PsiQRHTransformer(
-                vocab_size=vocab_size,
-                d_model=d_model
+                vocab_size=config.get('vocab_size', 1000),
+                d_model=config.get('d_model', 256)
             )
 
             # Dados de teste
-            input_ids = torch.randint(0, vocab_size, (batch_size, seq_len))
+            input_ids = torch.randint(0, config.get('vocab_size', 1000), (batch_size, seq_len))
 
             with torch.no_grad():
                 output = model(input_ids)

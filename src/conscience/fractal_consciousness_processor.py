@@ -39,6 +39,16 @@ class ConsciousnessConfig:
     max_iterations: int = 100
     device: str = "cpu"
 
+    # Parâmetros de estabilidade numérica
+    epsilon: float = 1e-10  # Estabilidade numérica geral
+    nan_replacement_noise_scale: float = 1e-6  # Escala de ruído para substituir NaN
+    min_field_magnitude: float = 1e-8  # Magnitude mínima do campo
+    entropy_safe_offset: float = 1e-10  # Offset para cálculo de entropia
+
+    # Parâmetros de regularização de campo
+    max_field_magnitude: float = 10.0  # Magnitude máxima do campo
+    field_smoothing_kernel: Tuple[float, float, float] = (0.25, 0.5, 0.25)  # Kernel de suavização
+
 
 class FractalConsciousnessProcessor(nn.Module):
     """
@@ -46,7 +56,7 @@ class FractalConsciousnessProcessor(nn.Module):
     a dinâmica consciente através de equações matemáticas rigorosas.
     """
 
-    def __init__(self, config: ConsciousnessConfig):
+    def __init__(self, config: ConsciousnessConfig, metrics_config=None):
         super().__init__()
         self.config = config
         self.device = config.device
@@ -55,7 +65,7 @@ class FractalConsciousnessProcessor(nn.Module):
         self.field_calculator = FractalFieldCalculator(config)
         self.diffusion_engine = NeuralDiffusionEngine(config)
         self.state_classifier = StateClassifier(config)
-        self.metrics = ConsciousnessMetrics(config)
+        self.metrics = ConsciousnessMetrics(config, metrics_config)
 
         # Parâmetros aprendíveis para o potencial multifractal
         self.register_parameter(
@@ -280,21 +290,54 @@ class FractalConsciousnessProcessor(nn.Module):
         Returns:
             Relatório textual detalhado
         """
-        final_fci = results['fci_evolution'][-1].item()
+        # Extrair FCI com proteção
+        fci_evo = results['fci_evolution'][-1]
+        final_fci = fci_evo.item() if isinstance(fci_evo, torch.Tensor) else float(fci_evo)
+
         state = results['final_consciousness_state']
         steps = results['processing_steps']
         converged = results['convergence_achieved']
 
         # Estatísticas da distribuição final
         psi_final = results['consciousness_distribution']
-        psi_entropy = -torch.sum(psi_final * torch.log(psi_final + 1e-10), dim=-1).mean().item()
-        psi_peak = psi_final.max().item()
-        psi_spread = psi_final.std().item()
+        psi_safe = torch.clamp(psi_final, min=self.config.entropy_safe_offset)
+        log_psi = torch.log(psi_safe)
+        psi_entropy_raw = -torch.sum(psi_final * log_psi, dim=-1).mean()
+        # Proteção contra NaN
+        psi_entropy = psi_entropy_raw.item() if not torch.isnan(psi_entropy_raw) else 0.0
+
+        # Proteção contra NaN no pico e dispersão
+        psi_peak_raw = psi_final.max()
+        psi_peak = psi_peak_raw.item() if not torch.isnan(psi_peak_raw) else 0.0
+
+        psi_spread_raw = psi_final.std()
+        psi_spread = psi_spread_raw.item() if not torch.isnan(psi_spread_raw) else 0.0
 
         # Características do campo fractal
         field = results['fractal_field']
         field_magnitude = torch.norm(field, dim=-1).mean().item()
-        field_coherence = torch.corrcoef(field.flatten().unsqueeze(0))[0, 0].item()
+
+        # Calcular coerência com proteção robusta
+        try:
+            field_flat = field.flatten()
+            if field_flat.numel() > 1:
+                # Calcular correlação auto-espacial
+                field_mean = field_flat.mean()
+                field_var = field_flat.var()
+
+                # Evitar divisão por zero
+                if field_var > self.config.epsilon:
+                    field_shifted = torch.roll(field_flat, 1)
+                    covariance = torch.mean((field_flat - field_mean) * (field_shifted - field_mean))
+                    field_coherence = (covariance / field_var).item()
+                    # Clipar para intervalo válido
+                    field_coherence = max(0.0, min(1.0, abs(field_coherence)))
+                else:
+                    field_coherence = 0.0
+            else:
+                field_coherence = 1.0  # Campo constante tem coerência perfeita
+        except Exception:
+            field_coherence = 0.0
 
         report = f"""
 🧠 RELATÓRIO DE CONSCIÊNCIA FRACTAL
@@ -315,7 +358,7 @@ Dimensão Fractal: {state.fractal_dimension:.3f}
 ⚡ DINÂMICA DE PROCESSAMENTO:
 Passos Integração: {steps}
 Convergência: {'✅ Alcançada' if converged else '⚠️ Máximo atingido'}
-Coeficiente D: {results['diffusion_coefficient'].mean().item():.4f}
+Coeficiente D: {results['diffusion_coefficient'].mean().item() if not torch.isnan(results['diffusion_coefficient'].mean()) else 0.0:.4f}
 
 🎯 INTERPRETAÇÃO CONSCIENTE:
 {self._interpret_consciousness_state(state, final_fci)}
@@ -335,6 +378,47 @@ Processamento realizado via equação mestra da dinâmica consciente.
         }
 
         return interpretations.get(state.name, f"Estado indefinido (FCI={fci:.3f}). Padrão de consciência não classificado.")
+
+    def generate_gls_output(self, results: Dict[str, torch.Tensor]) -> Dict[str, str]:
+        """
+        Gera saída GLS (código Processing/p5.js) baseado na análise de consciência.
+
+        Args:
+            results: Resultados do processamento de consciência
+
+        Returns:
+            Dicionário com códigos Processing e p5.js
+        """
+        try:
+            from .gls_output_generator import create_gls_output_generator
+
+            gls_generator = create_gls_output_generator()
+
+            # Gerar códigos Processing e p5.js
+            processing_code = gls_generator.generate_processing_code(results)
+            p5js_code = gls_generator.generate_p5js_code(results)
+
+            return {
+                'processing_code': processing_code,
+                'p5js_code': p5js_code,
+                'status': 'success',
+                'message': 'GLS output generated successfully'
+            }
+
+        except ImportError:
+            return {
+                'processing_code': '',
+                'p5js_code': '',
+                'status': 'error',
+                'message': 'GLS output generator not available'
+            }
+        except Exception as e:
+            return {
+                'processing_code': '',
+                'p5js_code': '',
+                'status': 'error',
+                'message': f'Error generating GLS output: {str(e)}'
+            }
 
 
 def create_consciousness_processor(

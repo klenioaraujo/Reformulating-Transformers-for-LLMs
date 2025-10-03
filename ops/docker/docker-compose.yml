@@ -1,13 +1,13 @@
 version: '3.8'
 
 services:
-  # Serviço principal do ΨQRH Framework
-  psiqrh:
+  # Serviço da API ΨQRH
+  psiqrh-api:
     build:
       context: ../..
       dockerfile: ops/docker/Dockerfile
       network: host
-    container_name: psiqrh-transformer
+    container_name: psiqrh-api
     dns:
       - 8.8.8.8
       - 8.8.4.4
@@ -30,11 +30,20 @@ services:
       - PYTHONUNBUFFERED=1
       - TORCH_HOME=/app/.torch
     ports:
-      - "8080:8080"  # Para visualizações web
-      - "8888:8888"  # Para Jupyter (se necessário)
-    stdin_open: true
-    tty: true
-    command: /bin/bash
+      - "5000:5000"  # API Flask
+    command: python app.py
+
+  # Serviço do Frontend
+  psiqrh-frontend:
+    image: nginx:alpine
+    container_name: psiqrh-frontend
+    volumes:
+      - ../..:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "8080:80"  # Frontend web
+    depends_on:
+      - psiqrh-api
 
   # Serviço para testes e validação
   psiqrh-test:
@@ -68,7 +77,7 @@ services:
         echo '=== All tests completed ==='
       "
     depends_on:
-      - psiqrh
+      - psiqrh-api
 
   # Serviço para demonstrações
   psiqrh-demo:
@@ -99,7 +108,7 @@ services:
         echo '=== Demonstrations completed ==='
       "
     depends_on:
-      - psiqrh
+      - psiqrh-api
 
   # Serviço para visualizações interativas
   psiqrh-viz:
@@ -127,7 +136,7 @@ services:
         python live_ecosystem_server.py
       "
     depends_on:
-      - psiqrh
+      - psiqrh-api
 
 # Volumes nomeados para persistência de dados
 volumes:

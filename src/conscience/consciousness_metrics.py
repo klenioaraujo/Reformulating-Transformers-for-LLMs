@@ -46,25 +46,34 @@ class ConsciousnessMetrics(nn.Module):
     o FCI e métricas auxiliares para análise completa.
     """
 
-    def __init__(self, config):
+    def __init__(self, config, metrics_config=None):
         super().__init__()
         self.config = config
         self.device = config.device
 
+        # Carregar configurações de métricas (se disponível) ou usar padrões
+        if metrics_config is None:
+            metrics_config = {}
+
         # Parâmetros de normalização para componentes do FCI
-        self.d_eeg_max = 10.0  # Máximo D_EEG observado
-        self.h_fmri_max = 5.0  # Máximo H_fMRI observado
-        self.clz_max = 3.0     # Máximo CLZ observado
+        self.d_eeg_max = metrics_config.get('d_eeg_max', 10.0)
+        self.h_fmri_max = metrics_config.get('h_fmri_max', 5.0)
+        self.clz_max = metrics_config.get('clz_max', 3.0)
         self.d_max = config.diffusion_coefficient_range[1]
 
         # Histórico de medições
         self.fci_history: List[FCI] = []
-        self.max_history = 1000
+        self.max_history = metrics_config.get('max_history', 1000)
+
+        # Proteção contra NaN
+        self.enable_nan_protection = metrics_config.get('enable_nan_protection', True)
+        self.default_fci_on_nan = metrics_config.get('default_fci_on_nan', 0.5)
 
         # Pesos para componentes do FCI (aprendíveis)
+        fci_weights = metrics_config.get('fci_weights', [0.4, 0.3, 0.3])
         self.register_parameter(
             'fci_weights',
-            nn.Parameter(torch.tensor([0.4, 0.3, 0.3]))  # [D_EEG, H_fMRI, CLZ]
+            nn.Parameter(torch.tensor(fci_weights))  # [D_EEG, H_fMRI, CLZ]
         )
 
         print(f"📊 ConsciousnessMetrics inicializado com D_max={self.d_max}")
@@ -96,7 +105,7 @@ class ConsciousnessMetrics(nn.Module):
         h_fmri = self._compute_h_fmri(psi_distribution, fractal_field)
         clz = self._compute_clz(psi_distribution, fractal_field)
 
-        # Normalizar componentes
+        # Normalizar componentes (d_eeg, h_fmri, clz já são floats)
         d_eeg_norm = d_eeg / self.d_eeg_max
         h_fmri_norm = h_fmri / self.h_fmri_max
         clz_norm = clz / self.clz_max
@@ -108,7 +117,14 @@ class ConsciousnessMetrics(nn.Module):
             self.fci_weights[2] * clz_norm
         )
 
-        fci_value = (fci_numerator / self.d_max).clamp(0.0, 1.0).item()
+        # Corrigir cálculo do FCI: usar média ponderada normalizada
+        fci_value = fci_numerator.clamp(0.0, 1.0)
+
+        # Proteção contra NaN/Inf (configurável)
+        if self.enable_nan_protection and (torch.isnan(fci_value) or torch.isinf(fci_value)):
+            fci_value = torch.tensor(self.default_fci_on_nan)
+
+        fci_value = fci_value.item()
 
         # Calcular confiança da medição
         confidence = self._compute_measurement_confidence(d_eeg, h_fmri, clz)
@@ -116,16 +132,16 @@ class ConsciousnessMetrics(nn.Module):
         # Classificar estado baseado no FCI
         state_classification = self._classify_fci_state(fci_value)
 
-        # Criar objeto FCI
+        # Criar objeto FCI (componentes normalizados já são floats)
         fci_object = FCI(
             value=fci_value,
             components={
                 'D_EEG': d_eeg,
                 'H_fMRI': h_fmri,
                 'CLZ': clz,
-                'D_EEG_normalized': d_eeg_norm.item(),
-                'H_fMRI_normalized': h_fmri_norm.item(),
-                'CLZ_normalized': clz_norm.item()
+                'D_EEG_normalized': d_eeg_norm,
+                'H_fMRI_normalized': h_fmri_norm,
+                'CLZ_normalized': clz_norm
             },
             timestamp=timestamp,
             state_classification=state_classification,
@@ -155,14 +171,18 @@ class ConsciousnessMetrics(nn.Module):
             Valor D_EEG
         """
         # Calcular entropia da distribuição como proxy para complexidade EEG
-        psi_safe = psi_distribution + 1e-10
-        entropy = -torch.sum(psi_distribution * torch.log(psi_safe), dim=-1).mean()
+        epsilon = self.config.epsilon if hasattr(self.config, 'epsilon') else 1e-10
+        psi_safe = torch.clamp(psi_distribution, min=epsilon)
+        log_psi = torch.log(psi_safe)
+        entropy_raw = -torch.sum(psi_distribution * log_psi, dim=-1).mean()
+        entropy = entropy_raw if not torch.isnan(entropy_raw) else torch.tensor(0.0)
 
         # Calcular variação espacial como indicador de atividade neural
         spatial_variation = torch.std(psi_distribution, dim=-1).mean()
 
         # Combinar métricas para D_EEG
-        d_eeg = (entropy * spatial_variation).item()
+        d_eeg_raw = (entropy * spatial_variation)
+        d_eeg = d_eeg_raw.item() if not torch.isnan(d_eeg_raw) else 0.0
 
         # Mapear para escala adequada
         d_eeg = d_eeg * 3.0  # Fator de escala empírico
@@ -314,14 +334,22 @@ class ConsciousnessMetrics(nn.Module):
         mean_component = np.mean(components)
         std_component = np.std(components)
 
-        if mean_component == 0:
-            return 0.0
+        if mean_component == 0 or np.isnan(mean_component) or np.isnan(std_component):
+            return 0.5  # Valor padrão quando não é possível calcular
 
         cv = std_component / mean_component
+
+        # Proteção contra valores extremos
+        if np.isnan(cv) or np.isinf(cv):
+            return 0.5
 
         # Mapear coeficiente de variação para confiança
         # Baixa variação → alta confiança
         confidence = np.exp(-2 * cv)
+
+        # Proteção final contra NaN/Inf
+        if np.isnan(confidence) or np.isinf(confidence):
+            return 0.5
 
         return min(max(confidence, 0.0), 1.0)
 

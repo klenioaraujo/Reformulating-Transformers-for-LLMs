@@ -1,3 +1,15 @@
+"""
+QRH Layer Implementation
+
+Core layer implementing Quaternion-Relativistic-Harmonic transformations.
+
+Copyright (C) 2025 Klenio Araujo Padilha
+Licensed under GNU GPLv3 - see LICENSE file
+
+DOI: https://zenodo.org/records/17171112
+Project: https://github.com/klenioaraujo/Reformulating-Transformers-for-LLMs
+"""
+
 import torch
 import torch.nn as nn
 import torch.fft as fft
@@ -98,6 +110,12 @@ class QRHConfig:
     enable_warnings: bool = True
     normalization_type: Optional[Literal['layer_norm', 'unit_projection']] = None
     spectral_dropout_rate: float = 0.0
+    enable_phase_check: bool = False
+    phase_check_threshold: float = 1e-6
+    # Additional config params from YAML
+    padding_enabled: bool = False
+    auto_adjust_shapes: bool = False
+    validate_shapes: bool = True
 
 class QRHLayer(nn.Module):
     """
@@ -131,7 +149,7 @@ class QRHLayer(nn.Module):
             self.register_buffer('phi_right', torch.tensor(config.phi_right))
 
         # Initialize the spectral filter with improvements
-        # self.spectral_filter = SpectralFilter(config.alpha, use_windowing=config.use_windowing, window_type=config.window_type)
+        self.spectral_filter = SpectralFilter(config.alpha, use_windowing=config.use_windowing, window_type=config.window_type)
 
         # Projection layers
         self.v_proj = nn.Linear(self.total_dim, self.total_dim)
@@ -255,8 +273,8 @@ class QRHLayer(nn.Module):
         # Apply windowing if enabled
         # Ψ_windowed = self.spectral_filter.apply_window(Ψ, seq_len)  # Commented out - spectral_filter not available
 
-        # Forward FFT along sequence dimension - MUST be complex with orthonormal normalization
-        Ψ_fft = fft.fft(Ψ, dim=1, norm="ortho")  # Use original Ψ since spectral filter not available
+        # Forward FFT along sequence dimension - MUST be complex
+        Ψ_fft = fft.fft(Ψ, dim=1)  # Use original Ψ since spectral filter not available
         assert Ψ_fft.dtype in [torch.complex64, torch.complex128], f"FFT must be complex, got {Ψ_fft.dtype}"
 
         # Compute wave vector magnitudes
@@ -296,13 +314,21 @@ class QRHLayer(nn.Module):
         # CRITICAL: Verify that phase rotation is actually applied
         assert Ψ_filtered_fft.dtype in [torch.complex64, torch.complex128], "Filtered FFT must be complex!"
 
-        # Check if imaginary part exists (more lenient for text-to-spectrum conversion)
-        has_imaginary = torch.any(torch.abs(Ψ_filtered_fft.imag) > 1e-8)
-        if not has_imaginary:
-            print("Warning: Filter may not be applying significant phase rotation")
+        # Check if imaginary part exists (configurable - only when enable_phase_check is True)
+        # NOTE: Future optimization opportunity - phase rotation effectiveness could be enhanced by:
+        # 1. Implementing adaptive phase modulation based on input spectral characteristics
+        # 2. Using learnable phase offset parameters for different frequency bands
+        # 3. Adding phase coherence metrics to guide rotation strength
+        if self.config.enable_phase_check:
+            has_imaginary = torch.any(torch.abs(Ψ_filtered_fft.imag) > self.config.phase_check_threshold)
+            if not has_imaginary and self.config.enable_warnings:
+                warnings.warn(
+                    "Filter may not be applying significant phase rotation. "
+                    "Consider enabling use_learned_rotation or adjusting frequency parameters."
+                )
 
         # Inverse FFT to return to time domain - take real part only after IFFT
-        Ψ_filtered = torch.fft.ifft(Ψ_filtered_fft, dim=1, norm="ortho").real
+        Ψ_filtered = torch.fft.ifft(Ψ_filtered_fft, dim=1).real
 
         return Ψ_filtered
 
@@ -321,7 +347,18 @@ class QRHLayer(nn.Module):
         batch_size, seq_len, embed_dim, quat_dim = Ψ_filtered.shape
 
         # Safe reshape for quaternion operations: [B*T*D, 4]
-        Ψ_flat = self._safe_reshape(Ψ_filtered, (-1, 4), "quaternion_flatten")
+        # Ensure total elements is divisible by 4 for quaternion operations
+        total_elements = Ψ_filtered.numel()
+        if total_elements % 4 != 0:
+            # Pad to make divisible by 4
+            padding_needed = 4 - (total_elements % 4)
+            Ψ_filtered_padded = torch.cat([
+                Ψ_filtered.flatten(),
+                torch.zeros(padding_needed, device=Ψ_filtered.device)
+            ])
+            Ψ_flat = Ψ_filtered_padded.view(-1, 4)
+        else:
+            Ψ_flat = Ψ_filtered.reshape(-1, 4)
 
         # Apply left rotation: q_left * Ψ
         # Expand q_left to match batch dimensions

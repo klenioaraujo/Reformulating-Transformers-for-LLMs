@@ -1,0 +1,73 @@
+{
+  "pipeline_name": "ΨQRH Real Data Flow Tracer",
+  "timestamp": "2025-09-30T00:23:44.944086",
+  "input_text": "O sistema ΨQRH demonstra eficiência superior em processamento quaternônico",
+  "steps": [
+    {
+      "step_number": 1,
+      "step_name": "entrada_texto",
+      "description": "Captura do texto de entrada do usuário.",
+      "timestamp": "2025-09-30T00:23:44.944120",
+      "input_data": "O sistema ΨQRH demonstra eficiência superior em processamento quaternônico",
+      "output_data": "O sistema ΨQRH demonstra eficiência superior em processamento quaternônico",
+      "variables": {
+        "texto_bruto": "O sistema ΨQRH demonstra eficiência superior em processamento quaternônico"
+      }
+    },
+    {
+      "step_number": 2,
+      "step_name": "inicializacao_pipeline",
+      "description": "Instanciação e configuração do ΨQRHPipeline real.",
+      "timestamp": "2025-09-30T00:23:44.982519",
+      "input_data": "O sistema ΨQRH demonstra eficiência superior em processamento quaternônico",
+      "output_data": "<psiqrh.ΨQRHPipeline object at 0x70187404d610>",
+      "processing_time": 0.0383601188659668,
+      "variables": {
+        "task": "text-generation",
+        "device": "cpu",
+        "model_type": "QRHFactory"
+      }
+    },
+    {
+      "step_number": 3,
+      "step_name": "execucao_pipeline",
+      "description": "Chamada principal ao pipeline (método __call__), que executa o process_text interno.",
+      "timestamp": "2025-09-30T00:23:46.647727",
+      "input_data": {
+        "text": "O sistema ΨQRH demonstra eficiência superior em processamento quaternônico"
+      },
+      "output_data": {
+        "status": "success",
+        "response": "Análise para 'O sistema ΨQRH demonstra eficiência superior em processamento quaternônico' com alpha=1.505: Espectro com torch.Size([1, 1, 256]) dimensões.\nANÁLISE DE CONSCIÊNCIA FRACTAL ΨQRH: 🧠 RELATÓRIO DE CONSCIÊNCIA FRACTAL\n═══════════════════════════════════════════════════\n\n📊 MÉTRICAS DE CONSCIÊNCIA:\nÍndice FCI: 0.0005\nEstado Classificado: COMA\nEntropia Ψ: 5.2027 bits\nDistribuição Pico: 0.0779\nDispersão Ψ: 0.0051\n\n🌊 CAMPO FRACTAL F(ψ):\nMagnitude Média: 2.3775\nCoerência: 0.6070\nDimensão Fractal: 1.008\n\n⚡ DINÂMICA DE PROCESSAMENTO:\nPassos Integração: 12\nConvergência: ✅ Alcançada\nCoeficiente D: 0.0100\n\n🎯 INTERPRETAÇÃO CONSCIENTE:\nEstado de baixa consciência (FCI=0.001). Modo de emergência ou processamento mínimo.\n\nProcessamento realizado via equação mestra da dinâmica consciente.\n✨ INTEGRAÇÃO ΨQRH-CONSCIOUSNESS: Pipeline completo: Texto → Enhanced α → Quaterniôn → Consciência Fractal → Análise ΨQRH\nEstado do sistema: Enhanced Processor + Fractal Consciousness Layer ativos\n",
+        "task": "text-generation",
+        "device": "cpu",
+        "input_length": 74,
+        "output_length": 989
+      },
+      "processing_time": 1.6651461124420166,
+      "variables": {
+        "status": "success",
+        "input_length": 74,
+        "output_length": 989
+      }
+    },
+    {
+      "step_number": 4,
+      "step_name": "resultado_final",
+      "description": "O texto final processado e retornado pelo pipeline.",
+      "timestamp": "2025-09-30T00:23:46.647781",
+      "input_data": {
+        "status": "success",
+        "response": "Análise para 'O sistema ΨQRH demonstra eficiência superior em processamento quaternônico' com alpha=1.505: Espectro com torch.Size([1, 1, 256]) dimensões.\nANÁLISE DE CONSCIÊNCIA FRACTAL ΨQRH: 🧠 RELATÓRIO DE CONSCIÊNCIA FRACTAL\n═══════════════════════════════════════════════════\n\n📊 MÉTRICAS DE CONSCIÊNCIA:\nÍndice FCI: 0.0005\nEstado Classificado: COMA\nEntropia Ψ: 5.2027 bits\nDistribuição Pico: 0.0779\nDispersão Ψ: 0.0051\n\n🌊 CAMPO FRACTAL F(ψ):\nMagnitude Média: 2.3775\nCoerência: 0.6070\nDimensão Fractal: 1.008\n\n⚡ DINÂMICA DE PROCESSAMENTO:\nPassos Integração: 12\nConvergência: ✅ Alcançada\nCoeficiente D: 0.0100\n\n🎯 INTERPRETAÇÃO CONSCIENTE:\nEstado de baixa consciência (FCI=0.001). Modo de emergência ou processamento mínimo.\n\nProcessamento realizado via equação mestra da dinâmica consciente.\n✨ INTEGRAÇÃO ΨQRH-CONSCIOUSNESS: Pipeline completo: Texto → Enhanced α → Quaterniôn → Consciência Fractal → Análise ΨQRH\nEstado do sistema: Enhanced Processor + Fractal Consciousness Layer ativos\n",
+        "task": "text-generation",
+        "device": "cpu",
+        "input_length": 74,
+        "output_length": 989
+      },
+      "output_data": "Análise para 'O sistema ΨQRH demonstra eficiência superior em processamento quaternônico' com alpha=1.505: Espectro com torch.Size([1, 1, 256]) dimensões.\nANÁLISE DE CONSCIÊNCIA FRACTAL ΨQRH: 🧠 RELATÓRIO DE CONSCIÊNCIA FRACTAL\n═══════════════════════════════════════════════════\n\n📊 MÉTRICAS DE CONSCIÊNCIA:\nÍndice FCI: 0.0005\nEstado Classificado: COMA\nEntropia Ψ: 5.2027 bits\nDistribuição Pico: 0.0779\nDispersão Ψ: 0.0051\n\n🌊 CAMPO FRACTAL F(ψ):\nMagnitude Média: 2.3775\nCoerência: 0.6070\nDimensão Fractal: 1.008\n\n⚡ DINÂMICA DE PROCESSAMENTO:\nPassos Integração: 12\nConvergência: ✅ Alcançada\nCoeficiente D: 0.0100\n\n🎯 INTERPRETAÇÃO CONSCIENTE:\nEstado de baixa consciência (FCI=0.001). Modo de emergência ou processamento mínimo.\n\nProcessamento realizado via equação mestra da dinâmica consciente.\n✨ INTEGRAÇÃO ΨQRH-CONSCIOUSNESS: Pipeline completo: Texto → Enhanced α → Quaterniôn → Consciência Fractal → Análise ΨQRH\nEstado do sistema: Enhanced Processor + Fractal Consciousness Layer ativos\n",
+      "variables": {
+        "texto_final": "Análise para 'O sistema ΨQRH demonstra eficiência superior em processamento quaternônico' com alpha=1.505: Espectro com torch.Size([1, 1, 256]) dimensões.\nANÁLISE DE CONSCIÊNCIA FRACTAL ΨQRH: 🧠 RELATÓRIO DE CONSCIÊNCIA FRACTAL\n═══════════════════════════════════════════════════\n\n📊 MÉTRICAS DE CONSCIÊNCIA:\nÍndice FCI: 0.0005\nEstado Classificado: COMA\nEntropia Ψ: 5.2027 bits\nDistribuição Pico: 0.0779\nDispersão Ψ: 0.0051\n\n🌊 CAMPO FRACTAL F(ψ):\nMagnitude Média: 2.3775\nCoerência: 0.6070\nDimensão Fractal: 1.008\n\n⚡ DINÂMICA DE PROCESSAMENTO:\nPassos Integração: 12\nConvergência: ✅ Alcançada\nCoeficiente D: 0.0100\n\n🎯 INTERPRETAÇÃO CONSCIENTE:\nEstado de baixa consciência (FCI=0.001). Modo de emergência ou processamento mínimo.\n\nProcessamento realizado via equação mestra da dinâmica consciente.\n✨ INTEGRAÇÃO ΨQRH-CONSCIOUSNESS: Pipeline completo: Texto → Enhanced α → Quaterniôn → Consciência Fractal → Análise ΨQRH\nEstado do sistema: Enhanced Processor + Fractal Consciousness Layer ativos\n"
+      }
+    }
+  ]
+}

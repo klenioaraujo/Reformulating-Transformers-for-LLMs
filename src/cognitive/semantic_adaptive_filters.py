@@ -5,7 +5,7 @@ from typing import Dict, List, Optional, Tuple
 from enum import Enum
 from dataclasses import dataclass
 
-from ..core.quaternion_operations import QuaternionOperations
+from ..core.quaternion_operations import quaternion_multiply
 
 
 class SemanticNoiseType(Enum):
@@ -247,7 +247,7 @@ class ContradictionDetector(nn.Module):
 
                     for d in range(embed_dim // 4):
                         original_quat = x_quat[b, t, d].clone()
-                        rotated_quat = QuaternionOperations.multiply(
+                        rotated_quat = quaternion_multiply(
                             attn_quat.unsqueeze(0),
                             original_quat.unsqueeze(0)
                         ).squeeze(0)
@@ -426,7 +426,7 @@ class BiasFilter(nn.Module):
                     for t in range(seq_len):
                         if bias_mask[b, t] > 0:
                             for d in range(embed_dim // 4):
-                                x_quat[b, t, d] = QuaternionOperations.multiply(
+                                x_quat[b, t, d] = quaternion_multiply(
                                     correction_quat.unsqueeze(0),
                                     x_quat[b, t, d].unsqueeze(0)
                                 ).squeeze(0)

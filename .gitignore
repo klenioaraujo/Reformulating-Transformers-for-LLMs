@@ -112,3 +112,54 @@ CLAUDE.md
 
 # Prompt engineering files
 /prompts/
+
+# PyPI and distribution
+dist/
+build/
+*.egg-info/
+.eggs/
+*.whl
+*.tar.gz
+
+# PyPI credentials and tokens
+.pypirc
+.pypi/
+*.token
+
+# Model checkpoints and data (large files)
+models/*.pt
+models/*.pth
+models/*.bin
+models/pretrained/*
+models/finetuned/*
+models/checkpoints/*
+!models/README.md
+!models/.gitkeep
+
+# Temporary validation data
+tmp/
+data/validation_reports/*.json
+data/Ψcws_cache/
+
+# Test outputs
+test_output/
+test_results/
+
+# HuggingFace cache
+.cache/
+huggingface/
+transformers_cache/
+
+# API keys and secrets
+*.key
+*.pem
+secrets.yaml
+.secrets/
+
+# Docker volumes and data
+volumes/
+docker-data/
+
+# Local development
+.local/
+local_config.yaml

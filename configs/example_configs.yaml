@@ -1,0 +1,321 @@
+# Example Configurations for different use cases
+# Maps example scripts to their appropriate configurations
+
+# Example to Config Mapping
+example_configs:
+  # Basic usage examples
+  basic_usage:
+    config_type: "basic"
+    model:
+      vocab_size: 10000
+      d_model: 512
+      n_layers: 6
+      n_heads: 8
+      dim_feedforward: 2048
+    validation:
+      tolerance: 0.1
+      quick_validation: true
+
+  # Scientific validation tests
+  parseval_validation_test:
+    config_type: "energy"
+    config_subtype: "parseval"
+    config_preset: "parseval_focus"
+    model:
+      vocab_size: 1000
+      d_model: 256
+    validation:
+      parseval_threshold: 0.0001
+
+  energy_conservation_test:
+    config_type: "energy"
+    config_subtype: "basic"
+    config_preset: "strict_conservation"
+    model:
+      vocab_size: 1000
+      d_model: 256
+    validation:
+      energy_conservation_threshold: 0.01
+
+  advanced_energy_test:
+    config_type: "energy"
+    config_subtype: "advanced"
+    config_preset: "scientific_validation"
+    model:
+      vocab_size: 1000
+      d_model: 256
+    scenarios:
+      count: 10
+
+  # Performance tests
+  performance_comparison:
+    config_type: "performance"
+    model:
+      vocab_size: 5000
+      d_model: 512
+    testing:
+      batch_sizes: [1, 4, 8]
+      sequence_lengths: [128, 256, 512]
+
+  # Test implementation
+  test_implementation:
+    config_type: "scientific"
+    config_preset: "performance_validation"
+    model:
+      vocab_size: 1000
+      d_model: 128
+      n_layers: 3
+    validation:
+      tolerance: 0.05
+
+# Scientific Test Configurations
+scientific_test_configs:
+  SCI_001:
+    name: "Baseline Text Processing Validation"
+    config_type: "scientific"
+    model:
+      vocab_size: 10000    # From BKP basic_usage.py working
+      d_model: 512         # From BKP basic_usage.py working
+    spectral:
+      fft_dim: 1          # FFT along sequence dimension
+      use_windowing: true
+      window_type: "hann"
+    validation:
+      tolerance: 0.05
+
+  SCI_002:
+    name: "Complex Mathematical Content Analysis"
+    config_type: "scientific"
+    model:
+      vocab_size: 5000     # From BKP performance tests working
+      d_model: 512         # From BKP basic_usage.py working
+    spectral:
+      fft_dim: 1          # FFT along sequence dimension
+      use_windowing: true
+      window_type: "hann"
+    validation:
+      tolerance: 0.03
+
+  SCI_003:
+    name: "Mathematical Computation Request"
+    config_type: "scientific"
+    model:
+      vocab_size: 2000
+      d_model: 384
+    spectral:
+      fft_dim: 1          # FFT along sequence dimension
+      use_windowing: true
+      window_type: "hann"
+    validation:
+      tolerance: 0.02
+
+  SCI_004:
+    name: "Numerical Data Processing"
+    config_type: "energy"
+    config_subtype: "basic"
+    model:
+      vocab_size: 1000
+      d_model: 256
+    spectral:
+      fft_dim: 1          # FFT along sequence dimension
+      use_windowing: true
+      window_type: "hann"
+    validation:
+      energy_conservation_threshold: 0.01
+
+  SCI_005:
+    name: "Energy Conservation Validation"
+    config_type: "energy"
+    config_subtype: "advanced"
+    config_preset: "strict_conservation"
+    model:
+      vocab_size: 1000
+      d_model: 256
+    spectral:
+      fft_dim: 1          # FFT along sequence dimension
+      use_windowing: true
+      window_type: "hann"
+    testing:
+      batch_sizes: [1, 2, 4]
+      sequence_lengths: [64, 128, 256]
+
+  SCI_006:
+    name: "Spectral Filter Unitarity Test"
+    config_type: "energy"
+    config_subtype: "parseval"
+    model:
+      vocab_size: 1000
+      d_model: 256
+    spectral:
+      fft_dim: 1          # FFT along sequence dimension
+      use_windowing: true
+      window_type: "hann"
+    validation:
+      parseval_threshold: 0.001
+
+  SCI_007:
+    name: "Quaternion Norm Stability Test"
+    config_type: "scientific"
+    model:
+      vocab_size: 1000
+      d_model: 256
+    spectral:
+      fft_dim: 1          # FFT along sequence dimension
+      use_windowing: true
+      window_type: "hann"
+    quaternion:
+      precision: "double"
+      normalization: true
+
+  SCI_008:
+    name: "Edge Case: Empty/Degenerate Inputs"
+    config_type: "scientific"
+    model:
+      vocab_size: 100
+      d_model: 128
+    spectral:
+      fft_dim: 1          # FFT along sequence dimension
+      use_windowing: true
+      window_type: "hann"
+    validation:
+      tolerance: 0.1
+
+  SCI_009:
+    name: "High-Dimensional Signal Validation"
+    config_type: "scientific"
+    model:
+      vocab_size: 10000
+      d_model: 768
+      n_layers: 12
+    spectral:
+      fft_dim: 1          # FFT along sequence dimension
+      use_windowing: true
+      window_type: "hann"
+    validation:
+      tolerance: 0.05
+
+  SCI_010:
+    name: "Mixed-Mode Request with Ambiguous Intent"
+    config_type: "scientific"
+    model:
+      vocab_size: 5000
+      d_model: 512
+    spectral:
+      fft_dim: 1          # FFT along sequence dimension
+      use_windowing: true
+      window_type: "hann"
+    validation:
+      tolerance: 0.1
+
+# Available Configuration Types
+config_types:
+  basic:
+    description: "Basic usage configuration"
+    default_model:
+      vocab_size: 10000
+      d_model: 512
+      n_layers: 6
+      n_heads: 8
+      dim_feedforward: 2048
+    default_spectral:
+      fft_dim: 1
+      use_windowing: true
+      window_type: "hann"
+      enable_phase_check: false
+      phase_check_threshold: 1e-6
+    default_quaternion:
+      reshape_pattern: [-1, 4]
+      padding_enabled: false
+      quaternion_dim: 4
+      auto_adjust_shapes: false
+      validate_shapes: true
+    default_device:
+      device: "cpu"
+      fallback_device: "cpu"
+      allow_cuda: true
+      allow_mps: true
+
+  scientific:
+    description: "Scientific validation configuration"
+    default_model:
+      vocab_size: 10000
+      d_model: 512
+      n_layers: 6
+      n_heads: 8
+      dim_feedforward: 2048
+    default_spectral:
+      fft_dim: 1
+      use_windowing: true
+      window_type: "hann"
+      enable_phase_check: false
+      phase_check_threshold: 1e-6
+    default_quaternion:
+      reshape_pattern: [-1, 4]
+      padding_enabled: false
+      quaternion_dim: 4
+      auto_adjust_shapes: false
+      validate_shapes: true
+    default_validation:
+      tolerance: 0.01
+      energy_conservation_threshold: 0.01
+
+  energy:
+    description: "Energy conservation focused configuration"
+    default_spectral:
+      fft_dim: 1
+      use_windowing: true
+      window_type: "hann"
+      enable_phase_check: false
+      phase_check_threshold: 1e-6
+    default_quaternion:
+      reshape_pattern: [-1, 4]
+      padding_enabled: false
+      quaternion_dim: 4
+      auto_adjust_shapes: false
+      validate_shapes: true
+    subtypes:
+      - "basic"
+      - "parseval"
+      - "advanced"
+
+  performance:
+    description: "Performance benchmarking configuration"
+    default_model:
+      vocab_size: 5000
+      d_model: 512
+      n_layers: 6
+      n_heads: 8
+      dim_feedforward: 2048
+    default_spectral:
+      fft_dim: 1
+      use_windowing: true
+      window_type: "hann"
+      enable_phase_check: false
+      phase_check_threshold: 1e-6
+    default_quaternion:
+      reshape_pattern: [-1, 4]
+      padding_enabled: false
+      quaternion_dim: 4
+      auto_adjust_shapes: false
+      validate_shapes: true
+
+  production:
+    description: "Production deployment configuration"
+    default_model:
+      vocab_size: 50000
+      d_model: 768
+      n_layers: 12
+      n_heads: 12
+      dim_feedforward: 3072
+    default_spectral:
+      fft_dim: 1
+      use_windowing: true
+      window_type: "hann"
+      enable_phase_check: false
+      phase_check_threshold: 1e-6
+    default_quaternion:
+      reshape_pattern: [-1, 4]
+      padding_enabled: false
+      quaternion_dim: 4
+      auto_adjust_shapes: false
+      validate_shapes: true

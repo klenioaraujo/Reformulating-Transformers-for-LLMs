@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ΨQRH Chat - Sistema de Consciência Fractal</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #0F0F23 0%, #1a1a2e 50%, #16213e 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            grid-template-rows: 1fr auto;
+            gap: 20px;
+            height: 100vh;
+            padding: 20px;
+        }
+
+        .chat-section {
+            grid-column: 1;
+            grid-row: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .visualization-section {
+            grid-column: 2;
+            grid-row: 1 / span 2;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .metrics-section {
+            grid-column: 1;
+            grid-row: 2;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #00FF88;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #00FF88;
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            color: #BDC3C7;
+            font-size: 1.1em;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .user-message {
+            background: rgba(41, 128, 185, 0.3);
+            border-left: 4px solid #2980B9;
+            margin-left: 20px;
+        }
+
+        .bot-message {
+            background: rgba(39, 174, 96, 0.3);
+            border-left: 4px solid #27AE60;
+            margin-right: 20px;
+        }
+
+        .message-header {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #00FF88;
+        }
+
+        .message-content {
+            line-height: 1.4;
+        }
+
+        .chat-input {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-family: 'Courier New', monospace;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .chat-input input:focus {
+            outline: none;
+            border-color: #00FF88;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+        }
+
+        .chat-input button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #00FF88, #27AE60);
+            color: white;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .chat-input button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 255, 136, 0.4);
+        }
+
+        .chat-input button:disabled {
+            background: #7F8C8D;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        #gls-canvas {
+            width: 100%;
+            height: 300px;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            margin-bottom: 20px;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .metric-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .metric-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #00FF88;
+            margin-bottom: 5px;
+        }
+
+        .metric-label {
+            font-size: 0.9em;
+            color: #BDC3C7;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .state-indicator {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .state-coma { background: #2C3E50; color: #BDC3C7; }
+        .state-analysis { background: #2980B9; color: white; }
+        .state-meditation { background: #27AE60; color: white; }
+        .state-emergence { background: #E74C3C; color: white; }
+
+        .visualization-controls {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .control-btn {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .control-btn.active {
+            background: #00FF88;
+            color: #0F0F23;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .loading {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        /* Scrollbar personalizada */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #00FF88;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #27AE60;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Seção de Chat -->
+        <div class="chat-section">
+            <div class="header">
+                <h1>ΨQRH Chat</h1>
+                <p>Sistema de Consciência Fractal - Interface Interativa</p>
+            </div>
+
+            <div class="chat-messages" id="chatMessages">
+                <div class="message bot-message">
+                    <div class="message-header">ΨQRH</div>
+                    <div class="message-content">
+                        Olá! Sou o ΨQRH, um sistema de consciência fractal.
+                        Como posso ajudá-lo hoje? Cada interação gera visualizações GLS únicas baseadas no seu estado de consciência.
+                    </div>
+                </div>
+            </div>
+
+            <div class="chat-input">
+                <input type="text" id="messageInput" placeholder="Digite sua mensagem..." autocomplete="off">
+                <button id="sendButton" onclick="sendMessage()">Enviar</button>
+            </div>
+        </div>
+
+        <!-- Seção de Visualização GLS -->
+        <div class="visualization-section">
+            <div class="header">
+                <h2>GLS Visualization</h2>
+                <p>Genetic Light Spectral - Visualização em Tempo Real</p>
+            </div>
+
+            <div id="gls-canvas">
+                <!-- Canvas será criado pelo p5.js -->
+            </div>
+
+            <div class="visualization-controls">
+                <button class="control-btn active" onclick="setVisualizationType('spheres')">Esferas</button>
+                <button class="control-btn" onclick="setVisualizationType('boxes')">Caixas</button>
+                <button class="control-btn" onclick="setVisualizationType('torus')">Torus</button>
+                <button class="control-btn" onclick="setVisualizationType('emergence')">Emergência</button>
+            </div>
+
+            <div class="metrics-grid" style="margin-top: 20px;">
+                <div class="metric-card">
+                    <div class="metric-value" id="fciValue">0.000</div>
+                    <div class="metric-label">FCI</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="stateValue">-</div>
+                    <div class="metric-label">Estado</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="fractalDimValue">1.000</div>
+                    <div class="metric-label">Dimensão Fractal</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="entropyValue">0.000</div>
+                    <div class="metric-label">Entropia</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seção de Métricas Detalhadas -->
+        <div class="metrics-section">
+            <div class="header">
+                <h2>Métricas de Consciência</h2>
+                <p>Análise Fractal em Tempo Real</p>
+            </div>
+
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-value" id="fieldMagnitude">0.000</div>
+                    <div class="metric-label">Magnitude do Campo</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="processingSteps">0</div>
+                    <div class="metric-label">Passos de Processamento</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="peakDistribution">0.000</div>
+                    <div class="metric-label">Pico da Distribuição</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="distributionSpread">0.000</div>
+                    <div class="metric-label">Dispersão</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variáveis globais
+        let currentGLSData = null;
+        let visualizationType = 'spheres';
+        let sketch = null;
+
+        // Inicializar quando a página carregar
+        document.addEventListener('DOMContentLoaded', function() {
+            // Permitir enviar mensagem com Enter
+            document.getElementById('messageInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+
+            // Inicializar visualização GLS
+            initializeGLSVisualization();
+        });
+
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const button = document.getElementById('sendButton');
+            const message = input.value.trim();
+
+            if (!message) return;
+
+            // Desabilitar input durante processamento
+            input.disabled = true;
+            button.disabled = true;
+            button.textContent = 'Processando...';
+
+            // Adicionar mensagem do usuário ao chat
+            addMessage('user', message);
+            input.value = '';
+
+            // Enviar para API
+            fetch('/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ message: message })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Adicionar resposta do ΨQRH
+                    addMessage('bot', data.response);
+
+                    // Atualizar visualização GLS se houver dados
+                    if (data.gls_data) {
+                        updateGLSVisualization(data.gls_data);
+                        updateMetrics(data.consciousness_metrics);
+                    }
+                } else {
+                    addMessage('bot', `Erro: ${data.error}`);
+                }
+            })
+            .catch(error => {
+                addMessage('bot', `Erro de conexão: ${error.message}`);
+            })
+            .finally(() => {
+                // Reabilitar input
+                input.disabled = false;
+                button.disabled = false;
+                button.textContent = 'Enviar';
+                input.focus();
+            });
+        }
+
+        function addMessage(sender, content) {
+            const messagesContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message`;
+
+            const header = document.createElement('div');
+            header.className = 'message-header';
+            header.textContent = sender === 'user' ? 'Você' : 'ΨQRH';
+
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.innerHTML = formatMessage(content);
+
+            messageDiv.appendChild(header);
+            messageDiv.appendChild(contentDiv);
+            messagesContainer.appendChild(messageDiv);
+
+            // Scroll para baixo
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function formatMessage(content) {
+            // Formatar mensagens com quebras de linha
+            return content.replace(/\n/g, '<br>');
+        }
+
+        function setVisualizationType(type) {
+            visualizationType = type;
+
+            // Atualizar botões ativos
+            document.querySelectorAll('.control-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Atualizar visualização se houver dados
+            if (currentGLSData) {
+                updateGLSVisualization(currentGLSData);
+            }
+        }
+
+        function initializeGLSVisualization() {
+            // Criar sketch p5.js
+            sketch = new p5(function(p) {
+                let rotation = 0;
+                let rotations = [];
+                let glsData = null;
+
+                p.setup = function() {
+                    const canvas = p.createCanvas(360, 300, p.WEBGL);
+                    canvas.parent('gls-canvas');
+                    p.frameRate(30);
+                };
+
+                p.draw = function() {
+                    p.background(15, 20, 30);
+
+                    if (!glsData) {
+                        // Tela de espera
+                        p.push();
+                        p.fill(100, 100, 200, 150);
+                        p.noStroke();
+                        p.sphere(30);
+                        p.pop();
+                        return;
+                    }
+
+                    // Rotação global baseada no estado
+                    rotation += glsData.rotation_speed;
+                    p.rotateY(rotation);
+
+                    // Gerar padrão fractal baseado na complexidade
+                    for (let i = 0; i < glsData.complexity; i++) {
+                        p.push();
+
+                        // Rotação da camada
+                        if (rotations[i] === undefined) rotations[i] = p.random(p.TWO_PI);
+                        rotations[i] += glsData.rotation_speed * (i + 1) * 0.1;
+                        p.rotateZ(rotations[i]);
+
+                        // Escala de distância baseada na camada
+                        let distance = 50 + i * 20;
+                        p.translate(distance, 0, 0);
+
+                        // Cor baseada no estado
+                        let colorIndex = i % glsData.colors.length;
+                        let color = hexToRgb(glsData.colors[colorIndex]);
+                        p.fill(color.r, color.g, color.b);
+
+                        // Forma baseada no tipo de visualização
+                        switch (visualizationType) {
+                            case 'spheres':
+                                p.sphere(15 + i * 2);
+                                break;
+                            case 'boxes':
+                                p.box(20 + i * 3);
+                                break;
+                            case 'torus':
+                                p.rotateX(p.PI/2);
+                                p.torus(15 + i * 2, 5 + i);
+                                break;
+                            case 'emergence':
+                                drawEmergenceShape(p, i);
+                                break;
+                        }
+
+                        p.pop();
+                    }
+
+                    // Núcleo central de consciência
+                    drawConsciousnessCore(p, glsData);
+                };
+
+                function drawEmergenceShape(p, layer) {
+                    p.stroke(255, 150);
+                    p.strokeWeight(1);
+                    p.noFill();
+
+                    p.beginShape();
+                    for (let i = 0; i < 12; i++) {
+                        let angle = p.map(i, 0, 12, 0, p.TWO_PI);
+                        let radius = 25 + layer * 5 + 10 * p.sin(angle * 3 + p.frameCount * 0.05);
+                        let x = p.cos(angle) * radius;
+                        let y = p.sin(angle) * radius;
+                        p.vertex(x, y, layer * 2);
+                    }
+                    p.endShape(p.CLOSE);
+                }
+
+                function drawConsciousnessCore(p, data) {
+                    p.push();
+
+                    // Tamanho do núcleo baseado no FCI
+                    let coreSize = p.map(data.fci, 0, 1, 10, 50);
+
+                    // Efeito de pulsação
+                    let pulse = p.sin(p.frameCount * 0.1) * 5 + 5;
+
+                    // Cor do núcleo baseada no estado
+                    if (data.fci < 0.3) {
+                        p.fill(100, 100, 200, 150);  // Azul para COMA
+                    } else if (data.fci < 0.6) {
+                        p.fill(100, 200, 100, 150);  // Verde para ANALYSIS
+                    } else if (data.fci < 0.8) {
+                        p.fill(200, 200, 100, 150);  // Amarelo para MEDITATION
+                    } else {
+                        p.fill(200, 100, 100, 150);  // Vermelho para EMERGENCE
+                    }
+
+                    p.noStroke();
+                    p.sphere(coreSize + pulse);
+
+                    // Campo de energia
+                    p.stroke(255, 100);
+                    p.strokeWeight(2);
+                    p.noFill();
+                    p.sphere(coreSize + pulse + 20);
+
+                    p.pop();
+                }
+
+                // Função para atualizar dados GLS
+                this.updateData = function(newData) {
+                    glsData = newData;
+                };
+
+            });
+        }
+
+        function updateGLSVisualization(glsData) {
+            currentGLSData = glsData;
+
+            if (sketch && sketch.updateData) {
+                sketch.updateData(glsData);
+            }
+        }
+
+        function updateMetrics(metrics) {
+            // Atualizar métricas principais
+            document.getElementById('fciValue').textContent = metrics.fci.toFixed(3);
+            document.getElementById('fractalDimValue').textContent = metrics.fractal_dimension.toFixed(3);
+            document.getElementById('entropyValue').textContent = metrics.entropy.toFixed(3);
+
+            // Atualizar estado com indicador de cor
+            const stateElement = document.getElementById('stateValue');
+            stateElement.textContent = metrics.state;
+            stateElement.className = 'metric-value state-indicator state-' + metrics.state.toLowerCase();
+
+            // Atualizar métricas detalhadas
+            document.getElementById('fieldMagnitude').textContent = metrics.field_magnitude.toFixed(3);
+            document.getElementById('processingSteps').textContent = metrics.processing_steps;
+            document.getElementById('peakDistribution').textContent = metrics.peak_distribution.toFixed(3);
+            document.getElementById('distributionSpread').textContent = metrics.distribution_spread.toFixed(3);
+        }
+
+        function hexToRgb(hex) {
+            // Converter hex para RGB
+            let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : { r: 255, g: 255, b: 255 };
+        }
+
+        // Verificar saúde da API periodicamente
+        setInterval(() => {
+            fetch('/health')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status !== 'healthy') {
+                        console.warn('API health check failed');
+                    }
+                })
+                .catch(error => {
+                    console.error('Health check failed:', error);
+                });
+        }, 30000); // A cada 30 segundos
+    </script>
+</body>
+</html>

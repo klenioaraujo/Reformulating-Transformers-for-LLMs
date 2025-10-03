@@ -10,10 +10,12 @@ import torch.nn as nn
 import sys
 import os
 
-# Add src directory to Python path
+# Add src and configs directories to Python path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'configs'))
 
 from src.architecture.psiqrh_transformer import PsiQRHTransformer
+from examples.config_loader import get_example_config
 from src.core.utils import (
     validate_parseval,
     validate_parseval_local,
@@ -91,20 +93,21 @@ def test_psiqrh_parseval_compliance():
     print("\n=== ΨQRH with Parseval Validation Test ===")
     print("=" * 50)
 
-    # Create model
-    vocab_size = 1000
-    d_model = 256
+    # Load configuration for parseval validation test
+    print("Loading configuration for parseval_validation_test.py...")
+    config = get_example_config("parseval_validation_test.py")
+    print(f"Config loaded: {config.get('vocab_size', 1000)} vocab, {config.get('d_model', 256)} d_model")
 
     print("Creating ΨQRH transformer...")
     model = PsiQRHTransformer(
-        vocab_size=vocab_size,
-        d_model=d_model,
+        vocab_size=config.get('vocab_size', 1000),
+        d_model=config.get('d_model', 256),
         n_layers=4,
         n_heads=8
     )
 
     # Test data
-    input_ids = torch.randint(0, vocab_size, (1, 64))
+    input_ids = torch.randint(0, config.get('vocab_size', 1000), (1, 64))
     print(f"Input shape: {input_ids.shape}")
 
     # Validate Parseval during runtime

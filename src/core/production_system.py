@@ -1,14 +1,36 @@
-#!/usr/bin/env python3 """ PRODUCTION-READY ENHANCED QRH SYSTEM Complete production system integrating all optimizations: 1. Performance-optimized components 2. Real-world scenario handling 3. Production configuration management 4. Deployment-ready interfaces 5. Monitoring and health checks """ import torch
- import torch.nn as nn import time
- import warnings from typing import Dict, List, Optional, Tuple, Union
- from dataclasses import data
-class, field from enum import Enum
- from .qrh_layer import QRHConfig
- from .optimized_components import ( OptimizedSemanticConfig, OptimizedContinuumConfig, OptimizedResonanceConfig, ProductionOptimizedQRH )
- from ...experiments.real_world_scenarios import RealWorldScenarioManager, RealWorldConfig, ScenarioType
- from ..cognitive.synthetic_neurotransmitters import ( SyntheticNeurotransmitterSystem, NeurotransmitterConfig, create_aligned_qrh_component )
- import functools from collections import OrderedDict
- import hashlib class PerformanceCache: """High-performance cache for production optimization"""
+#!/usr/bin/env python3
+"""
+PRODUCTION-READY ENHANCED QRH SYSTEM
+Complete production system integrating all optimizations:
+1. Performance-optimized components
+2. Real-world scenario handling
+3. Production configuration management
+4. Deployment-ready interfaces
+5. Monitoring and health checks
+"""
+
+import torch
+import torch.nn as nn
+import time
+import warnings
+from typing import Dict, List, Optional, Tuple, Union
+from dataclasses import dataclass, field
+from enum import Enum
+from .qrh_layer import QRHConfig
+from .optimized_components import (
+    OptimizedSemanticConfig, OptimizedContinuumConfig, OptimizedResonanceConfig, ProductionOptimizedQRH
+)
+from ...experiments.real_world_scenarios import RealWorldScenarioManager, RealWorldConfig, ScenarioType
+from ..cognitive.synthetic_neurotransmitters import (
+    SyntheticNeurotransmitterSystem, NeurotransmitterConfig, create_aligned_qrh_component
+)
+import functools
+from collections import OrderedDict
+import hashlib
+
+
+class PerformanceCache:
+    """High-performance cache for production optimization"""
 
 
  def __init__(self, max_size: int = 1000): self.cache = OrderedDict() self.max_size = max_size self.hits = 0 self.misses = 0 def _hash_tensor(self, x: torch.Tensor) -> str: """Generate hash for tensor caching""" return hashlib.md5( str(x.shape).encode() + x.flatten()[:100].cpu().numpy().tobytes() # Sample for speed ).hexdigest() def get(self, x: torch.Tensor) -> Optional[torch.Tensor]: """Get cached result if available""" key = self._hash_tensor(x) if key in self.cache: self.hits += 1 # Move to end (most recently used) self.cache.move_to_end(key) return self.cache[key].clone() self.misses += 1 return None def put(self, x: torch.Tensor, result: torch.Tensor): """Cache result""" key = self._hash_tensor(x) if len(self.cache) >= self.max_size: # Remove oldest entry self.cache.popitem(last=False) self.cache[key] = result.clone() def get_stats(self) -> Dict: """Get cache statistics""" total = self.hits + self.misses hit_rate = self.hits / total if total > 0 else 0.0 return { 'hit_rate': hit_rate, 'hits': self.hits, 'misses': self.misses, 'cache_size': len(self.cache) } class ProductionMode(Enum): """Production deployment modes""" HIGH_PERFORMANCE = "high_performance" # Optimized for speed HIGH_ACCURACY = "high_accuracy" # Optimized for quality BALANCED = "balanced" # Balance of speed and quality MEMORY_EFFICIENT = "memory_efficient" # Optimized for low memory @dataclass

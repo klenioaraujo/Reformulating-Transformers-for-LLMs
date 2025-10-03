@@ -8,10 +8,12 @@ import torch.nn as nn
 import sys
 import os
 
-# Add src directory to Python path
+# Add src and configs directories to Python path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'configs'))
 
 from src.architecture.psiqrh_transformer import PsiQRHTransformer
+from examples.config_loader import get_example_config
 from src.validation.mathematical_validation import MathematicalValidator
 from src.optimization.energy_normalizer import energy_preserve
 from src.optimization.advanced_energy_controller import AdvancedEnergyController
@@ -63,15 +65,17 @@ def test_enhanced_psiqrh():
     print("=" * 50)
 
     # Create base ΨQRH transformer
-    vocab_size = 1000
-    d_model = 256
-    base_model = PsiQRHTransformer(vocab_size=vocab_size, d_model=d_model)
+    # Load configuration for energy conservation test
+    config = get_example_config("energy_conservation_test.py")
+    print(f"Energy test config: {config.get('vocab_size', 1000)} vocab, {config.get('d_model', 256)} d_model")
+
+    base_model = PsiQRHTransformer(vocab_size=config.get('vocab_size', 1000), d_model=config.get('d_model', 256))
 
     # Use base model with built-in energy preservation
     enhanced_model = base_model
 
     # Generate test input
-    input_ids = torch.randint(0, vocab_size, (1, 64))
+    input_ids = torch.randint(0, config.get('vocab_size', 1000), (config.get('default_test_batch_size', 1), config.get('default_test_seq_length', 64)))
 
     # Test forward pass
     print("Running enhanced ΨQRH forward pass...")
@@ -106,15 +110,15 @@ def compare_original_vs_enhanced():
     print("Comparing Original vs Enhanced ΨQRH")
     print("=" * 50)
 
-    vocab_size = 1000
-    d_model = 256
+    # Load configuration for comparison test
+    config = get_example_config("energy_conservation_test.py")
 
     # Create both models (same model, just testing the built-in energy preservation)
-    original_model = PsiQRHTransformer(vocab_size=vocab_size, d_model=d_model)
+    original_model = PsiQRHTransformer(vocab_size=config.get('vocab_size', 1000), d_model=config.get('d_model', 256))
     enhanced_model = original_model
 
     # Test input
-    input_ids = torch.randint(0, vocab_size, (1, 64))
+    input_ids = torch.randint(0, config.get('vocab_size', 1000), (config.get('default_test_batch_size', 1), config.get('default_test_seq_length', 64)))
 
     # Test original model
     print("Testing Original ΨQRH...")
@@ -140,7 +144,11 @@ def compare_original_vs_enhanced():
     print(f"  Original Ratio: {original_ratio:.6f}")
     print(f"  Enhanced Output Energy: {enhanced_output_energy:.6f}")
     print(f"  Enhanced Ratio: {enhanced_ratio:.6f}")
-    print(f"  Improvement: {abs(enhanced_ratio - 1.0) / abs(original_ratio - 1.0):.2f}x closer to 1.0")
+    # Avoid division by zero when both ratios are exactly 1.0
+    if abs(original_ratio - 1.0) < 1e-10:
+        print(f"  Improvement: PERFECT ENERGY CONSERVATION (both models)")
+    else:
+        print(f"  Improvement: {abs(enhanced_ratio - 1.0) / abs(original_ratio - 1.0):.2f}x closer to 1.0")
 
     return original_ratio, enhanced_ratio
 

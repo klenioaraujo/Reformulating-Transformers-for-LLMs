@@ -121,6 +121,48 @@ class EnhancedQRHProcessor:
         # Placeholder
         return torch.fft.fft(q_output.real, norm="ortho").to(self.device)
 
+    def _extract_layer1_fractal(self, spectrum: torch.Tensor, text: str, alpha: float) -> Dict[str, Any]:
+        """
+        LAYER1-FRACTAL: Extrai valores espectrais quaterniônicos para análise.
+
+        Retorna valores numéricos reais do espectro para posterior aplicação de cálculos.
+        """
+        # Converter para numpy para facilitar manipulação
+        spectrum_magnitude = torch.abs(spectrum).cpu().numpy()
+        spectrum_phase = torch.angle(spectrum).cpu().numpy()
+        spectrum_real = spectrum.real.cpu().numpy()
+        spectrum_imag = spectrum.imag.cpu().numpy()
+
+        # Flatten para obter array 1D
+        mag_flat = spectrum_magnitude.flatten()
+        phase_flat = spectrum_phase.flatten()
+        real_flat = spectrum_real.flatten()
+        imag_flat = spectrum_imag.flatten()
+
+        return {
+            'input_text': text,
+            'alpha': float(alpha),
+            'shape': list(spectrum.shape),
+            'values': {
+                'magnitude': mag_flat.tolist(),
+                'phase': phase_flat.tolist(),
+                'real': real_flat.tolist(),
+                'imaginary': imag_flat.tolist()
+            },
+            'statistics': {
+                'magnitude_mean': float(mag_flat.mean()),
+                'magnitude_std': float(mag_flat.std()),
+                'magnitude_max': float(mag_flat.max()),
+                'magnitude_min': float(mag_flat.min()),
+                'phase_mean': float(phase_flat.mean()),
+                'phase_std': float(phase_flat.std()),
+                'real_mean': float(real_flat.mean()),
+                'imag_mean': float(imag_flat.mean()),
+                'energy': float((mag_flat ** 2).sum()),
+                'sparsity': float((np.abs(mag_flat) < 0.01).sum() / len(mag_flat))
+            }
+        }
+
     def _advanced_spectral_analysis(self, spectrum: torch.Tensor, text: str, alpha: float) -> str:
         """Realiza uma análise espectral avançada."""
         return f"Análise para '{text}' com alpha={alpha:.3f}: Espectro com {spectrum.shape} dimensões."
@@ -141,41 +183,45 @@ class EnhancedQRHProcessor:
             return cached_result
 
         self.spectral_filter.alpha = adaptive_alpha
-        
+
         spectrum = self.spectral_filter.text_to_spectrum(
             text,
             target_dim=4 * self.embed_dim,
             device=self.device
         )
-        
+
         quaternion_input = self._adapt_spectrum_to_qrh(spectrum)
-        
+
         with torch.no_grad():
             quaternion_output = self.qrh_layer(quaternion_input)
-            
+
         output_spectrum = self._adapt_qrh_to_spectrum(quaternion_output)
-        
+
+        # LAYER1-FRACTAL: Extração de valores espectrais
+        layer1_fractal = self._extract_layer1_fractal(output_spectrum, text, adaptive_alpha)
+
         analysis = self._advanced_spectral_analysis(output_spectrum, text, adaptive_alpha)
-        
+
         processing_time = time.time() - start_time
         self.performance_metrics['total_processed'] += 1
         self.performance_metrics['avg_processing_time'] = (
             (self.performance_metrics['avg_processing_time'] * (self.performance_metrics['total_processed'] - 1) + processing_time)
             / self.performance_metrics['total_processed']
         )
-        
+
         result = {
             'status': 'success',
             'text_analysis': analysis,
+            'layer1_fractal': layer1_fractal,
             'adaptive_alpha': adaptive_alpha,
             'processing_time': processing_time,
             'cache_hit': False,
             'performance_metrics': self.performance_metrics
         }
-        
+
         if use_cache:
             self.processing_cache[cache_key] = result
-            
+
         return result
 
 def create_enhanced_processor(embed_dim: int = 64, device: str = "cpu") -> EnhancedQRHProcessor:

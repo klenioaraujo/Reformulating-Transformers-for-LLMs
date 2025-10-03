@@ -1,20 +1,610 @@
+"""
+Hierarchical Gate System for ΨQRH Transformer
+
+Implements a multi-level gate mechanism for controlling information flow
+and resonance patterns in the transformer architecture.
+"""
+
 import torch
- import torch.nn as nn from typing import Dict, List, Optional, Tuple, Union
- from enum import Enum
- from dataclasses import data
-class import math
- from .gate_controller import GateController
- class GateLevel(Enum): """Níveis hierárquicos dos gate controllers""" NUMERICAL = "numerical" # Nível baixo: estabilidade numérica LOCAL_COHERENCE = "local" # Nível médio: coerência local (frases) GLOBAL_RESONANCE = "global" # Nível alto: ressonância global (parágrafos/documentos) SEMANTIC = "semantic" # Nível superior: coerência semântica class GateDecision(Enum): """Decisões expandidas do sistema de gates""" DELIVER = "DELIVER" # Entregar resultado (alta qualidade) ABSTAIN = "ABSTAIN" # Recusar processamento (erro crítico) CLARIFY = "CLARIFY" # Solicitar esclarecimento (resultado incerto) AMPLIFY = "AMPLIFY" # Amplificar sinal (alta ressonância) ATTENUATE = "ATTENUATE" # Atenuar sinal (interferência destrutiva) @dataclass
- class ResonanceConfig: """Configuração para análise de ressonância""" embed_dim: int = 64 num_resonance_modes: int = 8 interference_threshold: float = 0.2 # More sensitive to destructive interference constructive_threshold: float = 0.6 # Lower threshold for constructive detection phase_tolerance: float = 0.15 # Slightly more tolerant amplitude_threshold: float = 1e-6 coherence_window: int = 32 # New optimized thresholds high_coherence_threshold: float = 0.75 # For DELIVER decisions low_coherence_threshold: float = 0.25 # For ABSTAIN decisions resonance_amplification_factor: float = 1.2 # For AMPLIFY decisions resonance_attenuation_factor: float = 0.8 # For ATTENUATE decisions class NumericalGateController(GateController): """ Gate Controller de baixo nível para validação de estabilidade numérica e coerência local dentro de uma frase ou pequeno contexto. """
+import torch.nn as nn
+import torch.nn.functional as F
+from typing import Dict, List, Optional, Tuple, Union
+from dataclasses import dataclass
+import math
+import numpy as np
 
 
- def __init__(self, orthogonal_threshold: float = 1e-6, energy_threshold: float = 0.1, drift_threshold: float = 0.1, numerical_stability_threshold: float = 1e-12): super().__init__(orthogonal_threshold, energy_threshold, drift_threshold) self.numerical_stability_threshold = numerical_stability_threshold self.level = GateLevel.NUMERICAL def validate_numerical_stability(self, tensor: torch.Tensor) -> Dict[str, float]: """ Valida estabilidade numérica básica do tensor """ stability_metrics = {} # Verificar NaN e Inf has_nan = torch.isnan(tensor).any().item() has_inf = torch.isinf(tensor).any().item() stability_metrics['has_nan'] = float(has_nan) stability_metrics['has_inf'] = float(has_inf) # Verificar números muito pequenos que podem causar underflow min_abs_value = torch.min(torch.abs(tensor[tensor != 0])).item() if torch.any(tensor != 0) else 1.0 stability_metrics['min_magnitude'] = min_abs_value stability_metrics['underflow_risk'] = float(min_abs_value < self.numerical_stability_threshold) # Verificar condicionamento (número de condição aproximado) if tensor.dim() >= 2: try: condition_number = torch.linalg.cond(tensor.view(-1, tensor.size(-1))).item() stability_metrics['condition_number'] = condition_number stability_metrics['ill_conditioned'] = float(condition_number > 1e12) except: stability_metrics['condition_number'] = float('inf') stability_metrics['ill_conditioned'] = 1.0 else: stability_metrics['condition_number'] = 1.0 stability_metrics['ill_conditioned'] = 0.0 return stability_metrics def enhanced_gate_decision(self, receipts: Dict[str, float], stability_metrics: Dict[str, float]) -> GateDecision: """ Decisão de gate aprimorada considerando estabilidade numérica """ # Primeiro, verificar problemas críticos de estabilidade if (stability_metrics['has_nan'] or stability_metrics['has_inf'] or stability_metrics['underflow_risk'] or stability_metrics['ill_conditioned']): return GateDecision.ABSTAIN # Usar lógica original para casos normais original_decision = self.decide_gate(receipts) return GateDecision(original_decision) class LocalCoherenceGate(nn.Module): """ Gate Controller de nível médio para análise de coerência local entre elementos próximos na sequência (nível de frase). """
+@dataclass
+class ResonanceConfig:
+    """Configuration for hierarchical gate system"""
+    num_levels: int = 4
+    gate_dim: int = 512
+    resonance_threshold: float = 0.7
+    coherence_threshold: float = 0.8
+    gate_activation: str = "sigmoid"
+    enable_adaptive_resonance: bool = True
+    enable_coherence_analysis: bool = True
+    enable_energy_balancing: bool = True
 
 
- def __init__(self, config: ResonanceConfig): super().__init__() self.config = config self.level = GateLevel.LOCAL_COHERENCE self.embed_dim = config.embed_dim * 4 # Análise de coerência local via convolução self.local_coherence_conv = nn.Conv1d( in_channels=self.embed_dim, out_channels=config.num_resonance_modes, kernel_size=config.coherence_window // 4, padding='same' ) # Métricas de coerência self.coherence_scorer = nn.Sequential( nn.Linear(config.num_resonance_modes, config.num_resonance_modes // 2), nn.ReLU(), nn.Linear(config.num_resonance_modes // 2, 1), nn.Sigmoid() ) def calculate_local_coherence(self, x: torch.Tensor) -> torch.Tensor: """ Calcula coerência local usando análise convolucional Args: x: Input tensor [B, T, 4*D] Returns: coherence_scores: [B, T] scores de coerência local """ batch_size, seq_len, embed_dim = x.shape # Transpor para formato de convolução [B, 4*D, T] x_conv = x.transpose(1, 2) # Aplicar convolução para detectar padrões locais local_features = self.local_coherence_conv(x_conv) # [B, num_modes, T] # Transpor de volta e calcular scores local_features = local_features.transpose(1, 2) # [B, T, num_modes] coherence_scores = self.coherence_scorer(local_features).squeeze(-1) # [B, T] return coherence_scores def decide_local_gate(self, x: torch.Tensor) -> Tuple[torch.Tensor, Dict[str, torch.Tensor]]: """ Decisão de gate baseada em coerência local OTIMIZADA """ coherence_scores = self.calculate_local_coherence(x) # IMPROVEMENT: Use config-based optimized thresholds high_threshold = self.config.high_coherence_threshold low_threshold = self.config.low_coherence_threshold # More nuanced decision making very_high_coherence = (coherence_scores > high_threshold + 0.15).float() # AMPLIFY high_coherence = ((coherence_scores > high_threshold) & (coherence_scores <= high_threshold + 0.15)).float() # DELIVER medium_coherence = ((coherence_scores >= low_threshold) & (coherence_scores <= high_threshold)).float() # CLARIFY low_coherence = ((coherence_scores >= low_threshold * 0.5) & (coherence_scores < low_threshold)).float() # ATTENUATE very_low_coherence = (coherence_scores < low_threshold * 0.5).float() # ABSTAIN gate_decisions = torch.zeros_like(coherence_scores, dtype=torch.long) gate_decisions += (high_coherence * 0).long() # DELIVER = 0 gate_decisions += (very_low_coherence * 1).long() # ABSTAIN = 1 gate_decisions += (medium_coherence * 2).long() # CLARIFY = 2 gate_decisions += (very_high_coherence * 3).long() # AMPLIFY = 3 gate_decisions += (low_coherence * 4).long() # ATTENUATE = 4 metrics = { 'coherence_scores': coherence_scores, 'high_coherence_ratio': (high_coherence + very_high_coherence).mean(), 'low_coherence_ratio': (low_coherence + very_low_coherence).mean(), 'very_high_ratio': very_high_coherence.mean(), 'very_low_ratio': very_low_coherence.mean() } return gate_decisions, metrics class ResonanceAnalyzer(nn.Module): """ Analisador de ressonância para detectar interferência construtiva e destrutiva entre diferentes partes do texto, implementando a análise de "ondas" quaterniônicas. """
+class HierarchicalGateSystem(nn.Module):
+    """
+    Hierarchical gate system that controls information flow through multiple levels
+    of abstraction, enabling resonance and coherence analysis.
+    """
+
+    def __init__(self, config: ResonanceConfig):
+        super().__init__()
+        self.config = config
+
+        # Level-specific gate controllers
+        self.level_gates = nn.ModuleList([
+            GateController(config.gate_dim, config.gate_activation)
+            for _ in range(config.num_levels)
+        ])
+
+        # Resonance detectors for each level
+        self.resonance_detectors = nn.ModuleList([
+            ResonanceDetector(config.gate_dim)
+            for _ in range(config.num_levels)
+        ])
+
+        # Coherence analyzer
+        if config.enable_coherence_analysis:
+            self.coherence_analyzer = CoherenceAnalyzer(config.gate_dim)
+
+        # Energy balancer
+        if config.enable_energy_balancing:
+            self.energy_balancer = EnergyBalancer(config.gate_dim)
+
+        # Cross-level attention for resonance propagation
+        self.cross_level_attention = CrossLevelAttention(config.gate_dim)
+
+        # Adaptive resonance controller
+        if config.enable_adaptive_resonance:
+            self.adaptive_resonance = AdaptiveResonanceController(config)
+
+        # Statistics tracking
+        self.resonance_stats = {
+            'level_resonance': [0.0] * config.num_levels,
+            'global_coherence': 0.0,
+            'energy_balance': 1.0
+        }
+
+    def process_through_hierarchy(self,
+                                 input_tensor: torch.Tensor,
+                                 processed_tensor: torch.Tensor,
+                                 rotation_params: Optional[Dict] = None) -> Dict:
+        """
+        Process tensor through hierarchical gate system.
+
+        Args:
+            input_tensor: Original input tensor
+            processed_tensor: Tensor after ΨQRH processing
+            rotation_params: Optional rotation parameters from QRH layer
+
+        Returns:
+            Dictionary containing processed output and analysis results
+        """
+        batch_size, seq_len, d_model = processed_tensor.shape
+
+        results = {
+            'level_outputs': [],
+            'gate_activations': [],
+            'resonance_scores': [],
+            'coherence_metrics': {},
+            'energy_metrics': {}
+        }
+
+        # Initialize level inputs
+        current_input = processed_tensor
+
+        # Process through each level
+        for level in range(self.config.num_levels):
+            # Apply level-specific gate
+            level_output, gate_activation = self.level_gates[level](current_input)
+
+            # Detect resonance at this level
+            resonance_score = self.resonance_detectors[level](level_output)
+
+            # Store results
+            results['level_outputs'].append(level_output)
+            results['gate_activations'].append(gate_activation)
+            results['resonance_scores'].append(resonance_score)
+
+            # Update current input for next level
+            current_input = level_output
+
+        # Apply cross-level attention for resonance propagation
+        if len(results['level_outputs']) > 1:
+            cross_level_output = self.cross_level_attention(results['level_outputs'])
+            results['cross_level_output'] = cross_level_output
+        else:
+            results['cross_level_output'] = results['level_outputs'][0]
+
+        # Analyze coherence across levels
+        if self.config.enable_coherence_analysis:
+            coherence_metrics = self.coherence_analyzer.analyze_coherence(
+                results['level_outputs'], results['resonance_scores']
+            )
+            results['coherence_metrics'] = coherence_metrics
+
+        # Balance energy across levels
+        if self.config.enable_energy_balancing:
+            balanced_output, energy_metrics = self.energy_balancer.balance_energy(
+                results['level_outputs'], results['cross_level_output']
+            )
+            results['balanced_output'] = balanced_output
+            results['energy_metrics'] = energy_metrics
+        else:
+            results['balanced_output'] = results['cross_level_output']
+
+        # Apply adaptive resonance if enabled
+        if self.config.enable_adaptive_resonance:
+            adaptive_results = self.adaptive_resonance.adapt_resonance(
+                results['balanced_output'],
+                results['resonance_scores'],
+                rotation_params
+            )
+            results.update(adaptive_results)
+
+        # Update statistics
+        self._update_resonance_stats(results)
+
+        return results
+
+    def _update_resonance_stats(self, results: Dict) -> None:
+        """Update resonance statistics"""
+        # Update level resonance
+        for i, score in enumerate(results['resonance_scores']):
+            if i < len(self.resonance_stats['level_resonance']):
+                alpha = 0.1  # Smoothing factor
+                self.resonance_stats['level_resonance'][i] = (
+                    alpha * score.item() +
+                    (1 - alpha) * self.resonance_stats['level_resonance'][i]
+                )
+
+        # Update global coherence
+        if 'coherence_metrics' in results:
+            coherence = results['coherence_metrics'].get('global_coherence', 0.0)
+            alpha = 0.1
+            self.resonance_stats['global_coherence'] = (
+                alpha * coherence +
+                (1 - alpha) * self.resonance_stats['global_coherence']
+            )
+
+        # Update energy balance
+        if 'energy_metrics' in results:
+            balance = results['energy_metrics'].get('balance_score', 1.0)
+            alpha = 0.1
+            self.resonance_stats['energy_balance'] = (
+                alpha * balance +
+                (1 - alpha) * self.resonance_stats['energy_balance']
+            )
+
+    def get_hierarchy_health_report(self, results: Dict) -> Dict:
+        """Generate health report for the hierarchical gate system"""
+        health_report = {
+            'overall_hierarchy_health': 1.0,
+            'level_health': [],
+            'resonance_health': [],
+            'coherence_health': 1.0,
+            'energy_health': 1.0
+        }
+
+        # Analyze level health
+        for i, (gate_act, resonance) in enumerate(zip(
+            results['gate_activations'], results['resonance_scores']
+        )):
+            level_health = self._compute_level_health(gate_act, resonance)
+            health_report['level_health'].append(level_health)
+
+        # Analyze resonance health
+        resonance_health = self._compute_resonance_health(results['resonance_scores'])
+        health_report['resonance_health'] = resonance_health
+
+        # Analyze coherence health
+        if 'coherence_metrics' in results:
+            coherence = results['coherence_metrics'].get('global_coherence', 0.0)
+            health_report['coherence_health'] = coherence
+
+        # Analyze energy health
+        if 'energy_metrics' in results:
+            balance = results['energy_metrics'].get('balance_score', 1.0)
+            health_report['energy_health'] = balance
+
+        # Compute overall health
+        health_scores = [
+            np.mean(health_report['level_health']) if health_report['level_health'] else 1.0,
+            np.mean(health_report['resonance_health']) if health_report['resonance_health'] else 1.0,
+            health_report['coherence_health'],
+            health_report['energy_health']
+        ]
+
+        health_report['overall_hierarchy_health'] = np.mean(health_scores)
+
+        return health_report
+
+    def _compute_level_health(self, gate_activation: torch.Tensor, resonance: torch.Tensor) -> float:
+        """Compute health score for a single level"""
+        # Gate activation should be neither too low nor too high
+        gate_mean = gate_activation.mean().item()
+        gate_health = 1.0 - abs(gate_mean - 0.5) * 2.0  # Best at 0.5
+
+        # Resonance should be above threshold
+        resonance_health = min(1.0, resonance.item() / self.config.resonance_threshold)
+
+        # Combined health score
+        return 0.6 * gate_health + 0.4 * resonance_health
+
+    def _compute_resonance_health(self, resonance_scores: List[torch.Tensor]) -> List[float]:
+        """Compute health scores for resonance at each level"""
+        health_scores = []
+        for score in resonance_scores:
+            # Resonance should be above threshold
+            health = min(1.0, score.item() / self.config.resonance_threshold)
+            health_scores.append(health)
+
+        return health_scores
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Simplified forward pass for integration with other modules.
+
+        Args:
+            x: Input tensor
+
+        Returns:
+            Processed tensor through hierarchy
+        """
+        results = self.process_through_hierarchy(x, x)
+        return results.get('balanced_output', x)
 
 
- def __init__(self, config: ResonanceConfig): super().__init__() self.config = config self.embed_dim = config.embed_dim * 4 # Projeção para espaço de análise de ressonância self.resonance_projection = nn.Linear(self.embed_dim, config.num_resonance_modes) # Parâmetros para análise de fase self.phase_analyzers = nn.ModuleList([ nn.Linear(config.num_resonance_modes, 1) for _ in range(4) # Para cada componente quaterniônico ]) # Detector de interferência construtiva/destrutiva self.interference_detector = nn.Sequential( nn.Linear(config.num_resonance_modes * 2, config.num_resonance_modes), nn.Tanh(), nn.Linear(config.num_resonance_modes, 3), # [construtiva, destrutiva, neutra] nn.Softmax(dim=-1) ) def extract_quaternion_phases(self, x: torch.Tensor) -> torch.Tensor: """ Extrai fases dos quaternions para análise de ressonância Args: x: Tensor [B, T, 4*D] em representação quaterniônica Returns: phases: [B, T, D, 4] fases de cada componente quaterniônico """ batch_size, seq_len, embed_dim = x.shape quat_dim = embed_dim // 4 # Reshape para [B, T, D, 4] (quaternion components) x_quat = x.view(batch_size, seq_len, quat_dim, 4) # Calcular fases usando atan2 para cada quaternion phases = torch.zeros_like(x_quat) # Fase principal: arctan2(|v|, w) onde v = [x, y, z], w = componente escalar w = x_quat[..., 0] # Componente escalar v_magnitude = torch.norm(x_quat[..., 1:], p=2, dim=-1) # |v| main_phase = torch.atan2(v_magnitude, torch.abs(w) + 1e-8) phases[..., 0] = main_phase # Fases individuais para componentes imaginárias for i in range(1, 4): phases[..., i] = torch.atan2(x_quat[..., i], w + 1e-8) return phases def calculate_resonance_matrix(self, phases1: torch.Tensor, phases2: torch.Tensor) -> torch.Tensor: """ Calcula matriz de ressonância entre duas sequências de fases Args: phases1, phases2: Tensores de fase [B, T, D, 4] Returns: resonance_matrix: [B, T, T] matriz de correlação de fase """ batch_size, seq_len = phases1.shape[:2] # Flatten para cálculo de correlação phases1_flat = phases1.view(batch_size, seq_len, -1) # [B, T, D*4] phases2_flat = phases2.view(batch_size, seq_len, -1) # Produto escalar normalizado para correlação de fase norm1 = torch.nn.functional.normalize(phases1_flat, p=2, dim=-1) norm2 = torch.nn.functional.normalize(phases2_flat, p=2, dim=-1) # Matriz de correlação cruzada resonance_matrix = torch.bmm(norm1, norm2.transpose(1, 2)) # [B, T, T] return resonance_matrix def detect_interference_patterns(self, resonance_matrix: torch.Tensor) -> Dict[str, torch.Tensor]: """ Detecta padrões de interferência construtiva e destrutiva """ batch_size, seq_len, _ = resonance_matrix.shape # Interferência construtiva: correlações altas (próximas de 1) constructive_mask = (resonance_matrix > self.config.constructive_threshold).float() # Interferência destrutiva: correlações baixas/negativas (próximas de -1) destructive_mask = (resonance_matrix < -self.config.interference_threshold).float() # Métricas de interferência constructive_strength = torch.mean(constructive_mask, dim=[1, 2]) # [B] destructive_strength = torch.mean(destructive_mask, dim=[1, 2]) # [B] # Coerência global: razão entre interferência construtiva e destrutiva global_coherence = constructive_strength / (destructive_strength + 1e-8) return { 'constructive_mask': constructive_mask, 'destructive_mask': destructive_mask, 'constructive_strength': constructive_strength, 'destructive_strength': destructive_strength, 'global_coherence': global_coherence, 'resonance_matrix': resonance_matrix } class HierarchicalGateSystem(nn.Module): """ Sistema hierárquico de Gate Controllers com análise de ressonância, implementando múltiplos níveis de validação e controle de qualidade. """
+class GateController(nn.Module):
+    """Individual gate controller for a specific hierarchy level"""
+
+    def __init__(self, gate_dim: int, activation: str = "sigmoid"):
+        super().__init__()
+        self.gate_dim = gate_dim
+
+        # Gate computation
+        self.gate_linear = nn.Linear(gate_dim, gate_dim)
+        self.gate_norm = nn.LayerNorm(gate_dim)
+
+        # Activation function
+        if activation == "sigmoid":
+            self.activation = nn.Sigmoid()
+        elif activation == "tanh":
+            self.activation = nn.Tanh()
+        elif activation == "softmax":
+            self.activation = nn.Softmax(dim=-1)
+        else:
+            raise ValueError(f"Unsupported gate activation: {activation}")
+
+    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+        """
+        Apply gate to input tensor.
+
+        Args:
+            x: Input tensor
+
+        Returns:
+            Tuple of (gated_output, gate_activation)
+        """
+        # Compute gate activation
+        gate_input = self.gate_norm(x)
+        gate_logits = self.gate_linear(gate_input)
+        gate_activation = self.activation(gate_logits)
+
+        # Apply gate
+        gated_output = x * gate_activation
+
+        return gated_output, gate_activation
 
 
- def __init__(self, resonance_config: ResonanceConfig): super().__init__() self.config = resonance_config # Hierarquia de gates self.numerical_gate = NumericalGateController() self.local_gate = LocalCoherenceGate(resonance_config) self.resonance_analyzer = ResonanceAnalyzer(resonance_config) # Gate controller de alto nível para decisões finais self.global_gate_controller = nn.Sequential( nn.Linear(resonance_config.num_resonance_modes + 6, resonance_config.num_resonance_modes), nn.ReLU(), nn.Linear(resonance_config.num_resonance_modes, 5), # 5 decisões possíveis nn.Softmax(dim=-1) ) # Parâmetros adaptativos para mistura de decisões self.decision_weights = nn.Parameter(torch.ones(4) / 4) # [numerical, local, global, semantic] def process_through_hierarchy(self, input_tensor: torch.Tensor, output_tensor: torch.Tensor, rotation_params: Dict[str, torch.Tensor]) -> Dict[str, Union[torch.Tensor, str, Dict]]: """ Processa entrada através da hierarquia completa de gates Args: input_tensor: Tensor de entrada [B, T, 4*D] output_tensor: Tensor de saída [B, T, 4*D] rotation_params: Parâmetros de rotação do QRH layer Returns: Resultado hierárquico com decisões e métricas """ batch_size, seq_len = input_tensor.shape[:2] hierarchy_result = {} # 1. Gate Numérico (Nível mais baixo) numerical_receipts = self.numerical_gate.calculate_receipts( input_tensor, output_tensor, rotation_params ) numerical_stability = self.numerical_gate.validate_numerical_stability(output_tensor) numerical_decision = self.numerical_gate.enhanced_gate_decision( numerical_receipts, numerical_stability ) hierarchy_result['numerical'] = { 'decision': numerical_decision, 'receipts': numerical_receipts, 'stability_metrics': numerical_stability } # Se gate numérico falha, interromper processamento if numerical_decision == GateDecision.ABSTAIN: hierarchy_result['final_decision'] = GateDecision.ABSTAIN hierarchy_result['processed_output'] = input_tensor # Retorna entrada original return hierarchy_result # 2. Gate de Coerência Local (Nível médio) local_decisions, local_metrics = self.local_gate.decide_local_gate(output_tensor) hierarchy_result['local'] = { 'decisions': local_decisions, 'metrics': local_metrics } # 3. Análise de Ressonância Global (Nível alto) phases = self.resonance_analyzer.extract_quaternion_phases(output_tensor) # Calcular ressonância consigo mesmo (auto-correlação) e com entrada self_resonance = self.resonance_analyzer.calculate_resonance_matrix(phases, phases) input_phases = self.resonance_analyzer.extract_quaternion_phases(input_tensor) cross_resonance = self.resonance_analyzer.calculate_resonance_matrix(phases, input_phases) # Detectar padrões de interferência self_interference = self.resonance_analyzer.detect_interference_patterns(self_resonance) cross_interference = self.resonance_analyzer.detect_interference_patterns(cross_resonance) hierarchy_result['resonance'] = { 'self_interference': self_interference, 'cross_interference': cross_interference, 'phases': phases } # 4. Decisão Global Integrada global_decision, processed_output = self._make_global_decision( input_tensor, output_tensor, hierarchy_result ) hierarchy_result['final_decision'] = global_decision hierarchy_result['processed_output'] = processed_output return hierarchy_result def _make_global_decision(self, input_tensor: torch.Tensor, output_tensor: torch.Tensor, hierarchy_result: Dict) -> Tuple[GateDecision, torch.Tensor]: """ Toma decisão global baseada em todos os níveis da hierarquia """ batch_size = input_tensor.shape[0] # Extrair features para decisão global numerical_features = torch.tensor([ hierarchy_result['numerical']['receipts']['orthogonal_error'], hierarchy_result['numerical']['receipts']['energy_ratio'], hierarchy_result['numerical']['stability_metrics']['condition_number'] ]).expand(batch_size, -1) local_features = torch.stack([ hierarchy_result['local']['metrics']['coherence_scores'].mean(dim=1), hierarchy_result['local']['metrics']['high_coherence_ratio'].expand(batch_size), hierarchy_result['local']['metrics']['low_coherence_ratio'].expand(batch_size) ], dim=1) resonance_features = torch.stack([ hierarchy_result['resonance']['self_interference']['global_coherence'], hierarchy_result['resonance']['cross_interference']['global_coherence'] ], dim=1) # Concatenar todas as features global_features = torch.cat([numerical_features, local_features, resonance_features], dim=1) # Decisão via rede neural decision_probs = self.global_gate_controller(global_features) # [B, 5] # Converter para decisão categórica decision_indices = torch.argmax(decision_probs, dim=1) decision_map = [GateDecision.DELIVER, GateDecision.ABSTAIN, GateDecision.CLARIFY, GateDecision.AMPLIFY, GateDecision.ATTENUATE] # Para simplificar, usar decisão majoritária ao longo do batch majority_decision_idx = torch.mode(decision_indices).values.item() final_decision = decision_map[majority_decision_idx] # Aplicar política da decisão processed_output = self._apply_hierarchical_policy( final_decision, input_tensor, output_tensor, hierarchy_result ) return final_decision, processed_output def _apply_hierarchical_policy(self, decision: GateDecision, input_tensor: torch.Tensor, output_tensor: torch.Tensor, hierarchy_result: Dict) -> torch.Tensor: """ Aplica política baseada na decisão hierárquica """ if decision == GateDecision.DELIVER: return output_tensor elif decision == GateDecision.ABSTAIN: return input_tensor elif decision == GateDecision.CLARIFY: # Mistura ponderada baseada em confiança local local_coherence = hierarchy_result['local']['metrics']['coherence_scores'] confidence_weight = local_coherence.mean(dim=1, keepdim=True).unsqueeze(-1) return confidence_weight * output_tensor + (1 - confidence_weight) * input_tensor elif decision == GateDecision.AMPLIFY: # Amplifica baseado em ressonância construtiva - OTIMIZADO if 'resonance' in hierarchy_result and 'self_interference' in hierarchy_result['resonance']: constructive_strength = hierarchy_result['resonance']['self_interference']['constructive_strength'] amplification_factor = self.config.resonance_amplification_factor * ( 1.0 + constructive_strength.unsqueeze(1).unsqueeze(2) ) else: amplification_factor = self.config.resonance_amplification_factor return amplification_factor * output_tensor elif decision == GateDecision.ATTENUATE: # Atenua baseado em interferência destrutiva - OTIMIZADO if 'resonance' in hierarchy_result and 'self_interference' in hierarchy_result['resonance']: destructive_strength = hierarchy_result['resonance']['self_interference']['destructive_strength'] attenuation_factor = self.config.resonance_attenuation_factor * ( 1.0 - 0.2 * destructive_strength.unsqueeze(1).unsqueeze(2) ) else: attenuation_factor = self.config.resonance_attenuation_factor return attenuation_factor * output_tensor else: return output_tensor def get_hierarchy_health_report(self, hierarchy_result: Dict) -> Dict[str, float]: """ Gera relatório de saúde do sistema hierárquico """ health_report = {} # Saúde numérica numerical_health = 1.0 - float(hierarchy_result['numerical']['decision'] == GateDecision.ABSTAIN) health_report['numerical_health'] = numerical_health # Saúde de coerência local if 'local' in hierarchy_result and 'metrics' in hierarchy_result['local']: local_coherence_avg = hierarchy_result['local']['metrics']['coherence_scores'].mean().item() health_report['local_coherence_health'] = local_coherence_avg else: health_report['local_coherence_health'] = 0.5 # Default value # Saúde de ressonância global if 'resonance' in hierarchy_result and 'self_interference' in hierarchy_result['resonance']: global_resonance = hierarchy_result['resonance']['self_interference']['global_coherence'].mean().item() health_report['global_resonance_health'] = min(global_resonance, 2.0) / 2.0 # Normalizar # Métricas de interferência constructive_ratio = hierarchy_result['resonance']['self_interference']['constructive_strength'].mean().item() destructive_ratio = hierarchy_result['resonance']['self_interference']['destructive_strength'].mean().item() health_report['constructive_interference'] = constructive_ratio health_report['destructive_interference'] = destructive_ratio health_report['interference_balance'] = constructive_ratio / (destructive_ratio + 1e-8) else: health_report['global_resonance_health'] = 0.5 # Default value health_report['constructive_interference'] = 0.3 health_report['destructive_interference'] = 0.3 health_report['interference_balance'] = 1.0 # Saúde geral do sistema local_coherence_value = health_report.get('local_coherence_health', 0.5) global_resonance_value = health_report.get('global_resonance_health', 0.5) health_report['overall_hierarchy_health'] = ( 0.3 * numerical_health + 0.4 * local_coherence_value + 0.3 * global_resonance_value ) return health_report
+class ResonanceDetector(nn.Module):
+    """Detects resonance patterns at a specific hierarchy level"""
+
+    def __init__(self, gate_dim: int):
+        super().__init__()
+        self.gate_dim = gate_dim
+
+        # Resonance computation
+        self.resonance_linear = nn.Linear(gate_dim, 1)
+        self.resonance_norm = nn.LayerNorm(gate_dim)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Compute resonance score for input tensor.
+
+        Args:
+            x: Input tensor
+
+        Returns:
+            Resonance score tensor
+        """
+        # Compute resonance features
+        resonance_input = self.resonance_norm(x)
+        resonance_features = self.resonance_linear(resonance_input)
+
+        # Global resonance score (average across sequence)
+        resonance_score = torch.sigmoid(resonance_features.mean())
+
+        return resonance_score
+
+
+class CoherenceAnalyzer(nn.Module):
+    """Analyzes coherence across hierarchy levels"""
+
+    def __init__(self, gate_dim: int):
+        super().__init__()
+        self.gate_dim = gate_dim
+
+        # Coherence computation
+        self.coherence_projection = nn.Linear(gate_dim, gate_dim // 4)
+
+    def analyze_coherence(self,
+                         level_outputs: List[torch.Tensor],
+                         resonance_scores: List[torch.Tensor]) -> Dict:
+        """
+        Analyze coherence across hierarchy levels.
+
+        Args:
+            level_outputs: Outputs from each level
+            resonance_scores: Resonance scores from each level
+
+        Returns:
+            Dictionary of coherence metrics
+        """
+        if len(level_outputs) < 2:
+            return {'global_coherence': 1.0, 'level_coherence': []}
+
+        metrics = {
+            'global_coherence': 0.0,
+            'level_coherence': [],
+            'resonance_coherence': 0.0
+        }
+
+        # Compute pairwise coherence between levels
+        coherence_scores = []
+        for i in range(len(level_outputs)):
+            for j in range(i + 1, len(level_outputs)):
+                coherence = self._compute_pairwise_coherence(
+                    level_outputs[i], level_outputs[j]
+                )
+                coherence_scores.append(coherence)
+
+        # Global coherence (average of pairwise)
+        if coherence_scores:
+            metrics['global_coherence'] = torch.mean(torch.stack(coherence_scores)).item()
+
+        # Level-specific coherence
+        for i, output in enumerate(level_outputs):
+            level_coherence = self._compute_self_coherence(output)
+            metrics['level_coherence'].append(level_coherence.item())
+
+        # Resonance coherence
+        if resonance_scores:
+            resonance_tensor = torch.stack(resonance_scores)
+            metrics['resonance_coherence'] = 1.0 - torch.std(resonance_tensor).item()
+
+        return metrics
+
+    def _compute_pairwise_coherence(self, x1: torch.Tensor, x2: torch.Tensor) -> torch.Tensor:
+        """Compute coherence between two tensors"""
+        # Project to lower dimension
+        x1_proj = self.coherence_projection(x1)
+        x2_proj = self.coherence_projection(x2)
+
+        # Compute cosine similarity
+        similarity = F.cosine_similarity(x1_proj, x2_proj, dim=-1)
+        return similarity.mean()
+
+    def _compute_self_coherence(self, x: torch.Tensor) -> torch.Tensor:
+        """Compute self-coherence of a tensor"""
+        # Compute correlation between different positions
+        x_normalized = F.normalize(x, p=2, dim=-1)
+        correlation = torch.matmul(x_normalized, x_normalized.transpose(-2, -1))
+
+        # Average correlation (excluding diagonal)
+        batch_size, seq_len, _ = x.shape
+        mask = 1 - torch.eye(seq_len, device=x.device)
+        coherence = (correlation * mask.unsqueeze(0)).sum(dim=(-2, -1))
+        coherence /= (seq_len * (seq_len - 1))
+
+        return coherence.mean()
+
+
+class EnergyBalancer(nn.Module):
+    """Balances energy distribution across hierarchy levels"""
+
+    def __init__(self, gate_dim: int):
+        super().__init__()
+        self.gate_dim = gate_dim
+
+        # Energy balancing parameters
+        self.target_energy_ratio = 1.0
+
+    def balance_energy(self,
+                      level_outputs: List[torch.Tensor],
+                      cross_level_output: torch.Tensor) -> Tuple[torch.Tensor, Dict]:
+        """
+        Balance energy distribution across levels.
+
+        Args:
+            level_outputs: Outputs from each level
+            cross_level_output: Combined output from cross-level attention
+
+        Returns:
+            Tuple of (balanced_output, energy_metrics)
+        """
+        # Compute energy at each level
+        level_energies = [torch.norm(output, p=2).item() for output in level_outputs]
+        total_energy = sum(level_energies)
+
+        # Compute energy ratios
+        if total_energy > 0:
+            energy_ratios = [energy / total_energy for energy in level_energies]
+        else:
+            energy_ratios = [1.0 / len(level_energies)] * len(level_energies)
+
+        # Compute balance score (closer to uniform is better)
+        target_ratio = 1.0 / len(level_energies)
+        balance_score = 1.0 - sum(abs(ratio - target_ratio) for ratio in energy_ratios) / 2.0
+
+        # Apply energy balancing if needed
+        if balance_score < 0.8:  # Threshold for balancing
+            balanced_output = self._apply_energy_balancing(cross_level_output, energy_ratios)
+        else:
+            balanced_output = cross_level_output
+
+        # Energy metrics
+        energy_metrics = {
+            'level_energies': level_energies,
+            'energy_ratios': energy_ratios,
+            'balance_score': balance_score,
+            'total_energy': total_energy
+        }
+
+        return balanced_output, energy_metrics
+
+    def _apply_energy_balancing(self, x: torch.Tensor, energy_ratios: List[float]) -> torch.Tensor:
+        """Apply energy balancing to tensor"""
+        target_ratio = 1.0 / len(energy_ratios)
+
+        # Compute scaling factors
+        scaling_factors = [target_ratio / ratio if ratio > 0 else 1.0 for ratio in energy_ratios]
+        avg_scaling = sum(scaling_factors) / len(scaling_factors)
+
+        # Apply scaling
+        balanced_output = x * avg_scaling
+
+        return balanced_output
+
+
+class CrossLevelAttention(nn.Module):
+    """Attention mechanism for cross-level resonance propagation"""
+
+    def __init__(self, gate_dim: int):
+        super().__init__()
+        self.gate_dim = gate_dim
+
+        # Cross-level attention
+        self.cross_attention = nn.MultiheadAttention(
+            embed_dim=gate_dim,
+            num_heads=8,
+            batch_first=True
+        )
+
+    def forward(self, level_outputs: List[torch.Tensor]) -> torch.Tensor:
+        """
+        Apply cross-level attention.
+
+        Args:
+            level_outputs: List of outputs from different levels
+
+        Returns:
+            Combined output with cross-level attention
+        """
+        if len(level_outputs) == 1:
+            return level_outputs[0]
+
+        # Stack level outputs
+        stacked_outputs = torch.stack(level_outputs, dim=1)  # [batch, levels, seq_len, dim]
+        batch_size, num_levels, seq_len, dim = stacked_outputs.shape
+
+        # Reshape for attention
+        reshaped = stacked_outputs.view(batch_size, num_levels * seq_len, dim)
+
+        # Apply self-attention across levels
+        attended, _ = self.cross_attention(reshaped, reshaped, reshaped)
+
+        # Reshape back and average across levels
+        attended_reshaped = attended.view(batch_size, num_levels, seq_len, dim)
+        combined = attended_reshaped.mean(dim=1)
+
+        return combined
+
+
+class AdaptiveResonanceController(nn.Module):
+    """Adaptively controls resonance based on input characteristics"""
+
+    def __init__(self, config: ResonanceConfig):
+        super().__init__()
+        self.config = config
+
+        # Adaptive resonance parameters
+        self.resonance_gain = nn.Parameter(torch.ones(1))
+        self.coherence_weight = nn.Parameter(torch.ones(1))
+
+    def adapt_resonance(self,
+                       balanced_output: torch.Tensor,
+                       resonance_scores: List[torch.Tensor],
+                       rotation_params: Optional[Dict] = None) -> Dict:
+        """
+        Adapt resonance based on current state.
+
+        Args:
+            balanced_output: Balanced output from hierarchy
+            resonance_scores: Resonance scores from each level
+            rotation_params: Optional rotation parameters from QRH
+
+        Returns:
+            Dictionary with adapted output and control metrics
+        """
+        results = {
+            'adapted_output': balanced_output,
+            'resonance_gain': self.resonance_gain.item(),
+            'coherence_weight': self.coherence_weight.item()
+        }
+
+        # Compute average resonance
+        if resonance_scores:
+            avg_resonance = torch.mean(torch.stack(resonance_scores)).item()
+        else:
+            avg_resonance = 0.0
+
+        # Adapt resonance gain based on average resonance
+        target_gain = 1.0 + (avg_resonance - self.config.resonance_threshold)
+        target_gain = max(0.5, min(2.0, target_gain))
+
+        # Smooth update of resonance gain
+        with torch.no_grad():
+            alpha = 0.1
+            self.resonance_gain.data = (
+                alpha * target_gain + (1 - alpha) * self.resonance_gain.data
+            )
+
+        # Apply resonance gain
+        adapted_output = balanced_output * self.resonance_gain
+
+        # Update coherence weight based on rotation parameters if available
+        if rotation_params is not None:
+            coherence_weight = self._compute_coherence_weight(rotation_params)
+            with torch.no_grad():
+                self.coherence_weight.data = (
+                    alpha * coherence_weight + (1 - alpha) * self.coherence_weight.data
+                )
+
+        results['adapted_output'] = adapted_output
+        results['avg_resonance'] = avg_resonance
+
+        return results
+
+    def _compute_coherence_weight(self, rotation_params: Dict) -> float:
+        """Compute coherence weight based on rotation parameters"""
+        # Extract rotation angles
+        theta_left = rotation_params.get('theta_left', 0.0)
+        omega_left = rotation_params.get('omega_left', 0.0)
+        phi_left = rotation_params.get('phi_left', 0.0)
+
+        # Compute rotation complexity
+        rotation_complexity = (
+            abs(theta_left) + abs(omega_left) + abs(phi_left)
+        ) / 3.0
+
+        # Higher complexity = higher coherence requirement
+        coherence_weight = 1.0 + rotation_complexity
+
+        return min(2.0, max(0.5, coherence_weight))

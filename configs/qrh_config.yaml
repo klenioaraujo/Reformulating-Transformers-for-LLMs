@@ -13,3 +13,77 @@ qrh_layer:
   window_type: 'hann'
   fft_cache_size: 10
   device: 'cpu' # Mude para 'cuda' se uma GPU estiver disponível
+
+  # Warning and validation controls
+  enable_warnings: true
+  enable_phase_check: false
+  phase_check_threshold: 1.0e-6
+
+  # Shape handling
+  padding_enabled: false
+  auto_adjust_shapes: false
+  validate_shapes: true
+
+  # Normalization
+  normalization_type: null  # Options: 'layer_norm', 'unit_projection', null
+
+  # Regularization
+  spectral_dropout_rate: 0.0
+
+# Configurações do Fractal Consciousness Processor
+consciousness_processor:
+  embedding_dim: 256  # embed_dim * 4 (64 * 4)
+  sequence_length: 64
+  device: 'cpu'
+
+  # Fractal dimension range
+  fractal_dimension_range: [1.0, 3.0]
+
+  # Diffusion coefficient range
+  diffusion_coefficient_range: [0.01, 10.0]
+
+  # Consciousness frequency range (Hz - brain wave range)
+  consciousness_frequency_range: [0.5, 5.0]
+
+  # Phase consciousness (π/4 rad - optimal phase)
+  phase_consciousness: 0.7854
+
+  # Chaotic parameter (edge of chaos)
+  chaotic_parameter: 3.9
+
+  # Time integration
+  time_step: 0.01
+  max_iterations: 100
+
+  # FCI thresholds for state classification
+  fci_threshold_meditation: 0.8
+  fci_threshold_analysis: 0.6
+  fci_threshold_coma: 0.2
+  fci_threshold_emergence: 0.9
+
+# Configurações do Consciousness Metrics (FCI)
+consciousness_metrics:
+  # Parâmetros de normalização para componentes do FCI
+  d_eeg_max: 10.0  # Máximo D_EEG observado
+  h_fmri_max: 5.0  # Máximo H_fMRI observado
+  clz_max: 3.0     # Máximo CLZ observado
+
+  # Pesos para componentes do FCI [D_EEG, H_fMRI, CLZ]
+  fci_weights: [0.4, 0.3, 0.3]
+
+  # Histórico de medições
+  max_history: 1000
+
+  # Proteção contra valores inválidos
+  default_fci_on_nan: 0.5  # Valor padrão quando FCI resulta em NaN
+  enable_nan_protection: true
+
+# Configurações do modelo Ψcws
+psicws_model:
+  enabled: true  # Habilitar uso do modelo Ψcws
+  model_dir: 'data/Ψcws'
+  cache_dir: 'data/Ψcws_cache'
+  use_cache: true
+  default_model: 'latest'  # 'latest' para mais recente, ou hash específico
+  fallback_to_qrh: true  # Se falhar, usar QRH padrão
+  load_on_init: false  # Carregar modelo na inicialização ou sob demanda

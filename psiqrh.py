@@ -83,7 +83,7 @@ class ΨQRHPipeline:
         Detecta automaticamente o tipo de tarefa com base no conteúdo da entrada.
 
         # Roteamento automático:
-        # - signal-processing: se houver [números] ou palavras-chave técnicas
+        # - signal-processing: se houver [números] ou palavras-chave de simulação física
         # - text-generation: para todo o resto
         """
         import re
@@ -93,6 +93,7 @@ class ΨQRHPipeline:
         # Padrão para detectar arrays numéricos: [1.0, -2.5, 3e-2, ...]
         numeric_array_pattern = r'\[\s*[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?\s*(?:,\s*[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?\s*)*\]'
 
+        # Palavras-chave de processamento de sinais
         signal_keywords = [
             'spectral filter', 'fourier transform', 'clifford algebra',
             'quaternionic', 'signal processing', 'norm preservation',
@@ -101,10 +102,21 @@ class ΨQRHPipeline:
             'apply filter', 'validate unitarity', 'energy conservation'
         ]
 
-        # Verifica se há array numérico explícito OU palavras-chave de sinal
-        if (re.search(numeric_array_pattern, input_text) or
-            any(kw in input_lower for kw in signal_keywords)):
-            print(f"🔢 Detecção automática: usando signal-processing para entrada com dados numéricos/terminologia de sinal")
+        # Palavras-chave de simulação física
+        physics_keywords = [
+            "simule", "calcule", "verifique", "mostre", "demonstre",
+            "transformada", "fourier", "schrödinger", "tunelamento",
+            "invariância", "lorentz", "campo eletromagnético", "pacote de onda"
+        ]
+
+        # Verifica requisições de simulação física
+        has_physics_request = any(kw in input_lower for kw in physics_keywords)
+        has_numeric_data = bool(re.search(numeric_array_pattern, input_text))
+        has_signal_keywords = any(kw in input_lower for kw in signal_keywords)
+
+        # Se houver requisição física OU dados numéricos OU palavras-chave de sinal → signal-processing
+        if has_physics_request or has_numeric_data or has_signal_keywords:
+            print(f"🔢 Detecção automática: usando signal-processing para entrada com dados numéricos/terminologia de sinal/simulação física")
             return "signal-processing"
 
         # Caso contrário, assume geração de texto
@@ -113,6 +125,9 @@ class ΨQRHPipeline:
     def _initialize_model(self):
         """Inicializa o modelo ΨQRH automaticamente - ZERO FALLBACK POLICY"""
         print(f"🚀 Inicializando ΨQRH Pipeline no dispositivo: {self.device}")
+
+        # Carregar configuração apropriada baseada na tarefa
+        config = self._load_task_config()
 
         # Para geração de texto → use ΨQRH framework completo
         if self.task in ["text-generation", "chat"]:
@@ -123,17 +138,47 @@ class ΨQRHPipeline:
         # Para análise matemática → use o analisador espectral
         elif self.task == "analysis":
             from src.core.response_spectrum_analyzer import ResponseSpectrumAnalyzer
-            self.model = ResponseSpectrumAnalyzer()
+            self.model = ResponseSpectrumAnalyzer(config)
             print("✅ Analisador espectral ΨQRH carregado")
 
         # Para processamento de sinais → use processador numérico
         elif self.task == "signal-processing":
             from src.core.numeric_signal_processor import NumericSignalProcessor
-            self.model = NumericSignalProcessor()
+            # Usar configuração de dispositivo do arquivo de configuração
+            device_config = config.get('default_device', {'device': 'cpu'})
+            self.model = NumericSignalProcessor(device=device_config['device'])
             print("✅ Processador numérico ΨQRH carregado")
 
         else:
             raise ValueError(f"Tarefa não suportada: {self.task}")
+
+    def _load_task_config(self):
+        """Carrega configuração apropriada baseada na tarefa"""
+        import yaml
+
+        # Mapeamento de tarefa para arquivo de configuração
+        task_config_map = {
+            "text-generation": "configs/example_configs.yaml",
+            "chat": "configs/example_configs.yaml",
+            "analysis": "configs/example_configs.yaml",
+            "signal-processing": "configs/example_configs.yaml"
+        }
+
+        config_path = task_config_map.get(self.task, "configs/example_configs.yaml")
+
+        try:
+            with open(config_path, 'r') as f:
+                config_data = yaml.safe_load(f)
+
+            # Selecionar seção apropriada baseada na tarefa
+            if self.task == "signal-processing":
+                return config_data.get("energy_conservation", {})
+            else:
+                return config_data.get("scientific_validation", {})
+
+        except FileNotFoundError:
+            print(f"⚠️  Arquivo de configuração {config_path} não encontrado, usando padrão")
+            return {}
 
     def _validate_tensor_output(self, tensor: torch.Tensor, operation_name: str) -> torch.Tensor:
         """Validates tensor output from pipeline operations."""
@@ -179,7 +224,7 @@ class ΨQRHPipeline:
                 'task': self.task,
                 'device': self.device,
                 'input_length': len(text),
-                'output_length': len(processed_output) if isinstance(processed_output, str) else processed_output.numel()
+                'output_length': len(processed_output) if isinstance(processed_output, str) else (processed_output.numel() if hasattr(processed_output, 'numel') else len(str(processed_output)))
             }
 
         except Exception as e:
@@ -378,12 +423,37 @@ Comandos disponíveis:
             result = pipeline(user_input)
 
             if result['status'] == 'success':
-                print(f"🤖 ΨQRH: {result['response']}")
+                response = result['response']
+
+                # Handle both string and dictionary responses
+                if isinstance(response, dict) and 'text_analysis' in response:
+                    print(f"🤖 ΨQRH: {response['text_analysis']}")
+
+                    # Generate GLS output if consciousness results are available
+                    if 'consciousness_results' in response and hasattr(pipeline.model, 'generate_gls_output'):
+                        try:
+                            gls_output = pipeline.model.generate_gls_output(response['consciousness_results'])
+                            if gls_output.get('status') == 'success':
+                                print("\n🎨 GLS VISUALIZATION CODE GENERATED:")
+                                print("=" * 50)
+                                print("📱 Processing Code (copy to Processing IDE):")
+                                print(gls_output['processing_code'][:500] + "..." if len(gls_output['processing_code']) > 500 else gls_output['processing_code'])
+                                print("\n🌐 p5.js Code (copy to HTML file):")
+                                print(gls_output['p5js_code'][:500] + "..." if len(gls_output['p5js_code']) > 500 else gls_output['p5js_code'])
+                                print("=" * 50)
+                        except Exception as e:
+                            print(f"⚠️  GLS output generation failed: {e}")
+                else:
+                    print(f"🤖 ΨQRH: {response}")
+
                 if verbose:
                     print(f"📊 Metadados: {result['device']}, {result['output_length']} chars")
             else:
                 print(f"❌ Erro: {result.get('error', 'Desconhecido')}")
 
+        except EOFError:
+            print("\n👋 EOF detectado, encerrando modo interativo")
+            break
         except KeyboardInterrupt:
             print("\n👋 Interrompido pelo usuário")
             break

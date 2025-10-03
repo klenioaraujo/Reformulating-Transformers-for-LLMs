@@ -32,7 +32,7 @@ class FractalFieldCalculator(nn.Module):
 
         # Parâmetros do potencial multifractal
         self.max_terms = 20  # Número de termos da série infinita
-        self.epsilon = 1e-10  # Estabilidade numérica
+        self.epsilon = config.epsilon  # Estabilidade numérica do config
 
         # Gerador de ruído fractal
         self.fractal_noise_generator = FractalNoiseGenerator(config)
@@ -148,7 +148,7 @@ class FractalFieldCalculator(nn.Module):
         """
         # 1. Clipar valores extremos
         field_magnitude = torch.norm(field, dim=-1, keepdim=True)
-        max_magnitude = 10.0  # Limite máximo empiricamente determinado
+        max_magnitude = self.config.max_field_magnitude  # Do config
 
         # Normalizar se magnitude for muito alta
         field = torch.where(
@@ -160,10 +160,19 @@ class FractalFieldCalculator(nn.Module):
         # 2. Suavização espacial para reduzir oscilações
         field = self._apply_spatial_smoothing(field)
 
-        # 3. Verificar NaN/Inf e corrigir
+        # 3. Verificar NaN/Inf e corrigir com ruído mínimo ao invés de zeros
+        nan_mask = torch.isnan(field) | torch.isinf(field)
+        if nan_mask.any():
+            # Gerar ruído pequeno para substituir NaN/Inf
+            replacement_noise = torch.randn_like(field) * self.config.nan_replacement_noise_scale
+            field = torch.where(nan_mask, replacement_noise, field)
+
+        # 4. Garantir magnitude mínima para evitar zeros completos
+        field_magnitude = torch.norm(field, dim=-1, keepdim=True)
+        min_magnitude = self.config.min_field_magnitude
         field = torch.where(
-            torch.isnan(field) | torch.isinf(field),
-            torch.zeros_like(field),
+            field_magnitude < min_magnitude,
+            field + torch.randn_like(field) * min_magnitude,
             field
         )
 
@@ -173,7 +182,8 @@ class FractalFieldCalculator(nn.Module):
         """Aplica suavização espacial ao campo."""
         batch_size, embed_dim = field.shape
 
-        # Convolução simples com kernel suavizador
+        # Convolução simples com kernel suavizador do config
+        kernel = self.config.field_smoothing_kernel
         smoothed_field = torch.zeros_like(field)
 
         for i in range(embed_dim):
@@ -181,11 +191,11 @@ class FractalFieldCalculator(nn.Module):
             i_prev = (i - 1) % embed_dim
             i_next = (i + 1) % embed_dim
 
-            # Média ponderada: 0.25 * prev + 0.5 * current + 0.25 * next
+            # Média ponderada usando kernel do config
             smoothed_field[:, i] = (
-                0.25 * field[:, i_prev] +
-                0.5 * field[:, i] +
-                0.25 * field[:, i_next]
+                kernel[0] * field[:, i_prev] +
+                kernel[1] * field[:, i] +
+                kernel[2] * field[:, i_next]
             )
 
         return smoothed_field

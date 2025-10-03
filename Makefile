@@ -1,8 +1,31 @@
 # ΨQRH — Makefile
 # Run from project root: make build, make up, etc.
 
-.PHONY: build up down test clean integrity convert-pdf Ψcws-stats demo-pdf-Ψcws list-Ψcws test-native-reader convert-wiki-topic list-wiki-topics convert-all-wiki-topics test-ΨQRH test-math
+.PHONY: build up down test clean integrity convert-pdf Ψcws-stats demo-pdf-Ψcws list-Ψcws test-native-reader convert-wiki-topic list-wiki-topics convert-all-wiki-topics test-ΨQRH test-math docker-build docker-up docker-down docker-logs docker-shell docker-api docker-frontend dev-build dev-up dev-down dev-shell dev-jupyter dev-api dev-test dev-clean
 
+# Docker Commands
+docker-build:
+	docker-compose -f ops/docker/docker-compose.yml build
+
+docker-up:
+	docker-compose -f ops/docker/docker-compose.yml up -d
+
+docker-down:
+	docker-compose -f ops/docker/docker-compose.yml down
+
+docker-logs:
+	docker-compose -f ops/docker/docker-compose.yml logs -f
+
+docker-shell:
+	docker-compose -f ops/docker/docker-compose.yml exec psiqrh-api /bin/bash
+
+docker-api:
+	docker-compose -f ops/docker/docker-compose.yml up -d psiqrh-api
+
+docker-frontend:
+	docker-compose -f ops/docker/docker-compose.yml up -d psiqrh-frontend
+
+# Legacy Docker Commands (for backward compatibility)
 build:
 	docker-compose -f ops/docker/docker-compose.yml build
 
@@ -21,6 +44,95 @@ integrity:
 clean:
 	docker-compose -f ops/docker/docker-compose.yml down -v --rmi all
 	docker builder prune -f
+
+# Development Commands
+dev-build:
+	docker-compose -f ops/docker/docker-compose.dev.yml build
+
+dev-up:
+	docker-compose -f ops/docker/docker-compose.dev.yml up -d
+
+dev-down:
+	docker-compose -f ops/docker/docker-compose.dev.yml down
+
+dev-shell:
+	docker-compose -f ops/docker/docker-compose.dev.yml exec psiqrh-dev /bin/bash
+
+dev-jupyter:
+	docker-compose -f ops/docker/docker-compose.dev.yml exec psiqrh-dev jupyter notebook --ip=0.0.0.0 --port=8888 --no-browser --allow-root --NotebookApp.token=dev123
+
+dev-api:
+	docker-compose -f ops/docker/docker-compose.dev.yml exec psiqrh-dev python app.py
+
+dev-test:
+	docker-compose -f ops/docker/docker-compose.dev.yml exec psiqrh-dev python -m pytest tests/ -v
+
+dev-clean:
+	docker-compose -f ops/docker/docker-compose.dev.yml down -v --rmi all
+
+# Quick Start Commands
+start: docker-build docker-up
+	@echo "🚀 ΨQRH System Started!"
+	@echo "🌐 Frontend: http://localhost:8080"
+	@echo "🔧 API: http://localhost:5000"
+	@echo "📊 API via proxy: http://localhost:8080/api/"
+
+stop: docker-down
+	@echo "🛑 ΨQRH System Stopped!"
+
+restart: stop start
+	@echo "🔄 ΨQRH System Restarted!"
+
+status:
+	@docker-compose -f ops/docker/docker-compose.yml ps
+	@echo ""
+	@echo "🌐 Frontend: http://localhost:8080"
+	@echo "🔧 API: http://localhost:5000"
+	@echo "📊 API via proxy: http://localhost:8080/api/"
+
+help:
+	@echo "ΨQRH Makefile Commands:"
+	@echo ""
+	@echo "🐳 Docker Commands:"
+	@echo "  make docker-build     - Build all Docker images"
+	@echo "  make docker-up        - Start all services in background"
+	@echo "  make docker-down      - Stop all services"
+	@echo "  make docker-logs      - Follow logs from all services"
+	@echo "  make docker-shell     - Open shell in API container"
+	@echo "  make docker-api       - Start only API service"
+	@echo "  make docker-frontend  - Start only frontend service"
+	@echo ""
+	@echo "🔬 Development Commands:"
+	@echo "  make dev-build        - Build development environment"
+	@echo "  make dev-up           - Start development environment"
+	@echo "  make dev-down         - Stop development environment"
+	@echo "  make dev-shell        - Open shell in development container"
+	@echo "  make dev-jupyter      - Start Jupyter notebook in container"
+	@echo "  make dev-api          - Run API in development container"
+	@echo "  make dev-test         - Run tests in development container"
+	@echo "  make dev-clean        - Clean development environment"
+	@echo ""
+	@echo "🚀 Quick Start:"
+	@echo "  make start           - Build and start all services"
+	@echo "  make stop            - Stop all services"
+	@echo "  make restart         - Restart all services"
+	@echo "  make status          - Show service status and URLs"
+	@echo ""
+	@echo "🧪 Testing & Development:"
+	@echo "  make test            - Run tests"
+	@echo "  make integrity       - Run integrity verification"
+	@echo "  make clean           - Clean all Docker resources"
+	@echo ""
+	@echo "📄 ΨCWS Operations:"
+	@echo "  make convert-pdf PDF=path/to/file.pdf"
+	@echo "  make Ψcws-stats"
+	@echo "  make list-Ψcws"
+	@echo ""
+	@echo "🌐 URLs:"
+	@echo "  Frontend: http://localhost:8080"
+	@echo "  API: http://localhost:5000"
+	@echo "  API via proxy: http://localhost:8080/api/"
+	@echo "  Jupyter: http://localhost:8888 (dev)"
 
 # ΨQRH PDF to ΨCWS Conversion Commands
 # Variables
@@ -119,7 +231,7 @@ demo-wiki-conversion:
 # Test ΨQRH architecture with comprehensive test suite
 test-ΨQRH:
 	@echo "🧪 Running ΨQRH Comprehensive Test Suite..."
-	@python3 -m src.testing.ΨQRH_test_prompt_engine
+	@python3 Enhanced_Transparency_Framework.py
 
 # Run advanced mathematical tests
 test-math:

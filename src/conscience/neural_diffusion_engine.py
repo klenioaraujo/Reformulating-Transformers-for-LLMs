@@ -111,15 +111,21 @@ class NeuralDiffusionEngine(nn.Module):
             Fator de dispersão normalizado [0, 1]
         """
         # Calcular entropia como medida de dispersão
-        psi_safe = psi_distribution + 1e-10  # Evitar log(0)
-        entropy = -torch.sum(psi_distribution * torch.log(psi_safe), dim=-1, keepdim=True)
+        epsilon = self.config.epsilon if hasattr(self.config, 'epsilon') else 1e-10
+        psi_safe = torch.clamp(psi_distribution, min=epsilon)
+        log_psi = torch.log(psi_safe)
+        entropy_raw = -torch.sum(psi_distribution * log_psi, dim=-1, keepdim=True)
+        # Proteção contra NaN
+        entropy = torch.where(torch.isnan(entropy_raw), torch.zeros_like(entropy_raw), entropy_raw)
 
         # Normalizar entropia (máximo log(embed_dim))
         max_entropy = np.log(psi_distribution.shape[-1])
-        normalized_entropy = entropy / max_entropy
+        normalized_entropy = entropy / (max_entropy + epsilon)
 
         # Calcular desvio padrão como medida adicional de dispersão
         psi_std = torch.std(psi_distribution, dim=-1, keepdim=True)
+        # Proteção contra NaN
+        psi_std = torch.where(torch.isnan(psi_std), torch.zeros_like(psi_std), psi_std)
 
         # Combinar entropia e desvio padrão
         dispersion_factor = 0.7 * normalized_entropy + 0.3 * psi_std
@@ -146,11 +152,15 @@ class NeuralDiffusionEngine(nn.Module):
         field_magnitude = torch.abs(fractal_field)
 
         # Normalizar pela magnitude máxima global
-        max_magnitude = torch.max(field_magnitude) + 1e-10
+        epsilon = self.config.epsilon if hasattr(self.config, 'epsilon') else 1e-10
+        max_magnitude = torch.max(field_magnitude) + epsilon
         normalized_magnitude = field_magnitude / max_magnitude
 
         # Aplicar função sigmoidal para suavizar
         field_factor = torch.sigmoid(5 * (normalized_magnitude - 0.5))
+
+        # Proteção contra NaN
+        field_factor = torch.where(torch.isnan(field_factor), torch.ones_like(field_factor) * 0.5, field_factor)
 
         return field_factor
 
@@ -173,6 +183,7 @@ class NeuralDiffusionEngine(nn.Module):
             Fator de complexidade normalizado [0, 1]
         """
         batch_size, embed_dim = psi_distribution.shape
+        epsilon = self.config.epsilon if hasattr(self.config, 'epsilon') else 1e-10
 
         # Calcular gradientes espaciais como medida de complexidade
         psi_gradient = self._compute_spatial_gradient(psi_distribution)
@@ -182,11 +193,15 @@ class NeuralDiffusionEngine(nn.Module):
         psi_complexity = torch.std(psi_gradient, dim=-1, keepdim=True)
         field_complexity = torch.std(field_gradient, dim=-1, keepdim=True)
 
+        # Proteção contra NaN
+        psi_complexity = torch.where(torch.isnan(psi_complexity), torch.zeros_like(psi_complexity), psi_complexity)
+        field_complexity = torch.where(torch.isnan(field_complexity), torch.zeros_like(field_complexity), field_complexity)
+
         # Combinar complexidades
-        total_complexity = torch.sqrt(psi_complexity**2 + field_complexity**2)
+        total_complexity = torch.sqrt(psi_complexity**2 + field_complexity**2 + epsilon)
 
         # Normalizar
-        max_complexity = torch.max(total_complexity) + 1e-10
+        max_complexity = torch.max(total_complexity) + epsilon
         normalized_complexity = total_complexity / max_complexity
 
         # Broadcast para todas as dimensões
@@ -245,12 +260,29 @@ class NeuralDiffusionEngine(nn.Module):
         Returns:
             Coeficiente de difusão no range correto
         """
+        epsilon = self.config.epsilon if hasattr(self.config, 'epsilon') else 1e-10
+
+        # Proteção contra NaN no combined_factor
+        combined_factor = torch.where(
+            torch.isnan(combined_factor) | torch.isinf(combined_factor),
+            torch.ones_like(combined_factor) * 0.5,
+            combined_factor
+        )
+
         # Normalizar factor para [0, 1]
         factor_min = torch.min(combined_factor)
         factor_max = torch.max(combined_factor)
-        factor_range = factor_max - factor_min + 1e-10
+        factor_range = factor_max - factor_min + epsilon
 
         normalized_factor = (combined_factor - factor_min) / factor_range
+
+        # Proteção contra NaN no resultado
+        normalized_factor = torch.clamp(normalized_factor, 0.0, 1.0)
+        normalized_factor = torch.where(
+            torch.isnan(normalized_factor),
+            torch.ones_like(normalized_factor) * 0.5,
+            normalized_factor
+        )
 
         # Mapear para range de difusão
         diffusion_range = self.d_max - self.d_min
@@ -263,15 +295,21 @@ class NeuralDiffusionEngine(nn.Module):
         batch_size, embed_dim = diffusion_coeff.shape
         smoothed_coeff = torch.zeros_like(diffusion_coeff)
 
+        # Usar kernel do config se disponível
+        if hasattr(self.config, 'field_smoothing_kernel'):
+            kernel = self.config.field_smoothing_kernel
+        else:
+            kernel = (0.25, 0.5, 0.25)
+
         for i in range(embed_dim):
             i_prev = (i - 1) % embed_dim
             i_next = (i + 1) % embed_dim
 
-            # Média ponderada com vizinhos
+            # Média ponderada com vizinhos usando kernel do config
             smoothed_coeff[:, i] = (
-                0.25 * diffusion_coeff[:, i_prev] +
-                0.5 * diffusion_coeff[:, i] +
-                0.25 * diffusion_coeff[:, i_next]
+                kernel[0] * diffusion_coeff[:, i_prev] +
+                kernel[1] * diffusion_coeff[:, i] +
+                kernel[2] * diffusion_coeff[:, i_next]
             )
 
         return smoothed_coeff

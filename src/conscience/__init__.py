@@ -59,12 +59,13 @@ DEFAULT_CONSCIOUSNESS_CONFIG = {
     'fci_threshold_emergence': 0.9
 }
 
-def create_consciousness_processor(config: dict = None):
+def create_consciousness_processor(config: dict = None, metrics_config: dict = None):
     """
     Factory function para criar processador de consciência fractal.
 
     Args:
         config: Configuração personalizada ou None para usar padrão
+        metrics_config: Configuração de métricas (FCI) ou None para usar padrão
 
     Returns:
         FractalConsciousnessProcessor configurado
@@ -91,4 +92,4 @@ def create_consciousness_processor(config: dict = None):
         )
         config = consciousness_config
 
-    return FractalConsciousnessProcessor(config)
+    return FractalConsciousnessProcessor(config, metrics_config)

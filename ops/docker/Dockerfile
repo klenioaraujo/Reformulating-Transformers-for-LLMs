@@ -43,5 +43,8 @@ COPY . /app
 # Run integrity setup
 RUN make -f ops/Makefile integrity-setup || echo "Integrity setup completed"
 
-# Start the ecosystem server
-CMD ["python", "src/conceptual/live_ecosystem_server.py", "--mode=interactive"]
+# Install Flask dependencies for API
+RUN python -m pip install flask flask-cors
+
+# Default command to start the API
+CMD ["python", "app.py"]

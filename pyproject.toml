@@ -1,0 +1,218 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "psiqrh"
+version = "1.0.0"
+description = "ΨQRH Transformer: Quaternionic-Harmonic Architecture for Large Language Models"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "GPL-3.0-or-later"}
+authors = [
+    {name = "Klenio Araujo Padilha", email = "klenioaraujo@gmail.com"}
+]
+maintainers = [
+    {name = "Klenio Araujo Padilha", email = "klenioaraujo@gmail.com"}
+]
+keywords = [
+    "transformer",
+    "quaternion",
+    "spectral-analysis",
+    "deep-learning",
+    "nlp",
+    "large-language-models",
+    "energy-conservation",
+    "fractal-consciousness"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Scientific/Engineering :: Physics",
+]
+
+dependencies = [
+    "torch>=2.0.0",
+    "numpy>=1.24.0,<2.0.0",
+    "scipy>=1.10.0",
+    "matplotlib>=3.7.0",
+    "seaborn>=0.12.0",
+    "plotly>=5.14.0",
+    "pyyaml>=6.0",
+    "pydantic>=2.0.0",
+    "fastapi>=0.100.0",
+    "uvicorn>=0.23.0",
+    "aiohttp>=3.8.0",
+    "requests>=2.28.0",
+    "tqdm>=4.65.0",
+    "rich>=13.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "pytest-asyncio>=0.21.0",
+    "black>=23.0.0",
+    "flake8>=6.0.0",
+    "mypy>=1.4.0",
+    "pylint>=2.17.0",
+    "pre-commit>=3.3.0",
+    "jupyter>=1.0.0",
+    "ipython>=8.12.0",
+]
+
+api = [
+    "fastapi>=0.100.0",
+    "uvicorn[standard]>=0.23.0",
+    "python-multipart>=0.0.6",
+    "slowapi>=0.1.8",
+]
+
+viz = [
+    "plotly>=5.14.0",
+    "seaborn>=0.12.0",
+    "matplotlib>=3.7.0",
+]
+
+export = [
+    "onnx>=1.14.0",
+    "onnxruntime>=1.15.0",
+    "transformers>=4.30.0",
+]
+
+all = [
+    "psiqrh[dev,api,viz,export]"
+]
+
+[project.urls]
+Homepage = "https://github.com/klenioaraujo/Reformulating-Transformers-for-LLMs"
+Documentation = "https://github.com/klenioaraujo/Reformulating-Transformers-for-LLMs/docs"
+Repository = "https://github.com/klenioaraujo/Reformulating-Transformers-for-LLMs"
+Issues = "https://github.com/klenioaraujo/Reformulating-Transformers-for-LLMs/issues"
+Changelog = "https://github.com/klenioaraujo/Reformulating-Transformers-for-LLMs/blob/master/CHANGELOG.md"
+DOI = "https://zenodo.org/records/17171112"
+
+[project.scripts]
+psiqrh = "psiqrh:main"
+psiqrh-server = "psiqrh:run_server"
+
+[tool.setuptools]
+package-dir = {"" = "."}
+packages = ["src", "src.core", "src.architecture", "src.conscience", "src.cognitive", "src.optimization"]
+
+[tool.setuptools.package-data]
+"*" = ["*.yaml", "*.json", "*.md"]
+
+# Black code formatter configuration
+[tool.black]
+line-length = 88
+target-version = ['py310', 'py311', 'py312']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+  | data
+  | tmp
+)/
+'''
+
+# Pytest configuration
+[tool.pytest.ini_options]
+minversion = "7.0"
+testpaths = ["examples", "src/testing"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--strict-config",
+    "--cov=src",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests",
+]
+
+# MyPy type checking configuration
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+check_untyped_defs = true
+disallow_untyped_decorators = false
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+follow_imports = "normal"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = [
+    "torch.*",
+    "scipy.*",
+    "matplotlib.*",
+    "seaborn.*",
+    "plotly.*",
+]
+ignore_missing_imports = true
+
+# Pylint configuration
+[tool.pylint.main]
+max-line-length = 88
+disable = [
+    "C0103",  # Invalid name
+    "C0114",  # Missing module docstring
+    "C0115",  # Missing class docstring
+    "C0116",  # Missing function docstring
+    "R0913",  # Too many arguments
+    "R0914",  # Too many local variables
+    "W0212",  # Access to protected member
+]
+
+# Coverage configuration
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/tests/*",
+    "*/testing/*",
+    "*/__pycache__/*",
+    "*/tmp/*",
+    "*/data/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@abstractmethod",
+]

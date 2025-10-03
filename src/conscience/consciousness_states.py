@@ -163,9 +163,13 @@ class StateClassifier:
 
     def _calculate_entropy(self, psi_distribution: torch.Tensor) -> float:
         """Calcula entropia da distribuição de consciência."""
-        # Adicionar pequena constante para evitar log(0)
-        psi_safe = psi_distribution + 1e-10
-        entropy = -torch.sum(psi_distribution * torch.log(psi_safe), dim=-1).mean().item()
+        # Usar epsilon do config para evitar log(0)
+        epsilon = self.config.epsilon if hasattr(self.config, 'epsilon') else 1e-10
+        psi_safe = torch.clamp(psi_distribution, min=epsilon)
+        log_psi = torch.log(psi_safe)
+        entropy_raw = -torch.sum(psi_distribution * log_psi, dim=-1).mean()
+        # Proteção contra NaN
+        entropy = entropy_raw.item() if not torch.isnan(entropy_raw) else 0.0
         return entropy
 
     def _calculate_complexity(

@@ -1,9 +1,28 @@
+"""
+ΨQRH Transformer Architecture
+
+Main transformer implementation integrating quaternionic operations,
+spectral analysis, and fractal consciousness metrics.
+
+Copyright (C) 2025 Klenio Araujo Padilha
+Licensed under GNU GPLv3 - see LICENSE file
+
+DOI: https://zenodo.org/records/17171112
+Project: https://github.com/klenioaraujo/Reformulating-Transformers-for-LLMs
+"""
+
 import torch
 import torch.nn as nn
 import math
 from typing import Optional, Dict, Tuple
 
-from ..core.quaternion_operations import QuaternionOperations
+from ..core.quaternion_operations import (
+    QuaternionLinear,
+    QuaternionLayerNorm,
+    SpectralActivation,
+    AdaptiveSpectralDropout,
+    RealTimeFractalAnalyzer
+)
 
 
 class QuaternionTokenEmbedding(nn.Module):
@@ -14,13 +33,18 @@ class QuaternionTokenEmbedding(nn.Module):
         self.vocab_size = vocab_size
         self.d_model = d_model
 
-        # Direct quaternion embedding (4× d_model for quaternion components)
-        self.embedding = nn.Embedding(vocab_size, 4 * d_model)
+        # Standard embedding + quaternion projection
+        self.embedding = nn.Embedding(vocab_size, d_model)
+        self.quaternion_projection = nn.Linear(d_model, 4 * d_model)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        # Direct quaternion embedding
+        # Standard embedding
         embedded = self.embedding(x)
-        return embedded
+
+        # Project to quaternion space
+        quaternion_embedded = self.quaternion_projection(embedded)
+
+        return quaternion_embedded
 
 
 class SpectralPositionalEncoding(nn.Module):
@@ -61,8 +85,10 @@ class AdaptiveSpectralFilter(nn.Module):
         self.d_model = d_model
 
         # Learnable filter parameters - match the head dimension
-        self.alpha = nn.Parameter(torch.ones(d_model // 8))  # head_dim
-        self.beta = nn.Parameter(torch.zeros(d_model // 8))  # head_dim
+        # head_dim = (d_model * 4) // n_heads, but we need to handle variable n_heads
+        # Use a larger dimension that can broadcast to common head dimensions
+        self.alpha = nn.Parameter(torch.ones(256))  # head_dim
+        self.beta = nn.Parameter(torch.zeros(256))  # head_dim
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         # Apply logarithmic phase filter
@@ -70,9 +96,22 @@ class AdaptiveSpectralFilter(nn.Module):
         phase = torch.angle(x)
 
         # Adaptive filtering - ensure proper broadcasting
-        # x shape: [batch_size, seq_len, n_heads, head_dim]
-        alpha_expanded = self.alpha.unsqueeze(0).unsqueeze(0).unsqueeze(0)
-        beta_expanded = self.beta.unsqueeze(0).unsqueeze(0).unsqueeze(0)
+        # Get the actual size of the last dimension
+        last_dim = x.size(-1)
+
+        # Slice or repeat parameters to match the input size
+        if last_dim <= self.alpha.size(0):
+            alpha_slice = self.alpha[:last_dim]
+            beta_slice = self.beta[:last_dim]
+        else:
+            # Repeat parameters if input is larger
+            repeat_factor = (last_dim + self.alpha.size(0) - 1) // self.alpha.size(0)
+            alpha_slice = self.alpha.repeat(repeat_factor)[:last_dim]
+            beta_slice = self.beta.repeat(repeat_factor)[:last_dim]
+
+        # Expand to match input dimensions
+        alpha_expanded = alpha_slice.view(1, 1, 1, -1)
+        beta_expanded = beta_slice.view(1, 1, 1, -1)
 
         filtered_magnitude = magnitude * torch.sigmoid(alpha_expanded)
         filtered_phase = phase + beta_expanded
@@ -104,46 +143,55 @@ class PsiQRHAttention(nn.Module):
         super().__init__()
         self.d_model = d_model
         self.n_heads = n_heads
-        self.head_dim = d_model // n_heads
+        self.head_dim = (d_model * 4) // n_heads  # Quaternion expands by 4
 
-        # ΨQRH-based projections
-        self.q_proj = nn.Linear(d_model, d_model)
-        self.k_proj = nn.Linear(d_model, d_model)
-        self.v_proj = nn.Linear(d_model, d_model)
+        # ΨQRH-based projections - quaternion already expands by 4
+        self.q_proj = QuaternionLinear(d_model, d_model)
+        self.k_proj = QuaternionLinear(d_model, d_model)
+        self.v_proj = QuaternionLinear(d_model, d_model)
 
         # Spectral filtering
-        self.spectral_filter = AdaptiveSpectralFilter(d_model)
+        self.spectral_filter = AdaptiveSpectralFilter(d_model * 4)
 
-        # Output projection
-        self.out_proj = nn.Linear(d_model, d_model)
+        # Single output projection to combine heads and maintain quaternion dimensions
+        self.out_proj = QuaternionLinear(d_model, d_model)
 
     def forward(self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor) -> torch.Tensor:
         batch_size, seq_len, _ = query.shape
 
-        # Project to query, key, value
+        # Project to quaternion space
         Q = self.q_proj(query)
         K = self.k_proj(key)
         V = self.v_proj(value)
 
-        # Reshape for multi-head
-        Q = Q.view(batch_size, seq_len, self.n_heads, self.head_dim)
-        K = K.view(batch_size, seq_len, self.n_heads, self.head_dim)
-        V = V.view(batch_size, seq_len, self.n_heads, self.head_dim)
+        # Reshape for multi-head attention
+        actual_head_dim = Q.size(-1) // self.n_heads
+        Q = Q.view(batch_size, seq_len, self.n_heads, actual_head_dim)
+        K = K.view(batch_size, seq_len, self.n_heads, actual_head_dim)
+        V = V.view(batch_size, seq_len, self.n_heads, actual_head_dim)
 
         # Apply spectral attention
         attention_output = self._spectral_attention(Q, K, V)
 
-        # Combine heads and project
-        attention_output = attention_output.reshape(batch_size, seq_len, self.d_model)
+        # Combine heads and maintain quaternion dimensions
+        attention_output = attention_output.reshape(batch_size, seq_len, -1)
+
+        # Ensure output has correct dimensions (d_model * 4)
+        if attention_output.size(-1) != self.d_model * 4:
+            # If dimensions don't match, use a temporary linear layer to adjust
+            if not hasattr(self, '_dim_adjuster'):
+                self._dim_adjuster = nn.Linear(attention_output.size(-1), self.d_model * 4).to(attention_output.device)
+            attention_output = self._dim_adjuster(attention_output)
+
         return self.out_proj(attention_output)
 
     def _spectral_attention(self, Q: torch.Tensor, K: torch.Tensor, V: torch.Tensor) -> torch.Tensor:
         """Spectral-based attention using ΨQRH principles"""
 
-        # Convert to frequency domain with orthonormal FFT
-        Q_fft = torch.fft.fft(Q, dim=1, norm="ortho")
-        K_fft = torch.fft.fft(K, dim=1, norm="ortho")
-        V_fft = torch.fft.fft(V, dim=1, norm="ortho")
+        # Convert to frequency domain
+        Q_fft = torch.fft.fft(Q, dim=1)
+        K_fft = torch.fft.fft(K, dim=1)
+        V_fft = torch.fft.fft(V, dim=1)
 
         # Apply spectral correlation
         correlation = Q_fft * K_fft.conj()
@@ -152,7 +200,7 @@ class PsiQRHAttention(nn.Module):
         filtered_correlation = self.spectral_filter(correlation)
 
         # Combine with value
-        attention_weights = torch.fft.ifft(filtered_correlation, dim=1, norm="ortho").real
+        attention_weights = torch.fft.ifft(filtered_correlation, dim=1).real
         attention_output = attention_weights * V
 
         return attention_output
@@ -164,15 +212,15 @@ class PsiQRHFeedForward(nn.Module):
     def __init__(self, d_model: int, dim_feedforward: int):
         super().__init__()
 
-        # Linear layers
-        self.linear1 = nn.Linear(d_model, dim_feedforward)
-        self.linear2 = nn.Linear(dim_feedforward, d_model)
+        # Quaternion-based linear layers
+        self.linear1 = QuaternionLinear(d_model, dim_feedforward)
+        self.linear2 = QuaternionLinear(dim_feedforward, d_model)
 
         # Spectral activation
-        self.activation = nn.GELU()
+        self.activation = SpectralActivation()
 
         # Adaptive dropout
-        self.dropout = nn.Dropout(0.1)
+        self.dropout = AdaptiveSpectralDropout()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         # First linear transformation
@@ -191,50 +239,68 @@ class PsiQRHFeedForward(nn.Module):
 
 
 class PsiQRHTransformerBlock(nn.Module):
-    """Complete ΨQRH transformer block with energy preservation"""
+    """Complete ΨQRH transformer block"""
 
-    def __init__(self, d_model: int, n_heads: int, dim_feedforward: int):
+    def __init__(self, d_model: int, n_heads: int, dim_feedforward: int, fractal_analysis_freq: int):
         super().__init__()
 
         # ΨQRH attention
-        self.self_attention = PsiQRHAttention(4 * d_model, n_heads)  # 4× for quaternion
-        self.attention_norm = nn.LayerNorm(4 * d_model)
+        self.self_attention = PsiQRHAttention(d_model, n_heads)
+        self.attention_norm = QuaternionLayerNorm(d_model)
 
         # ΨQRH feed-forward
-        self.feed_forward = PsiQRHFeedForward(4 * d_model, dim_feedforward)
-        self.ffn_norm = nn.LayerNorm(4 * d_model)
+        self.feed_forward = PsiQRHFeedForward(d_model, dim_feedforward)
+        self.ffn_norm = QuaternionLayerNorm(d_model)
 
-        # Layer scaling
-        self.layer_scale_attention = nn.Parameter(torch.ones(4 * d_model))
-        self.layer_scale_ffn = nn.Parameter(torch.ones(4 * d_model))
+        # Fractal analysis
+        self.fractal_analyzer = RealTimeFractalAnalyzer()
+
+        # Layer scaling - adjusted for quaternion dimensions
+        self.layer_scale_attention = nn.Parameter(torch.ones(d_model * 4))
+        self.layer_scale_ffn = nn.Parameter(torch.ones(d_model * 4))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        # Self-attention with residual
+        # Import energy normalization from BKP implementation
+        from ..core.utils import energy_normalize
+
+        # Self-attention with residual and energy conservation
         residual = x
         x = self.attention_norm(x)
-        x = self.self_attention(x, x, x)
+        attention_out = self.self_attention(x, x, x)
 
-        # Apply energy normalization after attention
-        from ..core.utils import energy_normalize
-        x = energy_normalize(residual, x)
+        # Apply energy normalization to preserve energy conservation
+        attention_out = energy_normalize(x, attention_out)
+        x = residual + self.layer_scale_attention * attention_out
 
-        x = residual + self.layer_scale_attention * x
-
-        # Feed-forward with residual
+        # Feed-forward with residual and energy conservation
         residual = x
         x = self.ffn_norm(x)
-        x = self.feed_forward(x)
+        ffn_out = self.feed_forward(x)
 
-        # Apply energy normalization after feed-forward
-        x = energy_normalize(residual, x)
+        # Apply energy normalization to preserve energy conservation
+        ffn_out = energy_normalize(x, ffn_out)
+        x = residual + self.layer_scale_ffn * ffn_out
 
-        x = residual + self.layer_scale_ffn * x
+        # Real-time fractal analysis
+        fractal_metrics = self.fractal_analyzer.analyze(x)
+        self._adapt_parameters(fractal_metrics)
 
         return x
 
+    def _adapt_parameters(self, fractal_metrics: Dict):
+        """Adapt parameters based on fractal analysis"""
+        # Update spectral filter parameters
+        new_alpha = self._map_fractal_to_alpha(fractal_metrics['dimension'])
+        self.self_attention.spectral_filter.update_alpha(new_alpha)
+
+    def _map_fractal_to_alpha(self, dimension: torch.Tensor) -> torch.Tensor:
+        """Map fractal dimension to spectral filter alpha parameter"""
+        # Higher dimension = more complex signal = stronger filtering
+        return torch.sigmoid(dimension - 1.5)  # Map to [0, 1] range
+
 
 class PsiQRHTransformer(nn.Module):
-    """Complete ΨQRH-based transformer architecture with energy preservation"""
+    """Complete ΨQRH-based transformer architecture"""
 
     def __init__(self,
                  vocab_size: int,
@@ -242,51 +308,69 @@ class PsiQRHTransformer(nn.Module):
                  n_layers: int = 6,
                  n_heads: int = 8,
                  dim_feedforward: int = 2048,
-                 max_seq_length: int = 1024):
+                 max_seq_length: int = 1024,
+                 fractal_analysis_freq: int = 1000,
+                 quaternion_multiplier: int = 4):
         super().__init__()
 
         self.vocab_size = vocab_size
         self.d_model = d_model
         self.n_layers = n_layers
+        self.quaternion_multiplier = quaternion_multiplier
 
         # ΨQRH-based components
         self.token_embedding = QuaternionTokenEmbedding(vocab_size, d_model)
         self.positional_encoding = SpectralPositionalEncoding(d_model, max_seq_length)
 
-        # ΨQRH transformer blocks with energy preservation
+        # ΨQRH transformer blocks
         self.layers = nn.ModuleList([
             PsiQRHTransformerBlock(
                 d_model=d_model,
                 n_heads=n_heads,
-                dim_feedforward=dim_feedforward
+                dim_feedforward=dim_feedforward,
+                fractal_analysis_freq=fractal_analysis_freq
             ) for _ in range(n_layers)
         ])
 
+        # Adaptive fractal controller (placeholder - would be implemented in optimization module)
+        # self.fractal_controller = AdaptiveFractalController(
+        #     window_size=fractal_analysis_freq
+        # )
+
         # Output projection (from quaternion space back to vocabulary)
-        self.output_projection = nn.Linear(4 * d_model, vocab_size)
+        # Use regular linear to go from quaternion space (d_model * quaternion_multiplier) to vocab_size
+        self.output_projection = nn.Linear(d_model * quaternion_multiplier, vocab_size)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        # Store original input for energy preservation
-        input_ids = x
+        # Import energy normalization from BKP implementation
+        from ..core.utils import energy_normalize
 
         # Embed tokens as quaternions
         x = self.token_embedding(x)
+        x_embedded = x  # Save embedded representation for energy reference
 
         # Apply spectral positional encoding
         x = self.positional_encoding(x)
 
-        # Process through ΨQRH layers
-        for layer in self.layers:
+        # Process through ΨQRH layers with energy conservation
+        for i, layer in enumerate(self.layers):
+            x_before_layer = x
             x = layer(x)
 
+            # Apply energy conservation after each layer (from BKP)
+            x = energy_normalize(x_before_layer, x)
+
+            # Adaptive fractal analysis and parameter adjustment (placeholder)
+            # if i % self.fractal_analysis_freq == 0:
+            #     self.fractal_controller.update_parameters(x, layer)
+
         # Project back from quaternion space
-        x = self.output_projection(x)
+        output = self.output_projection(x)
 
-        # Apply global energy normalization
-        from ..core.utils import energy_normalize
-        x = energy_normalize(self.token_embedding(input_ids), x)
+        # Final energy normalization to maintain overall energy conservation
+        output = energy_normalize(x_embedded, output)
 
-        return x
+        return output
 
     def get_model_info(self) -> Dict:
         """Get information about the model architecture"""
