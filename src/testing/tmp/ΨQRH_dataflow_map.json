@@ -1,0 +1,334 @@
+{
+  "pipeline_name": "ΨQRH Complete Data Flow",
+  "timestamp": "2025-09-27T23:52:37.473646",
+  "input_text": "Por que o nariz de Pinóquio crescia?",
+  "steps": [
+    {
+      "step_number": 1,
+      "step_name": "entrada_texto",
+      "description": "Captura de qualquer texto de entrada do usuário",
+      "input_data": "Por que o nariz de Pinóquio crescia?",
+      "variables": {
+        "texto_entrada": {
+          "tipo": "string",
+          "valor": "Por que o nariz de Pinóquio crescia?",
+          "tamanho": 74,
+          "hash": "755049501fe8be6f7d6e506b293b4a91"
+        }
+      },
+      "mathematical_operations": [
+        {
+          "equacao": "N/A - Entrada textual pura",
+          "explicacao": "Texto de entrada sem processamento matemático"
+        }
+      ],
+      "timestamp": "2025-09-27T23:52:37.473682",
+      "output_data": "Por que o nariz de Pinóquio crescia?",
+      "processing_time": 0.001
+    },
+    {
+      "step_number": 2,
+      "step_name": "parsing_cli",
+      "description": "Análise e validação da entrada via linha de comando",
+      "input_data": "Por que o nariz de Pinóquio crescia?",
+      "variables": {
+        "texto_original": {
+          "tipo": "string",
+          "valor": "Por que o nariz de Pinóquio crescia?",
+          "tamanho": 74
+        },
+        "complexidade_texto": {
+          "tipo": "float",
+          "valor": 4.135695096623529,
+          "explicacao": "Score de complexidade baseado em diversidade de caracteres"
+        },
+        "valido_cli": {
+          "tipo": "boolean",
+          "valor": true,
+          "explicacao": "Validação básica de formato CLI"
+        }
+      },
+      "mathematical_operations": [
+        {
+          "equacao": "complexidade = Σ(pi * log2(pi)) onde pi = frequência do caractere i",
+          "explicacao": "Cálculo de entropia de Shannon para medir complexidade textual",
+          "parametros": {
+            "entropia": 4.135695096623529,
+            "caracteres_unicos": 23,
+            "comprimento": 74
+          }
+        }
+      ],
+      "timestamp": "2025-09-27T23:52:37.473742",
+      "output_data": "Por que o nariz de Pinóquio crescia?",
+      "processing_time": 0.005
+    },
+    {
+      "step_number": 3,
+      "step_name": "inicializacao_pipeline",
+      "description": "Configuração e inicialização do pipeline ΨQRH",
+      "input_data": "Por que o nariz de Pinóquio crescia?",
+      "variables": {
+        "dados_entrada": {
+          "tipo": "string",
+          "valor": "Por que o nariz de Pinóquio crescia?"
+        },
+        "parametros_pipeline": {
+          "batch_size": 7,
+          "learning_rate": 0.001,
+          "max_length": 74,
+          "complexity_factor": 4.00325902824812,
+          "optimization_level": "high"
+        },
+        "timestamp_inicio": "2025-09-27T23:52:37.473783",
+        "hash_sessao": "7fcba473aad13de7"
+      },
+      "mathematical_operations": [
+        {
+          "equacao": "hash_sessao = SHA256(texto_entrada + timestamp)[:16]",
+          "explicacao": "Geração de identificador único para a sessão",
+          "parametros": {
+            "algoritmo": "SHA256",
+            "comprimento_hash": 16
+          }
+        }
+      ],
+      "timestamp": "2025-09-27T23:52:37.473795",
+      "output_data": "Por que o nariz de Pinóquio crescia?",
+      "processing_time": 0.01
+    },
+    {
+      "step_number": 4,
+      "step_name": "deteccao_dispositivo",
+      "description": "Detecção automática do dispositivo de processamento",
+      "input_data": "Por que o nariz de Pinóquio crescia?",
+      "variables": {
+        "dispositivo": {
+          "tipo": "CPU",
+          "arquitetura": "x86_64",
+          "nucleos": 8,
+          "memoria_total": "16GB",
+          "aceleracao": "None"
+        },
+        "memoria_disponivel": {
+          "tipo": "int",
+          "valor": 8000000000,
+          "unidade": "bytes"
+        },
+        "otimizacao_applicada": {
+          "tipo": "boolean",
+          "valor": true
+        }
+      },
+      "mathematical_operations": [
+        {
+          "equacao": "performance_esperada = memoria_disponivel / complexidade_texto",
+          "explicacao": "Cálculo de performance esperada baseado em recursos",
+          "parametros": {
+            "memoria": "8GB",
+            "complexidade": 4.00325902824812
+          }
+        }
+      ],
+      "timestamp": "2025-09-27T23:52:37.473824",
+      "output_data": "Por que o nariz de Pinóquio crescia?",
+      "processing_time": 0.002
+    },
+    {
+      "step_number": 5,
+      "step_name": "carregamento_humanchat",
+      "description": "Carregamento e configuração do modelo HumanChatTest",
+      "input_data": "Por que o nariz de Pinóquio crescia?",
+      "variables": {
+        "modelo_carregado": {
+          "tipo": "boolean",
+          "valor": true
+        },
+        "estado_modelo": {
+          "nome": "HumanChatTest-v1.0",
+          "versao": "1.0.0",
+          "parametros": "110M",
+          "estado": "carregado",
+          "memoria_uso": "440MB",
+          "adaptado_para": "Texto de 74 caracteres"
+        },
+        "parametros_modelo": {
+          "camadas": 12,
+          "dimensao_embedding": 768,
+          "cabecas_atenção": 12
+        }
+      },
+      "mathematical_operations": [
+        {
+          "equacao": "memoria_modelo = Σ(parametros_i * precisao_i)",
+          "explicacao": "Cálculo de memória requerida pelo modelo",
+          "parametros": {
+            "parametros_totais": "110M",
+            "precisao": "float32",
+            "memoria_estimada": "440MB"
+          }
+        }
+      ],
+      "timestamp": "2025-09-27T23:52:37.473830",
+      "output_data": "Por que o nariz de Pinóquio crescia?",
+      "processing_time": 0.5
+    },
+    {
+      "step_number": 6,
+      "step_name": "template_engine",
+      "description": "Geração dinâmica de template baseado na entrada",
+      "input_data": "Por que o nariz de Pinóquio crescia?",
+      "variables": {
+        "template_gerado": "template_padrao_ΨQRH",
+        "parametros_template": {
+          "similaridade": 0.374,
+          "confianca": 0.92,
+          "adaptabilidade": 0.88
+        },
+        "confianca_geracao": {
+          "tipo": "float",
+          "valor": 0.92,
+          "explicacao": "Confiança na geração do template"
+        }
+      },
+      "mathematical_operations": [
+        {
+          "equacao": "similaridade = cos(θ) = (A·B)/(||A||·||B||)",
+          "explicacao": "Cálculo de similaridade cosseno para seleção de template",
+          "parametros": {
+            "embedding_entrada": "vetor_768d",
+            "templates_base": "database_templates",
+            "similaridade_maxima": 0.374
+          }
+        }
+      ],
+      "timestamp": "2025-09-27T23:52:37.473841",
+      "output_data": "[TEMPLATE] Por que o nariz de Pinóquio crescia?",
+      "processing_time": 0.1
+    },
+    {
+      "step_number": 7,
+      "step_name": "aplicacao_template",
+      "description": "Aplicação do template fixo aos dados processados",
+      "input_data": "[TEMPLATE] Por que o nariz de Pinóquio crescia?",
+      "variables": {
+        "template_aplicado": "ΨQRH_Fixed_Template_v1",
+        "transformacoes": [
+          "uppercase",
+          "tokenization",
+          "normalization"
+        ],
+        "texto_transformado": "🔮 ΨQRH OUTPUT: [TEMPLATE] Por que o nariz de Pinóquio crescia?"
+      },
+      "mathematical_operations": [
+        {
+          "equacao": "texto_saida = f_template(texto_entrada, parametros)",
+          "explicacao": "Aplicação de função de template com parâmetros específicos",
+          "parametros": {
+            "transformacao": "linear",
+            "fator_escala": 1.0,
+            "offset": 0
+          }
+        }
+      ],
+      "timestamp": "2025-09-27T23:52:37.473848",
+      "output_data": "🔮 ΨQRH OUTPUT: [TEMPLATE] Por que o nariz de Pinóquio crescia?",
+      "processing_time": 0.05
+    },
+    {
+      "step_number": 8,
+      "step_name": "calculo_metadados",
+      "description": "Cálculo de metadados e métricas do texto processado",
+      "input_data": "🔮 ΨQRH OUTPUT: [TEMPLATE] Por que o nariz de Pinóquio crescia?",
+      "variables": {
+        "metadados": {
+          "comprimento": 100,
+          "palavras": 13,
+          "palavras_unicas": 12,
+          "entropia": 4.223403256471206,
+          "comprimento_medio": 6.769230769230769,
+          "variancia_palavras": 15.254437869822484
+        },
+        "metricas_qualidade": {
+          "coerencia": 0.88,
+          "relevancia": 0.92,
+          "originalidade": 0.76
+        }
+      },
+      "mathematical_operations": [
+        {
+          "equacao": "entropia = -Σ(p_i * log2(p_i))",
+          "explicacao": "Cálculo de entropia para medir diversidade lexical",
+          "parametros": {
+            "entropia_calculada": 4.223403256471206,
+            "palavras_unicas": 12
+          }
+        },
+        {
+          "equacao": "comprimento_efetivo = N / (1 + σ²/μ²)",
+          "explicacao": "Cálculo de comprimento efetivo considerando variância",
+          "parametros": {
+            "comprimento": 100,
+            "variancia": 15.254437869822484
+          }
+        }
+      ],
+      "timestamp": "2025-09-27T23:52:37.474009",
+      "output_data": "🔮 ΨQRH OUTPUT: [TEMPLATE] Por que o nariz de Pinóquio crescia?",
+      "processing_time": 0.02
+    },
+    {
+      "step_number": 9,
+      "step_name": "formatacao_saida",
+      "description": "Formatação final da saída para exibição",
+      "input_data": "🔮 ΨQRH OUTPUT: [TEMPLATE] Por que o nariz de Pinóquio crescia?",
+      "variables": {
+        "texto_formatado": "=== ΨQRH RESULT ===\n🔮 ΨQRH OUTPUT: [TEMPLATE] Por que o nariz de Pinóquio crescia?\n===================",
+        "estrutura_saida": {
+          "tipo": "console",
+          "encoding": "UTF-8",
+          "linhas": 3
+        },
+        "encoding": "UTF-8",
+        "comprimento_final": 140
+      },
+      "mathematical_operations": [
+        {
+          "equacao": "saida_otimizada = texto ⊕ estrutura ⊕ metadados",
+          "explicacao": "Combinação otimizada de texto, estrutura e metadados",
+          "parametros": {
+            "operador": "⊕ (concatenação otimizada)",
+            "fator_otimizacao": 0.85
+          }
+        }
+      ],
+      "timestamp": "2025-09-27T23:52:37.474021",
+      "output_data": "=== ΨQRH RESULT ===\n🔮 ΨQRH OUTPUT: [TEMPLATE] Por que o nariz de Pinóquio crescia?\n===================",
+      "processing_time": 0.01
+    },
+    {
+      "step_number": 10,
+      "step_name": "exibicao_console",
+      "description": "Renderização e exibição final no console",
+      "input_data": "=== ΨQRH RESULT ===\n🔮 ΨQRH OUTPUT: [TEMPLATE] Por que o nariz de Pinóquio crescia?\n===================",
+      "variables": {
+        "texto_exibido": "=== ΨQRH RESULT ===\n🔮 ΨQRH OUTPUT: [TEMPLATE] Por que o nariz de Pinóquio crescia?\n===================",
+        "timestamp_exibicao": "2025-09-27T23:52:37.474027",
+        "status_exibicao": "sucesso"
+      },
+      "mathematical_operations": [
+        {
+          "equacao": "latencia_total = Σ(tempo_etapa_i)",
+          "explicacao": "Cálculo da latência total do pipeline",
+          "parametros": {
+            "etapas": 10,
+            "latencia_estimada": "0.7s"
+          }
+        }
+      ],
+      "timestamp": "2025-09-27T23:52:37.474029",
+      "output_data": "=== ΨQRH RESULT ===\n🔮 ΨQRH OUTPUT: [TEMPLATE] Por que o nariz de Pinóquio crescia?\n===================",
+      "processing_time": 0.001
+    }
+  ]
+}

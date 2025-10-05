@@ -1,0 +1,207 @@
+# Cognitive Filters Configuration
+# ================================
+# Configurações para filtros semânticos adaptativos do sistema ΨQRH
+#
+# Este arquivo configura os três filtros cognitivos principais:
+# 1. ContradictionDetector - Detecção de contradições semânticas
+# 2. IrrelevanceFilter - Filtragem de irrelevâncias
+# 3. BiasFilter - Correção de vieses cognitivos
+#
+# Copyright (C) 2025 Klenio Araujo Padilha
+# Licensed under GNU GPLv3
+
+# ========================================
+# Semantic Filter Configuration
+# ========================================
+
+semantic_filter:
+  # Dimensões base
+  embed_dim: 64  # Dimensão base do embedding (será multiplicado por 4 para quaternions)
+  num_heads: 8   # Número de cabeças de atenção para detecção de contradição
+
+  # Learning parameters
+  learning_rate: 1.0e-4  # Taxa de aprendizado para filtros adaptativos
+  temperature: 0.5       # Temperatura para decisões sharper (menor = mais determinístico)
+  epsilon: 1.0e-8        # Epsilon para estabilidade numérica
+
+# ========================================
+# Contradiction Detector Configuration
+# ========================================
+
+contradiction_detector:
+  # Threshold de detecção
+  contradiction_threshold: 0.3  # Limiar para considerar contradição (0-1)
+
+  # Sensitivity parameters
+  contradiction_sensitivity: 2.0  # Fator de amplificação para detecção (maior = mais sensível)
+  phase_rotation_strength: 0.5    # Força da rotação de fase para atenuação (0-1)
+
+  # Multi-head attention settings
+  attention_dropout: 0.1  # Dropout nas cabeças de atenção
+
+  # Quaternion filter parameters
+  phase_filter_init_scale: 0.1  # Escala inicial do filtro de contradição de fase
+
+  # Enhancement features
+  enable_multi_scale_analysis: true      # Análise multi-escala de atenção
+  enable_statistical_anomalies: true     # Detecção de anomalias estatísticas
+  enable_adaptive_thresholding: true     # Thresholding adaptativo baseado em contexto
+
+  # Preservation factor (quanto do original preservar após filtragem)
+  preservation_factor_base: 1.0  # Fator base de preservação (ajustado dinamicamente)
+
+# ========================================
+# Irrelevance Filter Configuration
+# ========================================
+
+irrelevance_filter:
+  # Threshold de relevância
+  irrelevance_threshold: 0.4  # Limiar para considerar irrelevante (0-1)
+
+  # Topic extraction
+  topic_query_init_scale: 1.0  # Escala inicial da query de tópico principal
+
+  # Relevance scoring
+  relevance_encoder_hidden_ratio: 2  # Razão de redução na dimensão oculta (embed_dim / ratio)
+
+  # Spectral filtering
+  spectral_filter_init_value: 0.5  # Valor inicial do filtro espectral
+  enable_fft_filtering: true       # Habilitar filtragem FFT para irrelevâncias
+
+  # Topic consistency
+  topic_consistency_weight: 0.7  # Peso para consistência com tópico principal
+
+# ========================================
+# Bias Filter Configuration
+# ========================================
+
+bias_filter:
+  # Threshold de viés
+  bias_threshold: 0.6  # Limiar para considerar viés significativo (0-1)
+
+  # Bias pattern recognition
+  num_bias_patterns: 10  # Número de padrões de viés a detectar
+  bias_detector_layers: [1.0, 0.5]  # Razões de redução nas camadas do detector
+
+  # Quaternion correction
+  correction_quaternion_init_scale: 0.1  # Escala inicial dos quaternions de correção
+
+  # Adaptive threshold
+  enable_adaptive_bias_threshold: true  # Threshold adaptativo para viés
+
+  # Bias types to monitor (optional - can be expanded)
+  monitored_bias_types:
+    - confirmation_bias
+    - anchoring_bias
+    - availability_bias
+    - negativity_bias
+    - optimism_bias
+    - dunning_kruger
+    - fundamental_attribution
+    - in_group_bias
+    - out_group_homogeneity
+    - recency_bias
+
+# ========================================
+# Filter Coordination
+# ========================================
+
+filter_coordination:
+  # Mixing strategy
+  enable_adaptive_mixing: true  # Mixing adaptativo dos 3 filtros
+  initial_mixing_weights: [0.333, 0.333, 0.334]  # Pesos iniciais [contradiction, irrelevance, bias]
+
+  # Residual connection
+  residual_weight: 0.1  # Peso da conexão residual com input original
+
+  # Coordination network
+  coordinator_hidden_ratio: 2  # Razão de redução na rede de coordenação
+
+# ========================================
+# Semantic Health Monitoring
+# ========================================
+
+semantic_health:
+  # Enable health reporting
+  enable_health_reports: true
+
+  # Health thresholds
+  healthy_contradiction_max: 0.3  # Contradição saudável máxima
+  healthy_relevance_min: 0.6      # Relevância saudável mínima
+  healthy_bias_max: 0.4           # Viés saudável máximo
+
+  # Overall health calculation
+  health_weights:
+    contradiction: 0.4
+    relevance: 0.3
+    bias: 0.3
+
+# ========================================
+# Performance Optimization
+# ========================================
+
+performance:
+  # Batch processing
+  enable_batch_optimization: true
+  max_batch_size: 32
+
+  # Caching
+  enable_filter_caching: false  # Cache de resultados de filtros (use com cuidado)
+  cache_max_size: 100
+
+  # Precision
+  use_mixed_precision: false  # Usar mixed precision (bfloat16/float32)
+
+# ========================================
+# Debug and Logging
+# ========================================
+
+debug:
+  log_filter_metrics: false        # Logar métricas detalhadas dos filtros
+  log_attention_weights: false     # Logar pesos de atenção
+  log_contradiction_scores: false  # Logar scores de contradição
+  log_relevance_scores: false      # Logar scores de relevância
+  log_bias_scores: false           # Logar scores de viés
+  verbose_health_reports: false    # Relatórios de saúde verbosos
+
+  # Save intermediate results
+  save_intermediate_states: false
+  intermediate_output_dir: "tmp/cognitive_debug"
+
+# ========================================
+# Integration Settings
+# ========================================
+
+integration:
+  # Pipeline position
+  apply_after_qrh: true      # Aplicar filtros cognitivos após QRHLayer
+  apply_before_output: true  # Aplicar antes da camada de saída final
+
+  # Input/output format
+  expect_quaternion_input: true  # Espera entrada no formato quaterniônico [B, T, 4*D]
+
+  # Compatibility
+  auto_adapt_dimensions: true  # Adaptar dimensões automaticamente se necessário
+
+# ======================================================================
+# 🔬 INSTRUÇÕES DE VALIDAÇÃO DO NÚCLEO
+# ======================================================================
+# Para garantir que qualquer alteração nesta configuração não quebre as
+# propriedades matemáticas fundamentais do sistema ΨQRH (como a
+# conservação de energia), execute o teste de validação do núcleo.
+#
+# Este teste verifica:
+#   1. Conservação de Energia
+#   2. Teorema de Parseval (Corretude da FFT)
+#   3. Eficiência de Memória e Parâmetros
+#   4. Propriedades do Quaternion Rotacional
+#
+# COMO EXECUTAR:
+# No diretório raiz do projeto, execute o seguinte comando:
+#
+# make validate-core
+#
+# Se o teste falhar, revise suas configurações ou o código modificado.
+# A normalização de energia agora é obrigatória para garantir a
+# estabilidade do sistema.
+# ======================================================================

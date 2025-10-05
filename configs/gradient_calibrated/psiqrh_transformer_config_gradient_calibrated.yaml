@@ -1,0 +1,172 @@
+psiqrh_transformer:
+  model:
+    vocab_size: 50000
+    d_model: 64
+    n_layers: 6
+    n_heads: 8
+    dim_feedforward: 256
+    max_seq_length: 1024
+    quaternion_multiplier: 4
+  components:
+    use_kuramoto: true
+    use_working_memory: true
+    use_phase_sync: true
+    use_cognitive_filters: false
+    use_fractal_analysis: true
+  embedding:
+    type: quaternion
+    dropout: 0.1
+    learned_positional: false
+  positional_encoding:
+    type: spectral
+    max_len: 5000
+    frequency_init: random
+    frequency_scale: 6.283185307
+  attention:
+    type: spectral
+    use_spectral_filter: true
+    adaptive_filter_dim: 256
+    dropout: 0.1
+    attention_dropout: 0.1
+  feedforward:
+    activation: spectral
+    use_adaptive_dropout: true
+    dropout: 0.1
+    intermediate_dropout: 0.1
+  kuramoto:
+    enabled: true
+    config_path: configs/kuramoto_config.yaml
+    grid_size: 32
+    coupling_strength: 1.0
+    device: cpu
+    layer_scale_init: 0.1
+  phase_synchronization:
+    enabled: true
+    grid_size: 32
+    sync_threshold: 0.9
+    extract_rhythms: true
+    create_phase_maps: true
+    noise_filtering: true
+    visualization_enabled: false
+  working_memory:
+    enabled: true
+    config_path: configs/working_memory_config.yaml
+    memory_size: 1024
+    embed_dim: 64
+    layer_scale_init: 0.1
+    influence_weight: 0.3
+  cognitive_filters:
+    enabled: false
+    config_path: configs/cognitive_filters_config.yaml
+    apply_after: attention
+  harmonic_coupling:
+    enabled: true
+    config_path: configs/harmonic_coupling_config.yaml
+    preset: standard
+  fractal_analysis:
+    enabled: true
+    analysis_frequency: 1000
+    real_time: true
+    update_alpha: true
+    dimension_range:
+    - 1.0
+    - 3.0
+    target_dimension: 2.0
+  normalization:
+    type: quaternion_layer_norm
+    eps: 1.0e-06
+    elementwise_affine: true
+  layer_scaling:
+    use_layer_scale: true
+    init_values:
+      attention: 1.0
+      kuramoto: 0.1
+      memory: 0.1
+      feedforward: 1.0
+  regularization:
+    dropout: 0.1
+    attention_dropout: 0.1
+    feedforward_dropout: 0.1
+    spectral_dropout: 0.0
+    path_dropout: 0.0
+  energy_conservation:
+    enabled: true
+    tolerance: 0.05
+    apply_normalization: true
+    log_violations: true
+  training:
+    gradient_checkpointing: false
+    mixed_precision: false
+    compile_model: false
+  inference:
+    use_cache: true
+    beam_size: 1
+    temperature: 1.0
+    top_k: 50
+    top_p: 0.9
+  performance:
+    device: cpu
+    dtype: float32
+    num_workers: 4
+    pin_memory: true
+  visualization:
+    enabled: false
+    save_phase_maps: false
+    save_frequency: 100
+    output_dir: visualizations/
+  debug:
+    log_shapes: false
+    log_energy: false
+    log_gradients: false
+    log_metrics: true
+    verbose: false
+  checkpointing:
+    save_frequency: 1000
+    checkpoint_dir: checkpoints/
+    keep_last_n: 5
+    save_optimizer: true
+presets:
+  minimal:
+    model:
+      d_model: 32
+      n_layers: 2
+      n_heads: 4
+      dim_feedforward: 128
+    components:
+      use_kuramoto: false
+      use_working_memory: false
+      use_phase_sync: false
+  standard:
+    model:
+      d_model: 64
+      n_layers: 6
+      n_heads: 8
+      dim_feedforward: 256
+    components:
+      use_kuramoto: true
+      use_working_memory: true
+      use_phase_sync: true
+  full:
+    model:
+      d_model: 128
+      n_layers: 12
+      n_heads: 16
+      dim_feedforward: 512
+    components:
+      use_kuramoto: true
+      use_working_memory: true
+      use_phase_sync: true
+      use_cognitive_filters: true
+  consciousness:
+    model:
+      d_model: 64
+      n_layers: 8
+      n_heads: 8
+      dim_feedforward: 256
+    components:
+      use_kuramoto: true
+      use_working_memory: true
+      use_phase_sync: true
+    fractal_analysis:
+      analysis_frequency: 100
+      real_time: true

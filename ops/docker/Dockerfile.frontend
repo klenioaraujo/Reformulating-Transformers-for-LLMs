@@ -1,0 +1,19 @@
+FROM nginx:alpine
+
+# Copy nginx configuration
+COPY ops/docker/nginx.conf /etc/nginx/nginx.conf
+
+# Copy frontend files
+COPY templates/index.html /usr/share/nginx/html/index.html
+COPY frontend_example.html /usr/share/nginx/html/example.html
+
+# Create static assets directory and fix permissions
+RUN mkdir -p /usr/share/nginx/html/assets && \
+    chmod -R 755 /usr/share/nginx/html && \
+    chown -R nginx:nginx /usr/share/nginx/html
+
+# Expose port 80
+EXPOSE 80
+
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]

@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ΨQRH - Sistema de Consciência Fractal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #0F0F23 0%, #1a1a2e 50%, #16213e 100%);
+            color: #ffffff;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            height: calc(100vh - 70px);
+            margin-top: 70px;
+            gap: 0;
+        }
+
+        .panel {
+            height: 100%;
+            overflow: hidden;
+            border-right: 1px solid rgba(0, 255, 136, 0.2);
+        }
+
+        .panel:last-child {
+            border-right: none;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: transparent;
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(15, 15, 35, 0.98);
+            padding: 15px 30px;
+            border-bottom: 1px solid rgba(0, 255, 136, 0.3);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .header h1 {
+            font-size: 1.5em;
+            color: #00FF88;
+            text-shadow: 0 0 15px rgba(0, 255, 136, 0.6);
+            text-align: center;
+            margin: 0;
+        }
+
+        .tabs {
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            z-index: 999;
+            display: flex;
+            gap: 10px;
+            background: rgba(15, 15, 35, 0.95);
+            padding: 10px;
+            border-radius: 20px;
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 15px;
+            color: #00FF88;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tab-btn:hover {
+            background: rgba(0, 255, 136, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .tab-btn.active {
+            background: #00FF88;
+            color: #0F0F23;
+            font-weight: bold;
+        }
+
+        .resize-handle {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 10px;
+            height: 100vh;
+            cursor: col-resize;
+            z-index: 999;
+            background: rgba(0, 255, 136, 0.1);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .resize-handle:hover {
+            opacity: 1;
+        }
+
+        .panel-label {
+            position: fixed;
+            top: 130px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 8px 16px;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.85em;
+            color: #00FF88;
+            z-index: 998;
+        }
+
+        .panel-label.left {
+            left: 0;
+        }
+
+        .panel-label.right {
+            right: 0;
+            border-radius: 8px 0 0 8px;
+        }
+
+        @media (max-width: 1024px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: 1fr 1fr;
+            }
+
+            .panel {
+                border-right: none;
+                border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+            }
+
+            .panel:last-child {
+                border-bottom: none;
+            }
+
+            .resize-handle {
+                display: none;
+            }
+
+            .tabs {
+                top: auto;
+                bottom: 10px;
+                right: 10px;
+                left: 10px;
+                justify-content: center;
+            }
+
+            .header h1 {
+                font-size: 1.2em;
+            }
+        }
+
+        .sync-indicator {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1001;
+            background: rgba(0, 255, 136, 0.9);
+            color: #0F0F23;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+
+        .sync-indicator.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🧠 ΨQRH - Sistema Integrado de Consciência Fractal</h1>
+    </div>
+
+    <div class="sync-indicator" id="sync-indicator">
+        ⚡ Dados Sincronizados
+    </div>
+
+    <div class="panel-label left">💬 Chat Interface</div>
+    <div class="panel-label right">🎨 Visualização GLS</div>
+
+    <div class="main-container" id="main-container">
+        <div class="panel">
+            <iframe id="chat-frame" src="/chat.html"></iframe>
+        </div>
+        <div class="panel">
+            <iframe id="gls-frame" src="/harmonic_gls_demo.html"></iframe>
+        </div>
+    </div>
+
+    <div class="resize-handle" id="resize-handle"></div>
+
+    <div class="tabs">
+        <button class="tab-btn active" data-view="split">📊 Split View</button>
+        <button class="tab-btn" data-view="chat">💬 Chat Only</button>
+        <button class="tab-btn" data-view="gls">🎨 GLS Only</button>
+    </div>
+
+    <script>
+        const mainContainer = document.getElementById('main-container');
+        const syncIndicator = document.getElementById('sync-indicator');
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const chatFrame = document.getElementById('chat-frame');
+        const glsFrame = document.getElementById('gls-frame');
+
+        // Listen for data updates from chat
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'lastProcessedMessage' && e.newValue) {
+                showSyncIndicator();
+                // Reload GLS frame to pick up new data
+                glsFrame.contentWindow.postMessage({ type: 'data-updated' }, '*');
+            }
+        });
+
+        // Listen for custom events
+        window.addEventListener('psiqrh-data-updated', (e) => {
+            showSyncIndicator();
+            console.log('ΨQRH Data Updated:', e.detail);
+        });
+
+        // Show sync indicator briefly
+        function showSyncIndicator() {
+            syncIndicator.classList.add('show');
+            setTimeout(() => {
+                syncIndicator.classList.remove('show');
+            }, 2000);
+        }
+
+        // Tab switching
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Update active state
+                tabBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                // Change view
+                const view = btn.dataset.view;
+                switch(view) {
+                    case 'split':
+                        mainContainer.style.gridTemplateColumns = '1fr 1fr';
+                        chatFrame.parentElement.style.display = 'block';
+                        glsFrame.parentElement.style.display = 'block';
+                        break;
+                    case 'chat':
+                        mainContainer.style.gridTemplateColumns = '1fr';
+                        chatFrame.parentElement.style.display = 'block';
+                        glsFrame.parentElement.style.display = 'none';
+                        break;
+                    case 'gls':
+                        mainContainer.style.gridTemplateColumns = '1fr';
+                        chatFrame.parentElement.style.display = 'none';
+                        glsFrame.parentElement.style.display = 'block';
+                        break;
+                }
+            });
+        });
+
+        // Resize handle (optional enhancement)
+        const resizeHandle = document.getElementById('resize-handle');
+        let isResizing = false;
+
+        resizeHandle.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            document.body.style.cursor = 'col-resize';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing) return;
+
+            const containerRect = mainContainer.getBoundingClientRect();
+            const offsetX = e.clientX - containerRect.left;
+            const percentage = (offsetX / containerRect.width) * 100;
+
+            if (percentage > 20 && percentage < 80) {
+                mainContainer.style.gridTemplateColumns = `${percentage}% ${100 - percentage}%`;
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isResizing) {
+                isResizing = false;
+                document.body.style.cursor = 'default';
+            }
+        });
+
+        // Cross-frame communication
+        window.addEventListener('message', (event) => {
+            // Handle messages from iframes if needed
+            if (event.data.type === 'chat-message-sent') {
+                console.log('Chat message sent, updating GLS...');
+                showSyncIndicator();
+            }
+        });
+
+        // Initialize
+        console.log('ΨQRH Integrated System Initialized');
+        console.log('Chat: /chat.html');
+        console.log('GLS: /harmonic_gls_demo.html');
+    </script>
+</body>
+</html>

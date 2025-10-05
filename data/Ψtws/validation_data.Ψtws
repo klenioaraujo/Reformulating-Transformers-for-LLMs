@@ -1,0 +1,44 @@
+ΨTWS_FILE_FORMAT_v1.0
+MAGIC_HEADER: ΨTWS_SPECTRAL_DATA
+VERSION: 1.0
+CREATION_DATE: 2025-09-30
+ENCRYPTION_LAYERS: 7
+SPECTRAL_DIMENSION: 256
+
+# Validation Data Set
+# Used for model validation and testing
+
+INPUT_TEXT: "Validation dataset for ΨCWS system testing and performance evaluation across multiple spectral dimensions and encryption layers."
+
+SPECTRAL_DATA:
+  - DIMENSIONS: [256, 128]
+  - COMPRESSION: log
+  - NORMALIZATION: per_channel
+  - ENCODING: utf-8
+  - SAMPLE_RATE: 16000
+  - N_FFT: 1024
+  - N_MELS: 80
+
+ENCRYPTION_INFO:
+  - LAYER_1: AES-256-GCM
+  - LAYER_2: ChaCha20-Poly1305
+  - LAYER_3: Fernet
+  - LAYER_4: XOR-Custom
+  - LAYER_5: Transposition
+  - LAYER_6: HMAC-AES
+  - LAYER_7: Obfuscation
+
+SCIENTIFIC_MASK:
+  - PATTERN: fractal_gaussian
+  - ENTROPY_THRESHOLD: 0.8
+  - APPLIED: true
+  - MASK_ENTROPY: 0.82
+
+VALIDATION_METRICS:
+  - LOSS: cross_entropy
+  - ACCURACY: conversion_accuracy
+  - SPECTRAL_FIDELITY: spectral_similarity
+  - ENCRYPTION_SECURITY: security_score
+
+VALIDATION_HASH: c3d4e5f67890a1b2
+END_OF_FILE

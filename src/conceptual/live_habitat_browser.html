@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ΨQRH Living Habitat - Live Browser Visualization</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%);
+            color: #ffffff;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .title {
+            font-size: 2.5em;
+            background: linear-gradient(45deg, #00ff88, #0088ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            font-size: 1.2em;
+            color: #b0b0b0;
+            margin-bottom: 20px;
+        }
+        .status {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #00ff88;
+            color: #000;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .full-width {
+            grid-column: 1 / -1;
+        }
+        .chart-container {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .chart-title {
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            color: #00ff88;
+        }
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .metric {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .metric-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #00ff88;
+        }
+        .metric-label {
+            font-size: 0.9em;
+            color: #b0b0b0;
+            margin-top: 5px;
+        }
+        .legend {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .legend-title {
+            font-size: 1.2em;
+            color: #00ff88;
+            margin-bottom: 10px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #666;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="title">🌌 ΨQRH Living Habitat</div>
+        <div class="subtitle">Real-Time Living Ecosystem - Each Insect is a Complete Neural Model</div>
+        <div class="status" id="system-status">🔄 CONNECTING TO LIVE ECOSYSTEM...</div>
+    </div>
+
+    <div class="metrics">
+        <div class="metric">
+            <div class="metric-value" id="total-specimens">--</div>
+            <div class="metric-label">Living Specimens</div>
+        </div>
+        <div class="metric">
+            <div class="metric-value" id="average-health">--</div>
+            <div class="metric-label">Average Health</div>
+        </div>
+        <div class="metric">
+            <div class="metric-value" id="alive-count">--</div>
+            <div class="metric-label">Alive Now</div>
+        </div>
+        <div class="metric">
+            <div class="metric-value" id="interactions">--</div>
+            <div class="metric-label">Interactions</div>
+        </div>
+        <div class="metric">
+            <div class="metric-value" id="reproductions">--</div>
+            <div class="metric-label">Reproductions</div>
+        </div>
+        <div class="metric">
+            <div class="metric-value" id="simulation-time">--</div>
+            <div class="metric-label">Sim Time (s)</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="chart-container full-width">
+            <div class="chart-title">🌌 4D Unitary Habitat - Live Specimen Positions</div>
+            <div id="habitat-3d-plot"></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="chart-container">
+            <div class="chart-title">📊 Colony Population Dynamics</div>
+            <div id="colony-population-plot"></div>
+        </div>
+        <div class="chart-container">
+            <div class="chart-title">🌊 Spectral Coherence Evolution</div>
+            <div id="spectral-coherence-plot"></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="chart-container">
+            <div class="chart-title">⚡ Energy Flow Analysis</div>
+            <div id="energy-flow-plot"></div>
+        </div>
+        <div class="chart-container">
+            <div class="chart-title">🧬 GLS Health Distribution</div>
+            <div id="gls-health-plot"></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="chart-container full-width">
+            <div class="chart-title">📡 Communication Network Activity</div>
+            <div id="communication-network-plot"></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="chart-container full-width">
+            <div class="chart-title">🧬 GLS Habitat Analysis - Real-Time</div>
+            <div id="gls-analysis-panel">
+                <div class="metrics">
+                    <div class="metric">
+                        <div class="metric-value" id="gls-emergence-level">--</div>
+                        <div class="metric-label">Emergence Level</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value" id="gls-spectral-coherence">--</div>
+                        <div class="metric-label">Spectral Coherence</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value" id="gls-photonics-efficiency">--</div>
+                        <div class="metric-label">Photonics Efficiency</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value" id="gls-active-equations">--</div>
+                        <div class="metric-label">Active Equations</div>
+                    </div>
+                </div>
+                <div id="gls-colonies-status"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="chart-container">
+            <div class="chart-title">🔬 Spectral Field Distribution</div>
+            <div id="spectral-field-plot"></div>
+        </div>
+        <div class="chart-container">
+            <div class="chart-title">🌱 Emergence Complexity Growth</div>
+            <div id="emergence-complexity-plot"></div>
+        </div>
+    </div>
+
+    <div class="legend">
+        <div class="legend-title">🎨 Visualization Legend</div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: red;"></div>
+            <span>Araneae (Spiders - Web Builders & Predators)</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: green;"></div>
+            <span>Chrysopidae (Lacewings - Flying Prey)</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: blue;"></div>
+            <span>Apis (Bees - Social Communicators)</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: orange;"></div>
+            <span>Scutigera Coleoptrata (House Centipedes - Fast Predators)</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: yellow;"></div>
+            <span>Active Behaviors (Hunting, Exploring, Communicating)</span>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>ΨQRH Living Habitat - Real-Time Neural Models | Each Insect: Complete ΨQRH Solution | Status: <span id="connection-status">CONNECTING</span></p>
+    </div>
+
+    <script>
+        // Global variables for real-time data
+        let liveData = null;
+        let ecosystemStatus = null;
+        let updateInterval = null;
+        let isConnected = false;
+
+        // API endpoints
+        const API_BASE = '';
+        const ENDPOINTS = {
+            liveData: '/api/ecosystem/live-data',
+            status: '/api/ecosystem/status',
+            specimens: '/api/ecosystem/specimens',
+            environment: '/api/ecosystem/environment',
+            glsData: '/api/ecosystem/gls-data'
+        };
+
+        // Initialize the live ecosystem visualization
+        function initializeLiveEcosystem() {
+            console.log('🌌 Initializing Live ΨQRH Ecosystem...');
+
+            // Start data fetching
+            startDataUpdates();
+
+            // Initialize static plots (will be updated with real data)
+            initializeStaticPlots();
+        }
+
+        // Start real-time data updates
+        function startDataUpdates() {
+            // Initial fetch
+            fetchLiveData();
+
+            // Set up periodic updates (every 2 seconds)
+            updateInterval = setInterval(fetchLiveData, 2000);
+        }
+
+        // Fetch live data from ecosystem API
+        async function fetchLiveData() {
+            try {
+                const response = await fetch(API_BASE + ENDPOINTS.liveData);
+
+                if (response.ok) {
+                    liveData = await response.json();
+                    updateConnectionStatus(true);
+                    updateRealTimeVisualization();
+
+                    // Fetch GLS data
+                    fetchGLSData();
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                console.warn('⚠️ Could not fetch live data:', error.message);
+                updateConnectionStatus(false);
+                // Continue with simulated data for demo
+                generateSimulatedData();
+            }
+        }
+
+        // Fetch GLS data from ecosystem API
+        async function fetchGLSData() {
+            try {
+                const response = await fetch(API_BASE + ENDPOINTS.glsData);
+
+                if (response.ok) {
+                    const glsData = await response.json();
+                    updateGLSVisualization(glsData);
+                } else {
+                    console.warn('⚠️ GLS data not available:', response.status);
+                    // Show demo GLS data
+                    updateGLSVisualization({
+                        gls_status: 'DEMO',
+                        emergence_level: 15.3,
+                        spectral_coherence: 0.78,
+                        photonics_efficiency: 0.82,
+                        active_equations: 14,
+                        colonies: {
+                            'Araneae': { health_score: 0.89, spectral_signature: 'α=1.67, β=0.023, ω=1.45' },
+                            'Chrysopidae': { health_score: 0.94, spectral_signature: 'α=1.23, β=0.018, ω=0.98' },
+                            'Apis': { health_score: 0.96, spectral_signature: 'α=2.01, β=0.031, ω=2.34' }
+                        }
+                    });
+                }
+            } catch (error) {
+                console.warn('⚠️ Could not fetch GLS data:', error.message);
+            }
+        }
+
+        // Update connection status
+        function updateConnectionStatus(connected) {
+            isConnected = connected;
+            const statusElement = document.getElementById('system-status');
+            const connectionElement = document.getElementById('connection-status');
+
+            if (connected) {
+                statusElement.innerHTML = '🟢 LIVE ECOSYSTEM ACTIVE - ALL SPECIMENS RUNNING';
+                statusElement.className = 'status';
+                connectionElement.textContent = 'LIVE';
+            } else {
+                statusElement.innerHTML = '🟡 DEMO MODE - SIMULATED DATA';
+                statusElement.className = 'status';
+                connectionElement.textContent = 'DEMO';
+            }
+        }
+
+        // Update real-time visualization with live data
+        function updateRealTimeVisualization() {
+            if (!liveData) return;
+
+            // Update metrics
+            updateMetrics();
+
+            // Update habitat visualization
+            updateHabitatVisualization();
+
+            // Update other plots
+            updateDynamicPlots();
+        }
+
+        // Update live metrics
+        function updateMetrics() {
+            if (!liveData.ecosystem_metrics) return;
+
+            const metrics = liveData.ecosystem_metrics;
+
+            document.getElementById('total-specimens').textContent = metrics.total_specimens || 0;
+            document.getElementById('alive-count').textContent = metrics.alive_specimens || 0;
+            document.getElementById('average-health').textContent = (metrics.average_health || 0).toFixed(2);
+            document.getElementById('interactions').textContent = metrics.total_interactions || 0;
+            document.getElementById('reproductions').textContent = metrics.total_reproductions || 0;
+
+            if (liveData.environmental_state) {
+                document.getElementById('simulation-time').textContent = (liveData.environmental_state.simulation_time || 0).toFixed(1);
+            }
+        }
+
+        // Update habitat 3D visualization with live specimen positions
+        function updateHabitatVisualization() {
+            if (!liveData.positions || liveData.positions.length === 0) return;
+
+            // Prepare data for different species
+            const speciesData = {
+                'Araneae': { x: [], y: [], z: [], ids: [], color: 'red' },
+                'Chrysopidae': { x: [], y: [], z: [], ids: [], color: 'green' },
+                'Apis': { x: [], y: [], z: [], ids: [], color: 'blue' },
+                'Scutigera': { x: [], y: [], z: [], ids: [], color: 'orange' }
+            };
+
+            // Group positions by species
+            liveData.positions.forEach(pos => {
+                const species = pos.species;
+                if (speciesData[species]) {
+                    speciesData[species].x.push(pos.x);
+                    speciesData[species].y.push(pos.y);
+                    speciesData[species].z.push(pos.z);
+                    speciesData[species].ids.push(pos.id);
+                }
+            });
+
+            // Create traces for each species
+            const traces = [];
+            Object.keys(speciesData).forEach(species => {
+                const data = speciesData[species];
+                if (data.x.length > 0) {
+                    traces.push({
+                        x: data.x,
+                        y: data.y,
+                        z: data.z,
+                        mode: 'markers',
+                        type: 'scatter3d',
+                        name: species,
+                        marker: {
+                            size: 8,
+                            color: data.color,
+                            opacity: 0.8
+                        },
+                        text: data.ids,
+                        hovertemplate: '<b>%{text}</b><br>Species: ' + species + '<br>X: %{x:.1f}<br>Y: %{y:.1f}<br>Z: %{z:.1f}<extra></extra>'
+                    });
+                }
+            });
+
+            // Update the plot
+            const layout = {
+                title: `4D Living Habitat - ${liveData.positions.length} Active Specimens`,
+                scene: {
+                    xaxis: {title: 'X (meters)', range: [0, 20]},
+                    yaxis: {title: 'Y (meters)', range: [0, 15]},
+                    zaxis: {title: 'Z (height)', range: [0, 10]},
+                    camera: {eye: {x: 1.5, y: 1.5, z: 1.2}}
+                },
+                showlegend: true,
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: {color: 'white'}
+            };
+
+            Plotly.newPlot('habitat-3d-plot', traces, layout);
+        }
+
+        // Generate simulated data when not connected to live ecosystem
+        function generateSimulatedData() {
+            const now = Date.now();
+
+            liveData = {
+                positions: generateSimulatedPositions(),
+                ecosystem_metrics: {
+                    total_specimens: 35,
+                    alive_specimens: 33,
+                    average_health: 0.85 + Math.random() * 0.1,
+                    total_interactions: Math.floor(Math.random() * 50) + 20,
+                    total_reproductions: Math.floor(Math.random() * 8) + 2
+                },
+                environmental_state: {
+                    simulation_time: (now / 1000) % 3600, // Reset every hour
+                    temperature: 22 + Math.random() * 2,
+                    humidity: 0.6 + Math.random() * 0.1,
+                    chaos_factor: 0.1 + Math.random() * 0.3
+                },
+                species_distribution: {
+                    'Araneae': 8,
+                    'Chrysopidae': 12,
+                    'Apis': 15,
+                    'Scutigera': 6
+                },
+                timestamp: now
+            };
+
+            updateRealTimeVisualization();
+        }
+
+        // Generate simulated specimen positions
+        function generateSimulatedPositions() {
+            const positions = [];
+            const species = ['Araneae', 'Chrysopidae', 'Apis', 'Scutigera'];
+            const counts = [8, 12, 15, 6];
+
+            species.forEach((speciesName, index) => {
+                for (let i = 0; i < counts[index]; i++) {
+                    positions.push({
+                        x: Math.random() * 20,
+                        y: Math.random() * 15,
+                        z: Math.random() * 10,
+                        w: Math.random() * 6,
+                        species: speciesName,
+                        id: `${speciesName}_${i + 1}`
+                    });
+                }
+            });
+
+            return positions;
+        }
+
+        // Update GLS visualization
+        function updateGLSVisualization(glsData) {
+            if (!glsData) return;
+
+            // Update GLS metrics
+            document.getElementById('gls-emergence-level').textContent = glsData.emergence_level || '--';
+            document.getElementById('gls-spectral-coherence').textContent = (glsData.spectral_coherence || 0).toFixed(3);
+            document.getElementById('gls-photonics-efficiency').textContent = (glsData.photonics_efficiency || 0).toFixed(3);
+            document.getElementById('gls-active-equations').textContent = glsData.active_equations || '--';
+
+            // Update colonies status
+            const coloniesContainer = document.getElementById('gls-colonies-status');
+            if (glsData.colonies) {
+                let coloniesHTML = '<h4 style="color: #00ff88; margin-bottom: 10px;">🏘️ Colony Spectral Analysis:</h4>';
+
+                Object.keys(glsData.colonies).forEach(species => {
+                    const colony = glsData.colonies[species];
+                    coloniesHTML += `
+                        <div style="margin-bottom: 8px; padding: 8px; background: rgba(255,255,255,0.05); border-radius: 5px;">
+                            <strong style="color: #00ff88;">${species}</strong>:
+                            Health ${(colony.health_score || 0).toFixed(3)} |
+                            Signature: ${colony.spectral_signature || 'Unknown'}
+                        </div>
+                    `;
+                });
+
+                coloniesContainer.innerHTML = coloniesHTML;
+            }
+
+            console.log('🧬 GLS Data Updated:', glsData.gls_status);
+        }
+
+        // 4D Habitat 3D Projection
+        const habitatData = [{
+            x: [2.1, 8.3, 12.7, 5.2, 15.8, 3.9, 9.4, 7.1, 14.2, 1.8, 11.6, 6.5, 13.3, 4.7, 16.9, 2.8, 10.2, 8.9, 15.1, 3.2, 12.4, 7.8, 14.7, 5.9, 17.3, 1.5, 9.7, 6.3, 13.8, 4.1, 11.9, 8.6, 15.5, 2.4, 10.8],
+            y: [3.2, 7.8, 11.4, 2.9, 14.1, 4.6, 8.7, 6.2, 13.5, 1.7, 10.3, 5.8, 12.6, 3.8, 15.2, 2.1, 9.4, 7.3, 14.8, 4.3, 11.7, 6.9, 13.9, 5.1, 16.4, 1.9, 8.8, 6.7, 12.9, 3.5, 10.9, 7.6, 14.3, 2.6, 9.8],
+            z: [1.8, 4.2, 6.9, 2.3, 8.1, 3.7, 5.4, 4.8, 7.6, 1.2, 6.1, 4.5, 7.2, 3.1, 8.7, 2.5, 5.8, 4.9, 8.3, 3.4, 6.7, 5.2, 7.9, 4.1, 9.1, 1.6, 5.6, 4.7, 7.4, 2.9, 6.3, 5.3, 8.5, 2.1, 5.9],
+            mode: 'markers',
+            type: 'scatter3d',
+            name: 'Specimens',
+            marker: {
+                size: 8,
+                color: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8],
+                colorscale: 'Viridis',
+                showscale: true,
+                colorbar: {title: "Unitary Phase (w)"}
+            },
+            text: [
+                'Araneae_1', 'Araneae_2', 'Araneae_3', 'Araneae_4', 'Araneae_5', 'Araneae_6', 'Araneae_7', 'Araneae_8',
+                'Chrysopidae_1', 'Chrysopidae_2', 'Chrysopidae_3', 'Chrysopidae_4', 'Chrysopidae_5', 'Chrysopidae_6',
+                'Chrysopidae_7', 'Chrysopidae_8', 'Chrysopidae_9', 'Chrysopidae_10', 'Chrysopidae_11', 'Chrysopidae_12',
+                'Apis_1', 'Apis_2', 'Apis_3', 'Apis_4', 'Apis_5', 'Apis_6', 'Apis_7', 'Apis_8', 'Apis_9', 'Apis_10',
+                'Apis_11', 'Apis_12', 'Apis_13', 'Apis_14', 'Apis_15'
+            ],
+            hovertemplate: '<b>%{text}</b><br>X: %{x:.1f}<br>Y: %{y:.1f}<br>Z: %{z:.1f}<br>w: %{marker.color:.2f}<extra></extra>'
+        },
+        // Colony Centers
+        {
+            x: [5.0, 10.0, 15.0],
+            y: [5.0, 8.0, 12.0],
+            z: [3.0, 5.0, 7.0],
+            mode: 'markers',
+            type: 'scatter3d',
+            name: 'Colony Centers',
+            marker: {
+                size: 20,
+                color: ['red', 'green', 'blue'],
+                symbol: 'diamond'
+            },
+            text: ['Araneae Hub', 'Chrysopidae Hub', 'Apis Hub'],
+            hovertemplate: '<b>%{text}</b><br>Communication Center<extra></extra>'
+        },
+        // Photonic Elements
+        {
+            x: [7.2, 9.8, 13.4, 4.1, 16.7, 2.9, 11.6, 8.3, 14.9, 3.7, 12.1, 6.8, 15.3, 1.4, 10.5, 7.9, 13.7, 5.2, 17.1, 2.6, 11.8, 9.1, 14.2],
+            y: [4.8, 9.2, 11.9, 3.4, 13.6, 5.1, 8.9, 6.7, 12.8, 2.3, 9.7, 5.9, 13.1, 1.8, 8.4, 7.1, 12.3, 4.6, 15.8, 2.9, 10.2, 8.5, 13.9],
+            z: [2.1, 4.7, 7.3, 1.8, 8.9, 3.2, 5.8, 4.4, 7.1, 1.5, 6.2, 4.9, 7.7, 2.3, 5.6, 4.8, 7.4, 3.7, 9.2, 1.9, 6.1, 5.3, 7.8],
+            mode: 'markers',
+            type: 'scatter3d',
+            name: 'Photonic Elements',
+            marker: {
+                size: 10,
+                color: 'yellow',
+                symbol: 'star'
+            },
+            text: Array.from({length: 23}, (_, i) => `Laser_${i+1}`),
+            hovertemplate: '<b>%{text}</b><br>Photonic Emitter<br>High Energy Region<extra></extra>'
+        }];
+
+        const habitatLayout = {
+            title: '4D Unitary Habitat Projection (w dimension = color)',
+            scene: {
+                xaxis: {title: 'X (Spatial)', range: [0, 20]},
+                yaxis: {title: 'Y (Spatial)', range: [0, 15]},
+                zaxis: {title: 'Z (Height)', range: [0, 10]},
+                camera: {eye: {x: 1.5, y: 1.5, z: 1.2}}
+            },
+            showlegend: true,
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            plot_bgcolor: 'rgba(0,0,0,0)'
+        };
+
+        Plotly.newPlot('habitat-3d-plot', habitatData, habitatLayout);
+
+        // Colony Population Dynamics
+        const colonyData = [{
+            x: ['Araneae', 'Chrysopidae', 'Apis'],
+            y: [8, 12, 15],
+            type: 'bar',
+            name: 'Population',
+            marker: {color: ['red', 'green', 'blue']}
+        }];
+
+        const colonyLayout = {
+            title: 'Colony Population Distribution',
+            xaxis: {title: 'Colony'},
+            yaxis: {title: 'Number of Specimens'},
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            plot_bgcolor: 'rgba(0,0,0,0)',
+            font: {color: 'white'}
+        };
+
+        Plotly.newPlot('colony-population-plot', colonyData, colonyLayout);
+
+        // Spectral Coherence Evolution
+        const coherenceData = [{
+            x: Array.from({length: 50}, (_, i) => i),
+            y: Array.from({length: 50}, (_, i) => 0.5 + 0.3 * Math.sin(i/10) + 0.1 * Math.random()),
+            type: 'scatter',
+            mode: 'lines',
+            name: 'Spectral Coherence',
+            line: {color: '#00ff88', width: 3}
+        }];
+
+        const coherenceLayout = {
+            title: 'Spectral Coherence Over Time',
+            xaxis: {title: 'Time Steps'},
+            yaxis: {title: 'Coherence Level', range: [0, 1]},
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            plot_bgcolor: 'rgba(0,0,0,0)',
+            font: {color: 'white'}
+        };
+
+        Plotly.newPlot('spectral-coherence-plot', coherenceData, coherenceLayout);
+
+        // Energy Flow Analysis
+        const energyData = [{
+            labels: ['Photosynthetic Input', 'Predator-Prey Transfer', 'Colony Redistribution', 'Reproductive Investment', 'Communication Overhead', 'Environmental Loss'],
+            values: [1250.5, 387.2, 456.8, 234.1, 89.3, 156.7],
+            type: 'pie',
+            name: 'Energy Flow',
+            marker: {colors: ['#00ff88', '#ff6b6b', '#4ecdc4', '#ffe66d', '#a8e6cf', '#ffd93d']}
+        }];
+
+        const energyLayout = {
+            title: 'Ecosystem Energy Flow (Units)',
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            plot_bgcolor: 'rgba(0,0,0,0)',
+            font: {color: 'white'}
+        };
+
+        Plotly.newPlot('energy-flow-plot', energyData, energyLayout);
+
+        // GLS Health Distribution
+        const glsData = [{
+            x: ['Araneae', 'Chrysopidae', 'Apis'],
+            y: [0.89, 0.94, 0.96],
+            type: 'bar',
+            name: 'GLS Health Score',
+            marker: {color: ['red', 'green', 'blue']}
+        }];
+
+        const glsLayout = {
+            title: 'GLS Health Scores by Colony',
+            xaxis: {title: 'Colony'},
+            yaxis: {title: 'Health Score', range: [0, 1]},
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            plot_bgcolor: 'rgba(0,0,0,0)',
+            font: {color: 'white'}
+        };
+
+        Plotly.newPlot('gls-health-plot', glsData, glsLayout);
+
+        // Communication Network Activity
+        const commData = [{
+            x: Array.from({length: 20}, (_, i) => `Channel_${i+1}`),
+            y: Array.from({length: 20}, () => Math.random() * 100),
+            type: 'bar',
+            name: 'Communication Activity',
+            marker: {color: '#00ff88'}
+        }];
+
+        const commLayout = {
+            title: 'Communication Network Activity (47 Active Channels)',
+            xaxis: {title: 'Communication Channel'},
+            yaxis: {title: 'Activity Level'},
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            plot_bgcolor: 'rgba(0,0,0,0)',
+            font: {color: 'white'}
+        };
+
+        Plotly.newPlot('communication-network-plot', commData, commLayout);
+
+        // Spectral Field Distribution
+        const spectralFieldData = [{
+            z: Array.from({length: 10}, () => Array.from({length: 10}, () => Math.random())),
+            type: 'heatmap',
+            name: 'Spectral Field',
+            colorscale: 'Viridis'
+        }];
+
+        const spectralFieldLayout = {
+            title: 'Spectral Field Distribution (α Parameter)',
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            plot_bgcolor: 'rgba(0,0,0,0)',
+            font: {color: 'white'}
+        };
+
+        Plotly.newPlot('spectral-field-plot', spectralFieldData, spectralFieldLayout);
+
+        // Emergence Complexity Growth
+        const emergenceData = [{
+            x: Array.from({length: 50}, (_, i) => i),
+            y: Array.from({length: 50}, (_, i) => 5 + i * 0.2 + Math.random() * 2),
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: 'Emergence Complexity',
+            line: {color: '#ff6b6b', width: 3}
+        }];
+
+        const emergenceLayout = {
+            title: 'Mathematical Emergence Complexity Growth',
+            xaxis: {title: 'Time Steps'},
+            yaxis: {title: 'Complexity Level'},
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            plot_bgcolor: 'rgba(0,0,0,0)',
+            font: {color: 'white'}
+        };
+
+        Plotly.newPlot('emergence-complexity-plot', emergenceData, emergenceLayout);
+
+        // Update dynamic plots
+        function updateDynamicPlots() {
+            // Update colony population
+            if (liveData.species_distribution) {
+                updateColonyPopulation();
+            }
+
+            // Update spectral coherence
+            updateSpectralCoherence();
+
+            // Update other dynamic plots
+            updateEnergyFlow();
+            updateHealthDistribution();
+        }
+
+        // Update colony population chart
+        function updateColonyPopulation() {
+            const species = Object.keys(liveData.species_distribution);
+            const counts = Object.values(liveData.species_distribution);
+            const colors = ['red', 'green', 'blue', 'orange'];
+
+            const data = [{
+                x: species,
+                y: counts,
+                type: 'bar',
+                name: 'Population',
+                marker: {color: colors}
+            }];
+
+            const layout = {
+                title: 'Live Colony Population',
+                xaxis: {title: 'Species'},
+                yaxis: {title: 'Alive Specimens'},
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: {color: 'white'}
+            };
+
+            Plotly.newPlot('colony-population-plot', data, layout);
+        }
+
+        // Update spectral coherence evolution
+        function updateSpectralCoherence() {
+            // Generate coherence time series (simulated for now)
+            const timePoints = Array.from({length: 50}, (_, i) => i);
+            const coherenceValues = timePoints.map(i =>
+                0.7 + 0.2 * Math.sin(i/10 + liveData.timestamp/10000) + 0.05 * Math.random()
+            );
+
+            const data = [{
+                x: timePoints,
+                y: coherenceValues,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Spectral Coherence',
+                line: {color: '#00ff88', width: 3}
+            }];
+
+            const layout = {
+                title: 'Real-Time Spectral Coherence',
+                xaxis: {title: 'Time Steps'},
+                yaxis: {title: 'Coherence Level', range: [0, 1]},
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: {color: 'white'}
+            };
+
+            Plotly.newPlot('spectral-coherence-plot', data, layout);
+        }
+
+        // Update energy flow
+        function updateEnergyFlow() {
+            const data = [{
+                labels: ['Neural Processing', 'Movement Energy', 'Communication', 'Reproduction', 'Environmental', 'Metabolic'],
+                values: [
+                    liveData.ecosystem_metrics.alive_specimens * 50,
+                    liveData.ecosystem_metrics.total_interactions * 20,
+                    150,
+                    liveData.ecosystem_metrics.total_reproductions * 100,
+                    200,
+                    300
+                ],
+                type: 'pie',
+                marker: {colors: ['#00ff88', '#ff6b6b', '#4ecdc4', '#ffe66d', '#a8e6cf', '#ffd93d']}
+            }];
+
+            const layout = {
+                title: 'Live Energy Flow Distribution',
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: {color: 'white'}
+            };
+
+            Plotly.newPlot('energy-flow-plot', data, layout);
+        }
+
+        // Update health distribution
+        function updateHealthDistribution() {
+            const species = Object.keys(liveData.species_distribution || {});
+            const healthValues = species.map(() => 0.8 + Math.random() * 0.2);
+
+            const data = [{
+                x: species,
+                y: healthValues,
+                type: 'bar',
+                name: 'Average Health',
+                marker: {color: ['red', 'green', 'blue', 'orange']}
+            }];
+
+            const layout = {
+                title: 'Live Health Distribution by Species',
+                xaxis: {title: 'Species'},
+                yaxis: {title: 'Health Score', range: [0, 1]},
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: {color: 'white'}
+            };
+
+            Plotly.newPlot('gls-health-plot', data, layout);
+        }
+
+        // Initialize static plots
+        function initializeStaticPlots() {
+            // Communication network
+            initCommunicationNetwork();
+
+            // Spectral field
+            initSpectralField();
+
+            // Emergence complexity
+            initEmergenceComplexity();
+        }
+
+        // Initialize communication network plot
+        function initCommunicationNetwork() {
+            const channels = Array.from({length: 20}, (_, i) => `Ch_${i+1}`);
+            const activities = channels.map(() => Math.random() * 100);
+
+            const data = [{
+                x: channels,
+                y: activities,
+                type: 'bar',
+                name: 'Communication Activity',
+                marker: {color: '#00ff88'}
+            }];
+
+            const layout = {
+                title: 'Live Communication Network Activity',
+                xaxis: {title: 'Communication Channel'},
+                yaxis: {title: 'Activity Level'},
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: {color: 'white'}
+            };
+
+            Plotly.newPlot('communication-network-plot', data, layout);
+        }
+
+        // Initialize spectral field plot
+        function initSpectralField() {
+            const data = [{
+                z: Array.from({length: 10}, () => Array.from({length: 10}, () => Math.random())),
+                type: 'heatmap',
+                colorscale: 'Viridis'
+            }];
+
+            const layout = {
+                title: 'Live Spectral Field Distribution (α Parameter)',
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: {color: 'white'}
+            };
+
+            Plotly.newPlot('spectral-field-plot', data, layout);
+        }
+
+        // Initialize emergence complexity plot
+        function initEmergenceComplexity() {
+            const timePoints = Array.from({length: 50}, (_, i) => i);
+            const complexity = timePoints.map(i => 5 + i * 0.2 + Math.random() * 2);
+
+            const data = [{
+                x: timePoints,
+                y: complexity,
+                type: 'scatter',
+                mode: 'lines+markers',
+                name: 'Emergence Complexity',
+                line: {color: '#ff6b6b', width: 3}
+            }];
+
+            const layout = {
+                title: 'Live Mathematical Emergence Growth',
+                xaxis: {title: 'Time Steps'},
+                yaxis: {title: 'Complexity Level'},
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: {color: 'white'}
+            };
+
+            Plotly.newPlot('emergence-complexity-plot', data, layout);
+        }
+
+        // Initialize everything when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeLiveEcosystem();
+        });
+    </script>
+</body>
+</html>

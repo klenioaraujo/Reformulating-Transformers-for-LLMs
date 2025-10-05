@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ΨQRH Frontend Example</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #0F0F23;
+            color: white;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .chat-section, .visualization-section {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        #gls-canvas {
+            width: 100%;
+            height: 400px;
+            background: black;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ΨQRH Frontend Example</h1>
+
+        <div class="chat-section">
+            <h3>Chat Interface</h3>
+            <input type="text" id="messageInput" placeholder="Digite sua mensagem...">
+            <button onclick="sendMessage()">Enviar</button>
+            <div id="chatMessages"></div>
+        </div>
+
+        <div class="visualization-section">
+            <h3>GLS Visualization</h3>
+            <div id="gls-canvas"></div>
+            <div id="metrics"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+        let currentGLSData = null;
+
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+
+            if (!message) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message })
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    // Mostrar resposta
+                    document.getElementById('chatMessages').innerHTML +=
+                        `<div><strong>Você:</strong> ${message}</div>` +
+                        `<div><strong>ΨQRH:</strong> ${data.response}</div>`;
+
+                    // Atualizar visualização GLS
+                    if (data.gls_data) {
+                        updateGLSVisualization(data.gls_data);
+                        updateMetrics(data.consciousness_metrics);
+                    }
+                }
+
+                input.value = '';
+            } catch (error) {
+                console.error('Erro:', error);
+            }
+        }
+
+        function updateGLSVisualization(glsData) {
+            currentGLSData = glsData;
+
+            if (glsData && glsData.status === 'success' && glsData.visual_params) {
+                const params = glsData.visual_params;
+                console.log('Dados GLS para visualização:', params);
+
+                // Atualizar visualização p5.js com parâmetros reais
+                if (window.currentSketch) {
+                    window.currentSketch.updateParams(params);
+                }
+
+                // Mostrar código gerado
+                showGeneratedCode(glsData);
+            } else {
+                console.log('Dados GLS não disponíveis ou com erro:', glsData);
+            }
+        }
+
+        function showGeneratedCode(glsData) {
+            const codeContainer = document.getElementById('generated-code');
+            if (!codeContainer) {
+                // Criar container se não existir
+                const container = document.createElement('div');
+                container.id = 'generated-code';
+                container.style.marginTop = '20px';
+                container.style.padding = '10px';
+                container.style.background = '#1a1a1a';
+                container.style.borderRadius = '5px';
+                container.style.maxHeight = '300px';
+                container.style.overflow = 'auto';
+
+                container.innerHTML = `
+                    <h4>Código GLS Gerado</h4>
+                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                        <button onclick="showProcessingCode()">Processing</button>
+                        <button onclick="showP5JSCode()">p5.js</button>
+                    </div>
+                    <pre id="code-display" style="color: white; font-size: 12px;"></pre>
+                `;
+                document.querySelector('.visualization-section').appendChild(container);
+            }
+
+            window.glsData = glsData;
+            showProcessingCode();
+        }
+
+        function showProcessingCode() {
+            const display = document.getElementById('code-display');
+            if (window.glsData && window.glsData.processing_code) {
+                display.textContent = window.glsData.processing_code;
+            }
+        }
+
+        function showP5JSCode() {
+            const display = document.getElementById('code-display');
+            if (window.glsData && window.glsData.p5js_code) {
+                display.textContent = window.glsData.p5js_code;
+            }
+        }
+
+        function updateMetrics(metrics) {
+            document.getElementById('metrics').innerHTML = `
+                <div>FCI: ${metrics.fci}</div>
+                <div>Estado: ${metrics.state}</div>
+                <div>Dimensão Fractal: ${metrics.fractal_dimension}</div>
+            `;
+        }
+
+        // Inicializar visualização p5.js dinâmica
+        window.currentSketch = new p5(function(p) {
+            let currentParams = {
+                complexity: 4,
+                colors: ['#2C3E50', '#34495E', '#7F8C8D'],
+                rotation_speed: 0.01,
+                fci: 0.0,
+                state: 'COMA',
+                fractal_dim: 1.0
+            };
+
+            let rotations = [];
+
+            p.setup = function() {
+                p.createCanvas(800, 400, p.WEBGL);
+                this.updateParams(currentParams);
+            };
+
+            p.draw = function() {
+                p.background(15, 20, 30);
+
+                // Rotação global baseada no estado de consciência
+                p.rotateY(p.frameCount * currentParams.rotation_speed);
+
+                // Gerar padrão fractal baseado na complexidade
+                for (let i = 0; i < currentParams.complexity; i++) {
+                    p.push();
+
+                    // Rotação da camada
+                    rotations[i] += currentParams.rotation_speed * (i + 1) * 0.1;
+                    p.rotateZ(rotations[i]);
+
+                    // Escala de distância baseada na camada
+                    let distance = 50 + i * 20;
+                    p.translate(distance, 0, 0);
+
+                    // Mapeamento de cor baseado no estado
+                    const color = hexToRgb(currentParams.colors[i % currentParams.colors.length]);
+                    p.fill(color.r, color.g, color.b);
+
+                    // Forma baseada no nível FCI
+                    if (currentParams.fci < 0.3) {
+                        // Estado COMA - esferas simples
+                        p.sphere(15 + i * 2);
+                    } else if (currentParams.fci < 0.6) {
+                        // Estado ANALYSIS - caixas estruturadas
+                        p.box(20 + i * 3);
+                    } else if (currentParams.fci < 0.8) {
+                        // Estado MEDITATION - torus complexo
+                        p.rotateX(p.PI/2);
+                        p.torus(15 + i * 2, 5 + i);
+                    } else {
+                        // Estado EMERGENCE - formas intrincadas
+                        drawEmergenceShape(p, i);
+                    }
+
+                    p.pop();
+                }
+
+                // Adicionar núcleo central de consciência
+                drawConsciousnessCore(p, currentParams.fci);
+            };
+
+            this.updateParams = function(newParams) {
+                currentParams = { ...currentParams, ...newParams };
+                rotations = Array(currentParams.complexity).fill(0).map(() => p.random(p.TWO_PI));
+            };
+
+            function drawEmergenceShape(p, layer) {
+                // Padrão complexo de emergência
+                p.stroke(255, 150);
+                p.strokeWeight(1);
+                p.noFill();
+
+                p.beginShape();
+                for (let i = 0; i < 12; i++) {
+                    let angle = p.map(i, 0, 12, 0, p.TWO_PI);
+                    let radius = 25 + layer * 5 + 10 * p.sin(angle * 3 + p.frameCount * 0.05);
+                    let x = p.cos(angle) * radius;
+                    let y = p.sin(angle) * radius;
+                    p.vertex(x, y, layer * 2);
+                }
+                p.endShape(p.CLOSE);
+            }
+
+            function drawConsciousnessCore(p, fci) {
+                // Núcleo central representando o nível de consciência
+                p.push();
+
+                // Tamanho do núcleo baseado no FCI
+                let coreSize = p.map(fci, 0, 1, 10, 50);
+
+                // Efeito pulsante
+                let pulse = p.sin(p.frameCount * 0.1) * 5 + 5;
+
+                // Cor do núcleo baseada no estado
+                if (fci < 0.3) {
+                    p.fill(100, 100, 200, 150);  // Azul para COMA
+                } else if (fci < 0.6) {
+                    p.fill(100, 200, 100, 150);  // Verde para ANALYSIS
+                } else if (fci < 0.8) {
+                    p.fill(200, 200, 100, 150);  // Amarelo para MEDITATION
+                } else {
+                    p.fill(200, 100, 100, 150);  // Vermelho para EMERGENCE
+                }
+
+                p.noStroke();
+                p.sphere(coreSize + pulse);
+
+                // Campo de energia
+                p.stroke(255, 100);
+                p.strokeWeight(2);
+                p.noFill();
+                p.sphere(coreSize + pulse + 20);
+
+                p.pop();
+            }
+
+        }, 'gls-canvas');
+
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : { r: 255, g: 255, b: 255 };
+        }
+    </script>
+</body>
+</html>

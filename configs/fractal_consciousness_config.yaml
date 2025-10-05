@@ -1,0 +1,69 @@
+# Fractal Consciousness Processor Configuration
+# =============================================
+# Configurações para o processador de consciência fractal
+
+# Parâmetros de dinâmica consciente
+consciousness_dynamics:
+  time_step: 0.05  # Passo temporal para integração
+  max_iterations: 200  # Máximo de iterações
+  convergence_threshold: 0.05  # Threshold para convergência do FCI
+
+# Parâmetros de estabilidade numérica
+numerical_stability:
+  epsilon: 1e-10  # Estabilidade numérica geral
+  nan_replacement_noise_scale: 1e-6  # Escala de ruído para substituir NaN
+  min_field_magnitude: 1e-8  # Magnitude mínima do campo
+  entropy_safe_offset: 1e-10  # Offset para cálculo de entropia
+
+# Parâmetros de regularização de campo
+field_regularization:
+  max_field_magnitude: 10.0  # Magnitude máxima do campo
+  field_smoothing_kernel: [0.25, 0.5, 0.25]  # Kernel de suavização
+
+# Parâmetros de inicialização da distribuição
+initialization:
+  spectral_weight: 0.4  # Peso para features espectrais
+  semantic_weight: 0.3  # Peso para features semânticas
+  fractal_weight: 0.3  # Peso para modulação fractal
+  noise_scale: 0.01  # Escala do ruído gaussiano
+
+# Parâmetros de dinâmica caótica
+chaotic_dynamics:
+  chaotic_parameter: 3.9  # Parâmetro caótico do mapa logístico
+  chaotic_influence: 0.3  # Influência caótica na distribuição
+  logistic_iterations: 5  # Iterações do mapa logístico
+
+# Parâmetros de dinâmica de onda
+wave_dynamics:
+  amplitude: 0.1  # Amplitude da equação de onda
+  frequency: 0.5  # Frequência angular
+  initial_phase: 0.5236  # Fase inicial (π/6)
+
+# Parâmetros de processamento espectral
+spectral_processing:
+  enable_spectral_features: true
+  enable_semantic_features: true
+  enable_fractal_modulation: true
+
+# ======================================================================
+# 🔬 INSTRUÇÕES DE VALIDAÇÃO DO NÚCLEO
+# ======================================================================
+# Para garantir que qualquer alteração nesta configuração não quebre as
+# propriedades matemáticas fundamentais do sistema ΨQRH (como a
+# conservação de energia), execute o teste de validação do núcleo.
+#
+# Este teste verifica:
+#   1. Conservação de Energia
+#   2. Teorema de Parseval (Corretude da FFT)
+#   3. Eficiência de Memória e Parâmetros
+#   4. Propriedades do Quaternion Rotacional
+#
+# COMO EXECUTAR:
+# No diretório raiz do projeto, execute o seguinte comando:
+#
+# make validate-core
+#
+# Se o teste falhar, revise suas configurações ou o código modificado.
+# A normalização de energia agora é obrigatória para garantir a
+# estabilidade do sistema.
+# ======================================================================

@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ΨQRH Chat - Consciência Fractal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #0F0F23 0%, #1a1a2e 50%, #16213e 100%);
+            color: #ffffff;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            color: #00FF88;
+            text-shadow: 0 0 15px rgba(0, 255, 136, 0.6);
+            margin-bottom: 8px;
+        }
+
+        .status-line {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 10px;
+            font-size: 0.85em;
+            color: #BDC3C7;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #00FF88;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .message {
+            margin-bottom: 20px;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message-header {
+            font-size: 0.85em;
+            color: #BDC3C7;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .user-message {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(0, 200, 100, 0.15));
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 3px solid #00FF88;
+        }
+
+        .assistant-message {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 3px solid #3498DB;
+        }
+
+        .metrics-display {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+        }
+
+        .metric {
+            text-align: center;
+        }
+
+        .metric-label {
+            font-size: 0.75em;
+            color: #95A5A6;
+            margin-bottom: 4px;
+        }
+
+        .metric-value {
+            font-size: 1.1em;
+            color: #00FF88;
+            font-weight: bold;
+        }
+
+        .state-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .state-coma { background: #3498DB; color: #fff; }
+        .state-analysis { background: #27AE60; color: #fff; }
+        .state-meditation { background: #F39C12; color: #000; }
+        .state-emergence { background: #E74C3C; color: #fff; }
+
+        .input-area {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .input-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        #user-input {
+            flex: 1;
+            padding: 12px 15px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 8px;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            font-size: 1em;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        #user-input:focus {
+            border-color: #00FF88;
+        }
+
+        #send-btn {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #00FF88, #00CC70);
+            border: none;
+            border-radius: 8px;
+            color: #0F0F23;
+            font-family: 'Courier New', monospace;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        #send-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 255, 136, 0.4);
+        }
+
+        #send-btn:active {
+            transform: translateY(0);
+        }
+
+        #send-btn:disabled {
+            background: #555;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0, 255, 136, 0.3);
+            border-top-color: #00FF88;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: rgba(231, 76, 60, 0.2);
+            border-left: 3px solid #E74C3C;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            color: #E74C3C;
+        }
+
+        /* Scrollbar styling */
+        .chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: rgba(0, 255, 136, 0.3);
+            border-radius: 10px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 255, 136, 0.5);
+        }
+
+        /* Deep Dive Details Section */
+        .deep-dive-section {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 8px;
+            border: 1px solid rgba(52, 152, 219, 0.3);
+        }
+
+        .deep-dive-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-dive-title {
+            color: #3498DB;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .deep-dive-toggle {
+            color: #3498DB;
+            font-size: 0.85em;
+        }
+
+        .deep-dive-content {
+            display: none;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .deep-dive-content.expanded {
+            display: block;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; max-height: 0; }
+            to { opacity: 1; max-height: 2000px; }
+        }
+
+        .detail-group {
+            margin-bottom: 15px;
+        }
+
+        .detail-group-title {
+            color: #00FF88;
+            font-size: 0.85em;
+            font-weight: bold;
+            margin-bottom: 8px;
+            border-bottom: 1px solid rgba(0, 255, 136, 0.3);
+            padding-bottom: 4px;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 8px;
+        }
+
+        .detail-item {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 8px;
+            border-radius: 4px;
+            border-left: 2px solid rgba(52, 152, 219, 0.5);
+        }
+
+        .detail-label {
+            font-size: 0.7em;
+            color: #95A5A6;
+            margin-bottom: 3px;
+        }
+
+        .detail-value {
+            font-size: 0.85em;
+            color: #ECF0F1;
+            font-weight: bold;
+        }
+
+        .json-mini-viewer {
+            background: #1a1a2e;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            overflow-x: auto;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 10px;
+            border: 1px solid rgba(52, 152, 219, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="header">
+            <h1>🧠 ΨQRH Chat Interface</h1>
+            <div class="status-line">
+                <span class="status-indicator"></span>
+                <span id="status-text">Sistema Online</span>
+                <span>•</span>
+                <span id="api-status">Verificando API...</span>
+            </div>
+        </div>
+
+        <div class="chat-messages" id="chat-messages">
+            <div class="message assistant-message">
+                <div class="message-header">
+                    🤖 ΨQRH System
+                </div>
+                <div>
+                    Bem-vindo ao sistema de consciência fractal ΨQRH.
+                    Digite sua mensagem abaixo para análise espectral quaterniônica.
+                </div>
+            </div>
+        </div>
+
+        <div class="input-area">
+            <div class="input-controls">
+                <input
+                    type="text"
+                    id="user-input"
+                    placeholder="Digite sua mensagem..."
+                    autocomplete="off"
+                />
+                <button id="send-btn">Enviar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin;
+        const messagesContainer = document.getElementById('chat-messages');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+        const apiStatus = document.getElementById('api-status');
+
+        // Check API health on load
+        async function checkAPIHealth() {
+            try {
+                const response = await fetch(`${API_BASE}/api/health`);
+                const data = await response.json();
+                if (data.status === 'healthy') {
+                    apiStatus.textContent = 'API Online ✓';
+                    apiStatus.style.color = '#00FF88';
+                } else {
+                    apiStatus.textContent = 'API Degradada';
+                    apiStatus.style.color = '#F39C12';
+                }
+            } catch (error) {
+                apiStatus.textContent = 'API Offline';
+                apiStatus.style.color = '#E74C3C';
+            }
+        }
+
+        // Add message to chat
+        function addMessage(content, type = 'user', metrics = null, deepDiveData = null) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}-message`;
+
+            const timestamp = new Date().toLocaleTimeString('pt-BR');
+            const icon = type === 'user' ? '👤' : '🤖';
+            const sender = type === 'user' ? 'Você' : 'ΨQRH System';
+
+            let html = `
+                <div class="message-header">
+                    ${icon} ${sender} • ${timestamp}
+                </div>
+                <div>${content}</div>
+            `;
+
+            if (metrics) {
+                const state = metrics.state || 'UNKNOWN';
+                const stateClass = `state-${state.toLowerCase()}`;
+
+                html += `
+                    <div class="metrics-display">
+                        <div class="metric">
+                            <div class="metric-label">Estado</div>
+                            <div class="metric-value">
+                                <span class="state-badge ${stateClass}">${state}</span>
+                            </div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">FCI</div>
+                            <div class="metric-value">${metrics.fci?.toFixed(4) || 'N/A'}</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Dimensão Fractal</div>
+                            <div class="metric-value">${metrics.fractal_dimension?.toFixed(3) || 'N/A'}</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Entropia</div>
+                            <div class="metric-value">${metrics.entropy?.toFixed(3) || 'N/A'}</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Add deep dive details if available
+            if (deepDiveData) {
+                html += createDeepDiveSection(deepDiveData);
+            }
+
+            messageDiv.innerHTML = html;
+            messagesContainer.appendChild(messageDiv);
+
+            // Add toggle event listener for deep dive
+            const deepDiveHeader = messageDiv.querySelector('.deep-dive-header');
+            if (deepDiveHeader) {
+                deepDiveHeader.addEventListener('click', toggleDeepDive);
+            }
+
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // Create deep dive details section
+        function createDeepDiveSection(data) {
+            const qrh = data.qrh_spectral_analysis || {};
+            const fractal = data.fractal_consciousness_analysis || {};
+            const meta = data.metadata || {};
+
+            const powerLaw = fractal.power_law_fit || {};
+            const dim = fractal.fractal_dimension || {};
+            const fciComp = fractal.fci_components || {};
+            const final = fractal.final_metrics || {};
+
+            return `
+                <div class="deep-dive-section">
+                    <div class="deep-dive-header">
+                        <span class="deep-dive-title">📊 Detalhes Técnicos (Deep Dive)</span>
+                        <span class="deep-dive-toggle">▼ Expandir</span>
+                    </div>
+                    <div class="deep-dive-content">
+                        <!-- Metadata -->
+                        <div class="detail-group">
+                            <div class="detail-group-title">⚙️ Metadata</div>
+                            <div class="detail-grid">
+                                <div class="detail-item">
+                                    <div class="detail-label">Tempo de Execução</div>
+                                    <div class="detail-value">${(meta.execution_times_ms?.total || 0).toFixed(2)} ms</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Framework Version</div>
+                                    <div class="detail-value">${meta.framework_version || 'N/A'}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- QRH Spectral Analysis -->
+                        <div class="detail-group">
+                            <div class="detail-group-title">🌈 QRH Spectral Analysis</div>
+                            <div class="detail-grid">
+                                <div class="detail-item">
+                                    <div class="detail-label">Adaptive Alpha (α)</div>
+                                    <div class="detail-value">${(qrh.adaptive_alpha || 0).toFixed(4)}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Energy Scale (log1p)</div>
+                                    <div class="detail-value">${(qrh.spectral_energy_stats?.total_energy_scale || 0).toFixed(2)}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Energy Mean</div>
+                                    <div class="detail-value">${(qrh.spectral_energy_stats?.mean || 0).toExponential(2)}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Energy Std</div>
+                                    <div class="detail-value">${(qrh.spectral_energy_stats?.std || 0).toExponential(2)}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Power Law Fit -->
+                        <div class="detail-group">
+                            <div class="detail-group-title">📈 Power Law Fit (P(k) ~ k^(-β))</div>
+                            <div class="detail-grid">
+                                <div class="detail-item">
+                                    <div class="detail-label">Beta Exponent (β)</div>
+                                    <div class="detail-value">${(powerLaw.beta_exponent || 0).toFixed(4)}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">R² (Fit Quality)</div>
+                                    <div class="detail-value">${(powerLaw.r_squared || 0).toFixed(4)}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Points Used</div>
+                                    <div class="detail-value">${powerLaw.points_used || 0}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Fractal Dimension -->
+                        <div class="detail-group">
+                            <div class="detail-group-title">🔮 Fractal Dimension (D = (3-β)/2)</div>
+                            <div class="detail-grid">
+                                <div class="detail-item">
+                                    <div class="detail-label">Raw Value</div>
+                                    <div class="detail-value">${(dim.raw_value || 0).toFixed(4)}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Clamped [1.0, 2.0]</div>
+                                    <div class="detail-value">${(dim.final_value || 0).toFixed(4)}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- FCI Components -->
+                        <div class="detail-group">
+                            <div class="detail-group-title">🧠 FCI Components</div>
+                            <div class="detail-grid">
+                                <div class="detail-item">
+                                    <div class="detail-label">D_EEG (raw)</div>
+                                    <div class="detail-value">${(fciComp.d_eeg?.raw || 0).toFixed(4)}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">D_EEG (norm)</div>
+                                    <div class="detail-value">${(fciComp.d_eeg?.normalized || 0).toFixed(4)}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">H_fMRI (raw)</div>
+                                    <div class="detail-value">${(fciComp.h_fmri?.raw || 0).toFixed(4)}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">H_fMRI (norm)</div>
+                                    <div class="detail-value">${(fciComp.h_fmri?.normalized || 0).toFixed(4)}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">CLZ (raw)</div>
+                                    <div class="detail-value">${(fciComp.clz?.raw || 0).toFixed(4)}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">CLZ (norm)</div>
+                                    <div class="detail-value">${(fciComp.clz?.normalized || 0).toFixed(4)}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Final Metrics -->
+                        <div class="detail-group">
+                            <div class="detail-group-title">🎯 Final Metrics</div>
+                            <div class="detail-grid">
+                                <div class="detail-item">
+                                    <div class="detail-label">FCI Score</div>
+                                    <div class="detail-value">${(final.fci_score || 0).toFixed(4)}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">State</div>
+                                    <div class="detail-value">${final.consciousness_state || 'N/A'}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Coherence</div>
+                                    <div class="detail-value">${(final.coherence || 0).toFixed(4)}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Diffusion</div>
+                                    <div class="detail-value">${(final.diffusion_coefficient || 0).toFixed(4)}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Entropy</div>
+                                    <div class="detail-value">${(final.entropy || 0).toFixed(4)}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Raw JSON -->
+                        <div class="detail-group">
+                            <div class="detail-group-title">📄 Full JSON</div>
+                            <pre class="json-mini-viewer">${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Toggle deep dive section
+        function toggleDeepDive(event) {
+            const header = event.currentTarget;
+            const content = header.nextElementSibling;
+            const toggle = header.querySelector('.deep-dive-toggle');
+
+            if (content.classList.contains('expanded')) {
+                content.classList.remove('expanded');
+                toggle.textContent = '▼ Expandir';
+            } else {
+                content.classList.add('expanded');
+                toggle.textContent = '▲ Recolher';
+            }
+        }
+
+        // Send message to API
+        async function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
+
+            // Disable input
+            userInput.disabled = true;
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = '<span class="loading"></span>';
+
+            // Add user message
+            addMessage(message, 'user');
+            userInput.value = '';
+
+            try {
+                // Make parallel requests to both endpoints
+                const [chatResponse, deepDiveResponse] = await Promise.all([
+                    fetch(`${API_BASE}/api/chat`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ message })
+                    }),
+                    fetch(`${API_BASE}/api/v1/analyze/deep_dive`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ text: message })
+                    })
+                ]);
+
+                const chatData = await chatResponse.json();
+                const deepDiveData = await deepDiveResponse.json();
+
+                if (chatData.status === 'success') {
+                    // Store in sessionStorage for other components
+                    sessionStorage.setItem('lastProcessedMessage', JSON.stringify(chatData));
+                    sessionStorage.setItem('lastDeepDiveData', JSON.stringify(deepDiveData));
+
+                    // Trigger custom event for visualization update
+                    window.dispatchEvent(new CustomEvent('psiqrh-data-updated', {
+                        detail: { chat: chatData, deepDive: deepDiveData }
+                    }));
+
+                    // Extract response text
+                    const responseText = chatData.response || 'Processamento concluído.';
+
+                    // Add assistant message with metrics AND deep dive data
+                    addMessage(
+                        responseText,
+                        'assistant',
+                        chatData.consciousness_metrics,
+                        deepDiveData  // Pass deep dive data
+                    );
+                } else {
+                    throw new Error(chatData.error || 'Erro desconhecido');
+                }
+            } catch (error) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message';
+                errorDiv.textContent = `❌ Erro: ${error.message}`;
+                messagesContainer.appendChild(errorDiv);
+            } finally {
+                // Re-enable input
+                userInput.disabled = false;
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'Enviar';
+                userInput.focus();
+            }
+        }
+
+        // Event listeners
+        sendBtn.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        // Initialize
+        checkAPIHealth();
+        userInput.focus();
+    </script>
+</body>
+</html>

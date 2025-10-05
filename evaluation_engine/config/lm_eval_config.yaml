@@ -1,0 +1,371 @@
+# ΨQRH LM-Eval Configuration
+# ==========================
+#
+# Configuration file for integrating ΨQRH framework with EleutherAI's
+# Language Model Evaluation Harness (LM-Eval).
+#
+# This configuration defines model specifications, evaluation tasks,
+# and ΨQRH-specific parameters for comprehensive benchmarking.
+
+# Model Configuration
+model:
+  # Model identification
+  model_name: "psiqrh"
+  model_type: "psiqrh-quaternion-harmonic"
+  model_version: "1.0.0"
+
+  # Model parameters
+  model_args:
+    device: "auto"  # auto, cpu, cuda, mps
+    batch_size: 1
+    max_length: 2048
+    max_gen_toks: 512
+    dtype: "float32"
+
+  # ΨQRH-specific configuration
+  psiqrh_config:
+    # Core parameters
+    embed_dim: 64
+    alpha: 1.5
+    beta: 0.01
+    use_spectral_filtering: true
+    use_fractal_analysis: true
+    quaternion_precision: "float32"
+    energy_conservation_threshold: 0.05
+
+    # Padilha Wave Equation parameters
+    wave_equation:
+      enable: true
+      I0: 1.0              # Maximum laser intensity
+      omega_base: 1.0      # Base angular frequency
+      alpha_modulation: true
+      beta_chirp: true
+      k_wave_number: true
+
+    # Fractal dimension analysis
+    fractal_analysis:
+      enable: true
+      dimension_calculation: "needle_method"
+      spatial_dims: [64, 64]
+      euclidean_reference: 2.0
+      lambda_scaling: 0.1
+
+    # Quaternion operations
+    quaternion_ops:
+      enable: true
+      precision: "double"
+      normalize: true
+      energy_conservation: true
+      stability_threshold: 1e-6
+
+    # Spectral filtering
+    spectral_filter:
+      enable: true
+      filter_type: "logarithmic_phase"
+      alpha_scaling: true
+      frequency_domain: "fft"
+      epsilon: 1e-8
+
+# Evaluation Tasks
+tasks:
+  # Language Understanding
+  - name: "hellaswag"
+    num_fewshot: 10
+    description: "Commonsense reasoning about everyday events"
+
+  - name: "arc_easy"
+    num_fewshot: 25
+    description: "Science questions (grade-school level)"
+
+  - name: "arc_challenge"
+    num_fewshot: 25
+    description: "Science questions (challenging)"
+
+  - name: "winogrande"
+    num_fewshot: 5
+    description: "Pronoun resolution"
+
+  # Mathematical and Logical Reasoning
+  - name: "gsm8k"
+    num_fewshot: 5
+    description: "Grade school math word problems"
+
+  - name: "mathqa"
+    num_fewshot: 5
+    description: "Mathematical reasoning"
+
+  # Reading Comprehension
+  - name: "piqa"
+    num_fewshot: 10
+    description: "Physical commonsense reasoning"
+
+  - name: "boolq"
+    num_fewshot: 10
+    description: "Boolean question answering"
+
+  # Knowledge and Facts
+  - name: "triviaqa"
+    num_fewshot: 5
+    description: "Trivia questions"
+
+  - name: "nq_open"
+    num_fewshot: 5
+    description: "Natural questions (open domain)"
+
+  # Code Understanding
+  - name: "humaneval"
+    num_fewshot: 0
+    description: "Python code generation"
+
+  # ΨQRH-specific evaluation tasks
+  - name: "quaternion_algebra"
+    num_fewshot: 5
+    description: "Quaternion mathematical operations"
+    custom: true
+
+  - name: "fractal_analysis"
+    num_fewshot: 3
+    description: "Fractal dimension understanding"
+    custom: true
+
+  - name: "wave_physics"
+    num_fewshot: 5
+    description: "Wave equation and physics concepts"
+    custom: true
+
+# Evaluation Configuration
+evaluation:
+  # Basic settings
+  limit: null              # Limit number of examples (null for all)
+  bootstrap_iters: 100000  # Bootstrap iterations for confidence intervals
+  write_out: true         # Write detailed outputs
+  log_samples: true       # Log individual samples
+
+  # Output configuration
+  output_path: "./lm_eval_results/psiqrh"
+  output_filename: "psiqrh_evaluation_results"
+  save_results: true
+  save_detailed_outputs: true
+
+  # Parallel processing
+  batch_size: 1
+  max_workers: 4
+  timeout: 300
+
+  # Generation parameters
+  generation:
+    temperature: 0.8
+    top_p: 0.9
+    top_k: 50
+    repetition_penalty: 1.0
+    do_sample: true
+
+# Metrics Configuration
+metrics:
+  # Standard LM-Eval metrics
+  standard:
+    - "accuracy"
+    - "f1"
+    - "matthews_corrcoef"
+    - "acc_norm"
+    - "bleu"
+    - "rouge"
+
+  # ΨQRH-specific metrics
+  psiqrh_metrics:
+    energy_conservation:
+      name: "Energy Conservation Ratio"
+      description: "Ratio of output to input energy in quaternion space"
+      formula: "||output|| / ||input||"
+      optimal_range: [0.9, 1.1]
+      weight: 0.25
+
+    quaternion_stability:
+      name: "Quaternion Stability Index"
+      description: "Stability of quaternion norms during processing"
+      formula: "1 - std(quaternion_norms) / mean(quaternion_norms)"
+      optimal_range: [0.8, 1.0]
+      weight: 0.20
+
+    fractal_coherence:
+      name: "Fractal Coherence Score"
+      description: "Consistency of fractal dimension analysis"
+      formula: "1 - abs(fractal_dim - expected_dim) / expected_dim"
+      optimal_range: [0.7, 1.0]
+      weight: 0.15
+
+    spectral_fidelity:
+      name: "Spectral Fidelity Measure"
+      description: "Fidelity of spectral filtering operations"
+      formula: "correlation(input_spectrum, filtered_spectrum)"
+      optimal_range: [0.8, 1.0]
+      weight: 0.15
+
+    wave_coherence:
+      name: "Wave Parameter Coherence"
+      description: "Coherence of Padilha Wave Equation parameters"
+      formula: "consistency_measure(alpha, beta, omega)"
+      optimal_range: [0.7, 1.0]
+      weight: 0.15
+
+    processing_efficiency:
+      name: "Processing Efficiency"
+      description: "Computational efficiency of ΨQRH operations"
+      formula: "tokens_per_second / memory_usage"
+      optimal_range: [1.0, 10.0]
+      weight: 0.10
+
+# Custom Task Definitions
+custom_tasks:
+  quaternion_algebra:
+    class: "PSIQRHQuaternionTask"
+    description: "Evaluate understanding of quaternion algebra"
+    dataset: "quaternion_problems"
+    metric: ["accuracy", "energy_conservation"]
+    num_examples: 100
+
+  fractal_analysis:
+    class: "PSIQRHFractalTask"
+    description: "Evaluate fractal dimension understanding"
+    dataset: "fractal_problems"
+    metric: ["accuracy", "fractal_coherence"]
+    num_examples: 50
+
+  wave_physics:
+    class: "PSIQRHWaveTask"
+    description: "Evaluate wave equation understanding"
+    dataset: "wave_physics_problems"
+    metric: ["accuracy", "wave_coherence"]
+    num_examples: 75
+
+# Baseline Comparisons
+baselines:
+  models:
+    - name: "gpt-3.5-turbo"
+      api_base: "https://api.openai.com/v1"
+      model_type: "openai-chat"
+
+    - name: "claude-3-sonnet"
+      api_base: "https://api.anthropic.com"
+      model_type: "anthropic"
+
+    - name: "llama-2-70b-chat"
+      model_type: "hf-causal"
+      model_args:
+        pretrained: "meta-llama/Llama-2-70b-chat-hf"
+
+    - name: "mistral-7b-instruct"
+      model_type: "hf-causal"
+      model_args:
+        pretrained: "mistralai/Mistral-7B-Instruct-v0.1"
+
+  comparison_tasks:
+    - "hellaswag"
+    - "arc_challenge"
+    - "gsm8k"
+    - "humaneval"
+    - "quaternion_algebra"
+    - "fractal_analysis"
+
+# Logging and Debugging
+logging:
+  log_level: "INFO"
+  log_file: "./logs/psiqrh_lm_eval.log"
+  console_output: true
+  detailed_errors: true
+
+  # ΨQRH-specific logging
+  psiqrh_debug:
+    log_quaternion_ops: false
+    log_fractal_analysis: false
+    log_spectral_filtering: false
+    log_energy_conservation: true
+    log_performance_metrics: true
+
+# Validation and Quality Control
+validation:
+  # Mathematical validation
+  energy_conservation_check: true
+  quaternion_norm_validation: true
+  spectral_coherence_check: true
+
+  # Performance validation
+  min_tokens_per_second: 5.0
+  max_memory_gb: 16.0
+  max_processing_time: 600  # seconds
+
+  # Quality thresholds
+  min_accuracy: 0.3
+  min_energy_conservation: 0.7
+  min_quaternion_stability: 0.6
+
+  # Error handling
+  max_retries: 3
+  retry_delay: 5.0
+  fail_on_error: false
+  graceful_degradation: true
+
+# Advanced Features
+advanced:
+  # Experimental features
+  enable_quaternion_visualization: false
+  enable_fractal_plotting: false
+  enable_spectral_analysis: true
+
+  # Performance optimization
+  enable_caching: true
+  cache_dir: "./lm_eval_cache/psiqrh"
+  enable_mixed_precision: true
+  enable_gradient_checkpointing: false
+
+  # Research features
+  save_intermediate_states: false
+  enable_ablation_studies: false
+  track_gradient_flow: false
+
+# Reporting Configuration
+reporting:
+  # Report generation
+  generate_html_report: true
+  generate_json_report: true
+  generate_csv_summary: true
+
+  # Report content
+  include_plots: true
+  include_error_analysis: true
+  include_performance_breakdown: true
+  include_psiqrh_analysis: true
+
+  # Comparison analysis
+  compare_with_baselines: true
+  statistical_significance: true
+  effect_size_analysis: true
+
+  # Report customization
+  report_title: "ΨQRH Framework LM-Eval Assessment"
+  author: "ΨQRH Research Team"
+  organization: "Independent Research"
+
+# Integration Settings
+integration:
+  # LM-Eval version compatibility
+  lm_eval_version: ">=0.4.0"
+
+  # API settings
+  api_timeout: 300
+  max_concurrent_requests: 1
+  rate_limit_requests_per_minute: 60
+
+  # Plugin system
+  plugins:
+    - name: "psiqrh_metrics"
+      path: "./plugins/psiqrh_metrics.py"
+      enabled: true
+
+    - name: "fractal_visualizer"
+      path: "./plugins/fractal_viz.py"
+      enabled: false
+
+  # Custom model registration
+  register_model: true
+  model_registry_path: "./models/psiqrh_registry.py"

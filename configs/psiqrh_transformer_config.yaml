@@ -1,0 +1,249 @@
+# Configuração Completa do PsiQRH Transformer
+# ===========================================
+#
+# Configuração centralizada para o transformer ΨQRH completo,
+# integrando todos os componentes sem hardcoding.
+
+psiqrh_transformer:
+  # ===== Arquitetura Básica =====
+  model:
+    vocab_size: 50000
+    d_model: 64                    # Dimensão base (será multiplicado por 4 para quaternion)
+    n_layers: 6
+    n_heads: 8
+    dim_feedforward: 256
+    max_seq_length: 1024
+    quaternion_multiplier: 4       # Multiplicador quaterniônico
+
+  # ===== Componentes Ativáveis =====
+  components:
+    use_kuramoto: true             # Habilitar Kuramoto Spectral Layer
+    use_working_memory: true       # Habilitar Conscious Working Memory
+    use_phase_sync: true           # Habilitar Phase Synchronization
+    use_cognitive_filters: false   # Habilitar Semantic Adaptive Filters
+    use_fractal_analysis: true     # Habilitar análise fractal em tempo real
+
+  # ===== Embedding e Codificação Posicional =====
+  embedding:
+    type: 'quaternion'             # 'quaternion' ou 'standard'
+    dropout: 0.1
+    learned_positional: false      # Se True, usa embedding aprendível
+
+  positional_encoding:
+    type: 'spectral'               # 'spectral', 'sinusoidal', 'learned'
+    max_len: 5000
+    frequency_init: 'random'       # 'random' ou 'fixed'
+    frequency_scale: 6.283185307   # 2π
+
+  # ===== Attention Configuration =====
+  attention:
+    type: 'spectral'               # 'spectral', 'standard', 'flash'
+    use_spectral_filter: true
+    adaptive_filter_dim: 256       # Dimensão do filtro adaptativo
+    dropout: 0.1
+    attention_dropout: 0.1
+
+  # ===== Feed-Forward Network =====
+  feedforward:
+    activation: 'spectral'         # 'spectral', 'gelu', 'relu', 'swish'
+    use_adaptive_dropout: true
+    dropout: 0.1
+    intermediate_dropout: 0.1
+
+  # ===== Kuramoto Integration =====
+  kuramoto:
+    enabled: true                  # Redundante com components.use_kuramoto, mas explícito
+    config_path: 'configs/kuramoto_config.yaml'
+    grid_size: 32
+    coupling_strength: 1.0
+    device: 'cpu'
+    layer_scale_init: 0.1          # Escala inicial para conexão residual
+
+  # ===== Phase Synchronization =====
+  phase_synchronization:
+    enabled: true
+    grid_size: 32
+    sync_threshold: 0.9
+    extract_rhythms: true          # Extrair ritmos theta/alpha/beta/gamma
+    create_phase_maps: true        # Criar mapas topográficos
+    noise_filtering: true          # Filtrar ruído via sincronização coletiva
+    visualization_enabled: false   # Habilitar visualizações automáticas
+
+  # ===== Working Memory =====
+  working_memory:
+    enabled: true
+    config_path: 'configs/working_memory_config.yaml'
+    memory_size: 1024
+    embed_dim: 64
+    layer_scale_init: 0.1
+    influence_weight: 0.3          # Peso da memória na saída
+
+  # ===== Cognitive Filters =====
+  cognitive_filters:
+    enabled: false                 # Desabilitado por padrão
+    config_path: 'configs/cognitive_filters_config.yaml'
+    apply_after: 'attention'       # 'attention', 'kuramoto', 'memory'
+
+  # ===== Harmonic Layer Coupling =====
+  harmonic_coupling:
+    enabled: true                  # Sincronização harmônica entre camadas
+    config_path: 'configs/harmonic_coupling_config.yaml'
+    preset: 'standard'             # 'standard', 'strong', 'weak', 'adaptive'
+
+  # ===== Fractal Analysis =====
+  fractal_analysis:
+    enabled: true
+    analysis_frequency: 1000       # A cada N passos
+    real_time: true
+    update_alpha: true             # Atualizar parâmetro α baseado em D
+    dimension_range: [1.0, 3.0]
+    target_dimension: 2.0
+
+  # ===== Normalização =====
+  normalization:
+    type: 'quaternion_layer_norm'  # 'quaternion_layer_norm', 'layer_norm', 'rms_norm'
+    eps: 1.0e-6
+    elementwise_affine: true
+
+  # ===== Layer Scaling =====
+  layer_scaling:
+    use_layer_scale: true
+    init_values:
+      attention: 1.0
+      kuramoto: 0.1                # Reduzido para estabilidade
+      memory: 0.1
+      feedforward: 1.0
+
+  # ===== Regularização =====
+  regularization:
+    dropout: 0.1
+    attention_dropout: 0.1
+    feedforward_dropout: 0.1
+    spectral_dropout: 0.0
+    path_dropout: 0.0              # Stochastic depth
+
+  # ===== Conservação de Energia =====
+  energy_conservation:
+    enabled: true
+    tolerance: 0.05                # [0.95, 1.05]
+    apply_normalization: true      # Normalizar para conservar energia
+    log_violations: true           # Log quando energia não conservada
+
+  # ===== Treinamento =====
+  training:
+    gradient_checkpointing: false  # Economizar memória
+    mixed_precision: false         # AMP (Automatic Mixed Precision)
+    compile_model: false           # torch.compile (PyTorch 2.0+)
+
+  # ===== Inferência =====
+  inference:
+    use_cache: true                # Cache de atenção
+    beam_size: 1                   # Beam search
+    temperature: 1.0
+    top_k: 50
+    top_p: 0.9
+
+  # ===== Performance =====
+  performance:
+    device: 'cpu'                  # 'cpu', 'cuda', 'mps'
+    dtype: 'float32'               # 'float32', 'float16', 'bfloat16'
+    num_workers: 4
+    pin_memory: true
+
+  # ===== Visualização e Debug =====
+  visualization:
+    enabled: false                 # Habilitar visualizações automáticas
+    save_phase_maps: false
+    save_frequency: 100            # Salvar a cada N steps
+    output_dir: 'visualizations/'
+
+  debug:
+    log_shapes: false
+    log_energy: false
+    log_gradients: false
+    log_metrics: true
+    verbose: false
+
+  # ===== Checkpointing =====
+  checkpointing:
+    save_frequency: 1000           # Salvar a cada N steps
+    checkpoint_dir: 'checkpoints/'
+    keep_last_n: 5                 # Manter últimos N checkpoints
+    save_optimizer: true
+
+# ===== Presets Rápidos =====
+presets:
+  # Configuração minimalista para testes rápidos
+  minimal:
+    model:
+      d_model: 32
+      n_layers: 2
+      n_heads: 4
+      dim_feedforward: 128
+    components:
+      use_kuramoto: false
+      use_working_memory: false
+      use_phase_sync: false
+
+  # Configuração padrão balanceada
+  standard:
+    model:
+      d_model: 64
+      n_layers: 6
+      n_heads: 8
+      dim_feedforward: 256
+    components:
+      use_kuramoto: true
+      use_working_memory: true
+      use_phase_sync: true
+
+  # Configuração completa para produção
+  full:
+    model:
+      d_model: 128
+      n_layers: 12
+      n_heads: 16
+      dim_feedforward: 512
+    components:
+      use_kuramoto: true
+      use_working_memory: true
+      use_phase_sync: true
+      use_cognitive_filters: true
+
+# ======================================================================
+# 🔬 INSTRUÇÕES DE VALIDAÇÃO DO NÚCLEO
+# ======================================================================
+# Para garantir que qualquer alteração nesta configuração não quebre as
+# propriedades matemáticas fundamentais do sistema ΨQRH (como a
+# conservação de energia), execute o teste de validação do núcleo.
+#
+# Este teste verifica:
+#   1. Conservação de Energia
+#   2. Teorema de Parseval (Corretude da FFT)
+#   3. Eficiência de Memória e Parâmetros
+#   4. Propriedades do Quaternion Rotacional
+#
+# COMO EXECUTAR:
+# No diretório raiz do projeto, execute o seguinte comando:
+#
+# make validate-core
+#
+# Se o teste falhar, revise suas configurações ou o código modificado.
+# A normalização de energia agora é obrigatória para garantir a
+# estabilidade do sistema.
+# ======================================================================
+
+  # Configuração para experimentos com consciência
+  consciousness:
+    model:
+      d_model: 64
+      n_layers: 8
+      n_heads: 8
+      dim_feedforward: 256
+    components:
+      use_kuramoto: true
+      use_working_memory: true
+      use_phase_sync: true
+    fractal_analysis:
+      analysis_frequency: 100      # Análise mais frequente
+      real_time: true

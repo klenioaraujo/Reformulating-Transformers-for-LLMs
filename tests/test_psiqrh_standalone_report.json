@@ -1,0 +1,147 @@
+{
+  "timestamp": "2025-10-02T09:15:42.043838",
+  "python_version": "3.12.7 (main, Jun 18 2025, 13:16:51) [GCC 14.2.0]",
+  "pytorch_version": "2.8.0+cu128",
+  "summary": {
+    "total": 19,
+    "passed": 15,
+    "failed": 1,
+    "warnings": 3,
+    "pass_rate": 78.94736842105263
+  },
+  "tests": [
+    {
+      "test": "Import QRHFactory",
+      "status": "PASS",
+      "message": "QRHFactory importado com sucesso",
+      "details": "",
+      "timestamp": "2025-10-02T09:15:41.659303"
+    },
+    {
+      "test": "Import QRHLayer",
+      "status": "PASS",
+      "message": "QRHLayer e QRHConfig importados",
+      "details": "",
+      "timestamp": "2025-10-02T09:15:41.659341"
+    },
+    {
+      "test": "Import QuaternionOperations",
+      "status": "PASS",
+      "message": "QuaternionOperations importado",
+      "details": "",
+      "timestamp": "2025-10-02T09:15:41.659349"
+    },
+    {
+      "test": "Verifica\u00e7\u00e3o de Desacoplamento",
+      "status": "PASS",
+      "message": "Nenhum import ag\u00eantico encontrado no core",
+      "details": "",
+      "timestamp": "2025-10-02T09:15:41.659698"
+    },
+    {
+      "test": "Criar QRHFactory",
+      "status": "PASS",
+      "message": "QRHFactory instanciado com sucesso",
+      "details": "",
+      "timestamp": "2025-10-02T09:15:41.668158"
+    },
+    {
+      "test": "QRHFactory.config",
+      "status": "PASS",
+      "message": "Config presente: embed_dim=64",
+      "details": "",
+      "timestamp": "2025-10-02T09:15:41.668184"
+    },
+    {
+      "test": "QRH Layer",
+      "status": "PASS",
+      "message": "QRH Layer dispon\u00edvel",
+      "details": "",
+      "timestamp": "2025-10-02T09:15:41.668188"
+    },
+    {
+      "test": "Criar QuaternionOperations",
+      "status": "PASS",
+      "message": "QuaternionOperations instanciado",
+      "details": "",
+      "timestamp": "2025-10-02T09:15:41.668205"
+    },
+    {
+      "test": "Quaternion Split",
+      "status": "WARN",
+      "message": "M\u00e9todo split_quaternion n\u00e3o encontrado",
+      "details": "",
+      "timestamp": "2025-10-02T09:15:41.668887"
+    },
+    {
+      "test": "Quaternion Normalization",
+      "status": "WARN",
+      "message": "M\u00e9todo normalize_quaternion n\u00e3o encontrado",
+      "details": "",
+      "timestamp": "2025-10-02T09:15:41.668909"
+    },
+    {
+      "test": "Filtros Espectrais",
+      "status": "FAIL",
+      "message": "Erro: SpectralFilter.__init__() got an unexpected keyword argument 'embed_dim'",
+      "details": "SpectralFilter.__init__() got an unexpected keyword argument 'embed_dim'",
+      "timestamp": "2025-10-02T09:15:41.668992"
+    },
+    {
+      "test": "SemanticAdaptiveFilter",
+      "status": "PASS",
+      "message": "Filtro sem\u00e2ntico criado com sucesso",
+      "details": "",
+      "timestamp": "2025-10-02T09:15:41.690867"
+    },
+    {
+      "test": "SemanticFilter Metrics",
+      "status": "PASS",
+      "message": "M\u00e9tricas geradas: ['contradiction_scores', 'attention_weights', 'relevance_scores', 'topic_weights', 'bias_scores', 'bias_magnitude', 'filter_weights', 'mixing_params']",
+      "details": "",
+      "timestamp": "2025-10-02T09:15:41.979672"
+    },
+    {
+      "test": "SyntheticNeurotransmitters",
+      "status": "PASS",
+      "message": "Sistema de neurotransmissores criado",
+      "details": "",
+      "timestamp": "2025-10-02T09:15:41.994640"
+    },
+    {
+      "test": "Criar QRHLayer",
+      "status": "PASS",
+      "message": "QRHLayer criado (embed_dim=16, alpha=1.0)",
+      "details": "",
+      "timestamp": "2025-10-02T09:15:42.030428"
+    },
+    {
+      "test": "QRHLayer Forward Shape",
+      "status": "PASS",
+      "message": "Shape correto: torch.Size([2, 8, 64])",
+      "details": "",
+      "timestamp": "2025-10-02T09:15:42.035021"
+    },
+    {
+      "test": "QRHLayer NaN Check",
+      "status": "PASS",
+      "message": "Nenhum NaN detectado",
+      "details": "",
+      "timestamp": "2025-10-02T09:15:42.035106"
+    },
+    {
+      "test": "QRHLayer Output Stats",
+      "status": "PASS",
+      "message": "Mean=-0.2551, Std=11.7986",
+      "details": "",
+      "timestamp": "2025-10-02T09:15:42.035217"
+    },
+    {
+      "test": "Integra\u00e7\u00e3o \u03a8QRH",
+      "status": "WARN",
+      "message": "QRH Layer n\u00e3o acess\u00edvel diretamente via factory",
+      "details": "",
+      "timestamp": "2025-10-02T09:15:42.043761"
+    }
+  ]
+}

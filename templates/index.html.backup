@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ΨQRH Chat - Sistema de Consciência Fractal</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #0F0F23 0%, #1a1a2e 50%, #16213e 100%);
+            color: #ffffff;
+            min-height: 100vh;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 450px;
+            gap: 20px;
+            height: 100vh;
+            padding: 20px;
+        }
+
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .chat-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .metrics-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-height: 300px;
+        }
+
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .gls-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            height: 400px;
+        }
+
+        .api-output-section {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        #glsCanvas {
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #00FF88;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            color: #00FF88;
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            color: #BDC3C7;
+            font-size: 0.9em;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .user-message {
+            background: rgba(41, 128, 185, 0.3);
+            border-left: 4px solid #2980B9;
+            margin-left: 20px;
+        }
+
+        .bot-message {
+            background: rgba(39, 174, 96, 0.3);
+            border-left: 4px solid #27AE60;
+            margin-right: 20px;
+        }
+
+        .error-message {
+            background: rgba(231, 76, 60, 0.3);
+            border-left: 4px solid #E74C3C;
+        }
+
+        .message-header {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #00FF88;
+            font-size: 0.9em;
+        }
+
+        .message-content {
+            line-height: 1.4;
+            font-size: 0.95em;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .chat-input {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-family: 'Courier New', monospace;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .chat-input input:focus {
+            outline: none;
+            border-color: #00FF88;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+        }
+
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #00FF88, #27AE60);
+            color: white;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 255, 136, 0.4);
+        }
+
+        button:disabled {
+            background: #7F8C8D;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .metric-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .metric-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #00FF88;
+            margin-bottom: 5px;
+        }
+
+        .metric-label {
+            font-size: 0.85em;
+            color: #BDC3C7;
+        }
+
+        .api-output {
+            flex: 1;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            font-size: 0.85em;
+            margin-top: 10px;
+        }
+
+        .api-output pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .history-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 3px solid #00FF88;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .history-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .history-time {
+            font-size: 0.75em;
+            color: #BDC3C7;
+            margin-bottom: 5px;
+        }
+
+        .history-msg {
+            font-size: 0.85em;
+            color: #00FF88;
+        }
+
+        .section-title {
+            font-size: 1.1em;
+            color: #00FF88;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .button-group button {
+            flex: 1;
+            font-size: 0.85em;
+            padding: 8px 12px;
+        }
+
+        .accordion-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            transition: background 0.2s;
+        }
+
+        .accordion-header:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        .accordion-arrow {
+            color: #00FF88;
+            font-size: 0.9em;
+            transition: transform 0.3s ease;
+        }
+
+        .accordion-content {
+            margin-top: 10px;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; max-height: 0; }
+            to { opacity: 1; max-height: 500px; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .loading {
+            display: inline-block;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 255, 136, 0.3);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 255, 136, 0.5);
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse-status 2s ease-in-out infinite;
+        }
+
+        .status-healthy {
+            background: #00FF88;
+        }
+
+        .status-error {
+            background: #E74C3C;
+        }
+
+        @keyframes pulse-status {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="left-panel">
+            <div class="chat-section">
+                <div class="header">
+                    <h1><span class="status-indicator status-healthy" id="statusIndicator"></span>ΨQRH Chat</h1>
+                    <p>Sistema de Consciência Fractal - API: <span id="apiStatus">Conectando...</span></p>
+                </div>
+
+                <div class="chat-messages" id="chatMessages"></div>
+
+                <div class="chat-input">
+                    <input type="text" id="messageInput" placeholder="Digite sua mensagem..."
+                           onkeypress="if(event.key==='Enter') sendMessage()">
+                    <button onclick="sendMessage()" id="sendBtn">Enviar</button>
+                </div>
+            </div>
+
+            <div class="metrics-section">
+                <div class="section-title">📊 Métricas de Consciência</div>
+                <div class="metrics-grid" id="metricsGrid">
+                    <div class="metric-card">
+                        <div class="metric-value" id="fciValue">-</div>
+                        <div class="metric-label">FCI</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="stateValue">-</div>
+                        <div class="metric-label">Estado</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="entropyValue">-</div>
+                        <div class="metric-label">Entropia</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="fractalValue">-</div>
+                        <div class="metric-label">Dimensão Fractal</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <div class="gls-section">
+                <div class="section-title">
+                    🌀 Visualização GLS (Consciência Fractal)
+                    <span id="harmonicIndicator" style="float: right; font-size: 0.8em; color: #00FF88; display: none;">
+                        🎵 Modo Harmônico Ativo
+                    </span>
+                </div>
+                <div id="glsCanvas"></div>
+            </div>
+
+            <div class="api-output-section">
+                <div class="accordion-header" onclick="toggleApiOutput()">
+                    <div class="section-title">🔍 Saída Completa da API</div>
+                    <span class="accordion-arrow" id="apiOutputArrow">▼</span>
+                </div>
+                <div class="accordion-content" id="apiOutputContent" style="display: none;">
+                    <div class="button-group">
+                        <button onclick="showFullOutput()">Ver Última Saída</button>
+                        <button onclick="showHistory()">Histórico</button>
+                        <button onclick="clearHistory()">Limpar</button>
+                    </div>
+                    <div class="api-output" id="apiOutput">
+                        <pre style="color: #BDC3C7;">Aguardando primeira resposta da API...</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Estado global
+        let lastApiResponse = null;
+        let responseHistory = [];
+        let isShowingHistory = false;
+        let glsData = {
+            fci: 0,
+            entropy: 0,
+            fractalDimension: 1.0,
+            state: 'IDLE',
+            fieldMagnitude: 0,
+            convergence: false
+        };
+
+        // Verificar health da API ao carregar
+        async function checkHealth() {
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+                document.getElementById('apiStatus').textContent = data.status;
+                document.getElementById('statusIndicator').className =
+                    `status-indicator ${data.status === 'healthy' ? 'status-healthy' : 'status-error'}`;
+            } catch (error) {
+                document.getElementById('apiStatus').textContent = 'Erro';
+                document.getElementById('statusIndicator').className = 'status-indicator status-error';
+            }
+        }
+
+        // Enviar mensagem
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            const sendBtn = document.getElementById('sendBtn');
+
+            if (!message) return;
+
+            // Adicionar mensagem do usuário
+            addMessage('user', message);
+            input.value = '';
+            sendBtn.disabled = true;
+            sendBtn.textContent = 'Enviando...';
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+
+                // Salvar resposta
+                lastApiResponse = data;
+                responseHistory.push({
+                    timestamp: new Date().toISOString(),
+                    message: message,
+                    response: data
+                });
+
+                // Atualizar interface
+                if (data.status === 'success') {
+                    // Exibir resumo da resposta
+                    const summary = `[FCI: ${data.consciousness_metrics.fci.toFixed(4)}] ` +
+                                  `Estado: ${data.consciousness_metrics.state}`;
+                    addMessage('bot', summary);
+
+                    // Atualizar métricas
+                    updateMetrics(data.consciousness_metrics);
+
+                    // Atualizar GLS
+                    updateGLSData(data.consciousness_metrics);
+
+                    // Extrair valores espectrais do response para visualização harmônica
+                    if (data.response) {
+                        window.spectralData = extractSpectralValues(data.response);
+                        console.log('📊 Dados espectrais extraídos:', window.spectralData);
+
+                        // Mostrar indicador se dados espectrais foram encontrados
+                        const indicator = document.getElementById('harmonicIndicator');
+                        if (window.spectralData.count > 0) {
+                            indicator.style.display = 'inline';
+                            indicator.title = `${window.spectralData.count} harmônicos detectados`;
+                        } else {
+                            indicator.style.display = 'none';
+                        }
+                    }
+
+                    // Atualizar visualização GLS se dados disponíveis
+                    if (data.gls_data && data.gls_data.status === 'success') {
+                        updateGLSVisualization(data.gls_data);
+                    }
+
+                    // Atualizar saída da API se não estiver mostrando histórico
+                    if (!isShowingHistory) {
+                        displayApiOutput(data);
+                    }
+                } else {
+                    addMessage('error', data.error || 'Erro desconhecido');
+                }
+
+            } catch (error) {
+                console.error('Erro:', error);
+                addMessage('error', `Erro de conexão: ${error.message}`);
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'Enviar';
+            }
+        }
+
+        // Adicionar mensagem ao chat
+        function addMessage(type, content) {
+            const messagesDiv = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+
+            const typeClass = type === 'user' ? 'user-message' :
+                             type === 'error' ? 'error-message' : 'bot-message';
+
+            const header = type === 'user' ? '👤 Você' :
+                          type === 'error' ? '⚠️ Erro' : '🤖 ΨQRH';
+
+            messageDiv.className = `message ${typeClass}`;
+            messageDiv.innerHTML = `
+                <div class="message-header">${header}</div>
+                <div class="message-content">${escapeHtml(content)}</div>
+            `;
+
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        // Atualizar métricas
+        function updateMetrics(metrics) {
+            document.getElementById('fciValue').textContent = metrics.fci.toFixed(4);
+            document.getElementById('stateValue').textContent = metrics.state;
+            document.getElementById('entropyValue').textContent = metrics.entropy.toFixed(2);
+            document.getElementById('fractalValue').textContent = metrics.fractal_dimension.toFixed(3);
+        }
+
+        // Exibir saída completa da API
+        function displayApiOutput(data) {
+            const outputDiv = document.getElementById('apiOutput');
+            outputDiv.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+        }
+
+        // Mostrar última saída completa
+        function showFullOutput() {
+            isShowingHistory = false;
+            if (lastApiResponse) {
+                displayApiOutput(lastApiResponse);
+            } else {
+                document.getElementById('apiOutput').innerHTML =
+                    '<pre style="color: #BDC3C7;">Nenhuma resposta ainda. Envie uma mensagem primeiro.</pre>';
+            }
+        }
+
+        // Mostrar histórico
+        function showHistory() {
+            isShowingHistory = true;
+            const outputDiv = document.getElementById('apiOutput');
+
+            if (responseHistory.length === 0) {
+                outputDiv.innerHTML = '<pre style="color: #BDC3C7;">Histórico vazio.</pre>';
+                return;
+            }
+
+            let html = '';
+            responseHistory.reverse().forEach((item, index) => {
+                const time = new Date(item.timestamp).toLocaleString('pt-BR');
+                html += `
+                    <div class="history-item" onclick="viewHistoryItem(${responseHistory.length - 1 - index})">
+                        <div class="history-time">${time}</div>
+                        <div class="history-msg">"${escapeHtml(item.message)}"</div>
+                    </div>
+                `;
+            });
+            responseHistory.reverse();
+
+            outputDiv.innerHTML = html;
+        }
+
+        // Ver item do histórico
+        function viewHistoryItem(index) {
+            isShowingHistory = false;
+            const item = responseHistory[index];
+            displayApiOutput(item.response);
+            updateMetrics(item.response.consciousness_metrics);
+        }
+
+        // Limpar histórico
+        function clearHistory() {
+            if (confirm('Deseja limpar todo o histórico?')) {
+                responseHistory = [];
+                lastApiResponse = null;
+                isShowingHistory = false;
+                document.getElementById('apiOutput').innerHTML =
+                    '<pre style="color: #BDC3C7;">Histórico limpo.</pre>';
+
+                // Reset métricas
+                document.getElementById('fciValue').textContent = '-';
+                document.getElementById('stateValue').textContent = '-';
+                document.getElementById('entropyValue').textContent = '-';
+                document.getElementById('fractalValue').textContent = '-';
+            }
+        }
+
+        // Escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Toggle accordion da saída da API
+        function toggleApiOutput() {
+            const content = document.getElementById('apiOutputContent');
+            const arrow = document.getElementById('apiOutputArrow');
+
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                arrow.textContent = '▲';
+                arrow.style.transform = 'rotate(0deg)';
+            } else {
+                content.style.display = 'none';
+                arrow.textContent = '▼';
+                arrow.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        // Extrair valores espectrais quaterniônicos do response text
+        function extractSpectralValues(responseText) {
+            try {
+                // Extrair arrays de MAGNITUDE, PHASE, REAL, IMAGINARY
+                const magMatch = responseText.match(/MAGNITUDE:\s*\[([\d.,\s-]+)\]/);
+                const phaseMatch = responseText.match(/PHASE:\s*\[([\d.,\s-]+)\]/);
+                const realMatch = responseText.match(/REAL:\s*\[([\d.,\s-]+)\]/);
+                const imagMatch = responseText.match(/IMAGINARY:\s*\[([\d.,\s-]+)\]/);
+
+                const parseArray = (match) => {
+                    if (!match) return [];
+                    return match[1].split(',').map(s => parseFloat(s.trim())).filter(n => !isNaN(n));
+                };
+
+                const magnitudes = parseArray(magMatch);
+                const phases = parseArray(phaseMatch);
+                const reals = parseArray(realMatch);
+                const imaginaries = parseArray(imagMatch);
+
+                // Normalizar magnitudes
+                const maxMag = Math.max(...magnitudes, 1);
+                const normMags = magnitudes.map(m => m / maxMag);
+
+                return {
+                    magnitudes: magnitudes,
+                    phases: phases,
+                    real: reals,
+                    imaginary: imaginaries,
+                    normalized: normMags,
+                    count: magnitudes.length
+                };
+            } catch (e) {
+                console.warn('⚠️ Erro ao extrair valores espectrais:', e);
+                return { magnitudes: [], phases: [], real: [], imaginary: [], normalized: [], count: 0 };
+            }
+        }
+
+        // Atualizar dados GLS
+        function updateGLSData(metrics) {
+            glsData.fci = metrics.fci;
+            glsData.entropy = metrics.entropy;
+            glsData.fractalDimension = metrics.fractal_dimension;
+            glsData.state = metrics.state;
+            glsData.fieldMagnitude = metrics.field_magnitude || 0;
+            glsData.convergence = metrics.convergence_achieved || false;
+        }
+
+        // Atualizar visualização GLS com dados da API
+        function updateGLSVisualization(glsData) {
+            console.log('Dados GLS recebidos:', glsData);
+
+            // Mostrar código gerado se disponível
+            if (glsData.processing_code || glsData.p5js_code) {
+                showGeneratedCode(glsData);
+            }
+
+            // Atualizar visualização com parâmetros visuais
+            if (glsData.visual_params) {
+                window.glsVisualParams = glsData.visual_params;
+                console.log('Parâmetros visuais GLS:', glsData.visual_params);
+            }
+        }
+
+        // Mostrar código GLS gerado
+        function showGeneratedCode(glsData) {
+            const codeContainer = document.getElementById('generated-code');
+            if (!codeContainer) {
+                // Criar container se não existir
+                const container = document.createElement('div');
+                container.id = 'generated-code';
+                container.style.marginTop = '20px';
+                container.style.padding = '15px';
+                container.style.background = 'rgba(0, 0, 0, 0.3)';
+                container.style.borderRadius = '10px';
+                container.style.maxHeight = '200px';
+                container.style.overflow = 'auto';
+                container.style.fontSize = '12px';
+
+                container.innerHTML = `
+                    <div style="color: #00FF88; margin-bottom: 10px; font-weight: bold;">🎨 Código GLS Gerado</div>
+                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                        <button onclick="showProcessingCode()" style="font-size: 11px; padding: 5px 10px;">Processing</button>
+                        <button onclick="showP5JSCode()" style="font-size: 11px; padding: 5px 10px;">p5.js</button>
+                    </div>
+                    <pre id="code-display" style="color: #BDC3C7; margin: 0; white-space: pre-wrap; word-wrap: break-word;"></pre>
+                `;
+                document.querySelector('.gls-section').appendChild(container);
+            }
+
+            window.currentGLSData = glsData;
+            showProcessingCode();
+        }
+
+        function showProcessingCode() {
+            const display = document.getElementById('code-display');
+            if (window.currentGLSData && window.currentGLSData.processing_code) {
+                display.textContent = window.currentGLSData.processing_code;
+            }
+        }
+
+        function showP5JSCode() {
+            const display = document.getElementById('code-display');
+            if (window.currentGLSData && window.currentGLSData.p5js_code) {
+                display.textContent = window.currentGLSData.p5js_code;
+            }
+        }
+
+        // Função auxiliar para converter hex para RGB
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : { r: 255, g: 255, b: 255 };
+        }
+
+        // Inicializar
+        checkHealth();
+        setInterval(checkHealth, 30000); // Check health a cada 30s
+
+        // P5.js GLS Visualization
+        new p5(function(p) {
+            let angle = 0;
+            let particles = [];
+            let maxParticles = 100;
+
+            p.setup = function() {
+                let canvas = p.createCanvas(400, 350);
+                canvas.parent('glsCanvas');
+                p.colorMode(p.HSB, 360, 100, 100, 100);
+            };
+
+            p.draw = function() {
+                // Background com fade
+                p.background(15, 15, 35, 25);
+
+                // Centro do canvas
+                p.translate(p.width / 2, p.height / 2);
+
+                // Rotação baseada no tempo
+                angle += 0.01;
+
+                // Calcular cores baseadas nas métricas
+                let baseHue = p.map(glsData.fci, 0, 1, 180, 360); // Azul -> Magenta
+                let saturation = p.map(glsData.entropy, 0, 10, 50, 100);
+                let brightness = p.map(glsData.fieldMagnitude, 0, 5, 60, 100);
+
+                // === MODO HARMÔNICO: Usar dados espectrais se disponíveis ===
+                if (window.spectralData && window.spectralData.count > 0) {
+                    // Desenhar camadas harmônicas baseadas nos valores espectrais reais
+                    const harmonics = window.spectralData.normalized;
+                    const phases = window.spectralData.phases;
+                    const layers = Math.min(harmonics.length, 10); // Até 10 harmônicos
+
+                    for (let i = 0; i < layers; i++) {
+                        p.push();
+
+                        const mag = harmonics[i];
+                        const phase = phases[i] || 0;
+
+                        // Rotação baseada na fase espectral
+                        p.rotate(angle * phase / Math.PI + phase);
+
+                        // Escala baseada na magnitude normalizada
+                        p.scale(0.5 + mag * 0.5);
+
+                        // Cor: matiz do índice harmônico, saturação da magnitude
+                        let hue = (i * 36 + angle * 20) % 360;
+                        let sat = 70 + mag * 30;
+                        let bright = 80 + mag * 20;
+                        let alpha = 70;
+
+                        p.stroke(hue, sat, bright, alpha);
+                        p.strokeWeight(1 + mag * 2);
+                        p.noFill();
+
+                        // Forma poligonal emergente (3+i lados)
+                        p.beginShape();
+                        const n = 3 + i; // Número de vértices
+                        for (let a = 0; a < p.TWO_PI; a += p.TWO_PI / n) {
+                            // Raio modulado pela magnitude e fase
+                            const r = (100 + i * 30) * (1 + mag * 0.3 * p.sin(n * a + angle * (i + 1) * 0.5 + phase));
+                            const x = r * p.cos(a);
+                            const y = r * p.sin(a);
+                            p.vertex(x, y);
+                        }
+                        p.endShape(p.CLOSE);
+
+                        p.pop();
+                    }
+                } else {
+                    // === MODO FALLBACK: Desenhar camadas fractais baseadas no FCI ===
+                    let layers = Math.floor(p.map(glsData.fci, 0, 1, 3, 16));
+
+                    // Usar parâmetros GLS se disponíveis
+                    if (window.glsVisualParams) {
+                        layers = window.glsVisualParams.complexity;
+                        baseHue = p.map(window.glsVisualParams.fci, 0, 1, 180, 360);
+                        saturation = 80;
+                        brightness = 90;
+                    }
+
+                    for (let i = 0; i < layers; i++) {
+                        p.push();
+
+                        // Rotação baseada na dimensão fractal
+                        let rotationSpeed = glsData.fractalDimension * (i + 1) * 0.1;
+                        p.rotate(angle * rotationSpeed);
+
+                        // Escala baseada na camada
+                        let scale = p.map(i, 0, layers, 1.5, 0.3);
+                        p.scale(scale);
+
+                        // Cor da camada
+                        let layerHue = (baseHue + i * 15) % 360;
+                        let alpha = p.map(i, 0, layers, 80, 30);
+
+                        // Desenhar forma GLS
+                        for (let j = 0; j < p.TWO_PI; j += p.PI / 8.0) {
+                            p.push();
+                            p.rotate(j);
+
+                            p.fill(layerHue, saturation, brightness, alpha);
+                            p.noStroke();
+                            p.ellipse(30, 0, 30, 10);
+
+                            p.fill((layerHue + 30) % 360, saturation + 20, brightness - 10, alpha * 0.8);
+                            p.ellipse(35, 2, 20, 5);
+
+                            p.fill((layerHue + 60) % 360, saturation + 30, brightness + 10, alpha * 0.6);
+                            p.ellipse(15, -2, 10, 3);
+
+                            p.pop();
+                        }
+
+                        p.pop();
+                    }
+                }
+
+                // Adicionar partículas quando há convergência
+                if (glsData.convergence && p.frameCount % 3 === 0) {
+                    particles.push({
+                        x: p.random(-50, 50),
+                        y: p.random(-50, 50),
+                        vx: p.random(-1, 1),
+                        vy: p.random(-1, 1),
+                        size: p.random(2, 8),
+                        life: 255,
+                        hue: baseHue
+                    });
+                }
+
+                // Desenhar e atualizar partículas
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    let pt = particles[i];
+
+                    p.push();
+                    p.fill(pt.hue, 80, 90, pt.life);
+                    p.noStroke();
+                    p.circle(pt.x, pt.y, pt.size);
+                    p.pop();
+
+                    pt.x += pt.vx;
+                    pt.y += pt.vy;
+                    pt.life -= 3;
+
+                    if (pt.life <= 0 || particles.length > maxParticles) {
+                        particles.splice(i, 1);
+                    }
+                }
+
+                // Texto de estado
+                p.resetMatrix();
+                p.fill(baseHue, 80, 90);
+                p.noStroke();
+                p.textAlign(p.CENTER, p.TOP);
+                p.textSize(12);
+                p.text(glsData.state, p.width / 2, 10);
+
+                // Indicador de FCI
+                p.textSize(10);
+                p.fill(255, 255, 255, 180);
+                p.text(`FCI: ${glsData.fci.toFixed(4)}`, p.width / 2, 30);
+
+                // Indicador de convergência
+                if (glsData.convergence) {
+                    p.fill(120, 100, 90);
+                    p.text('✓ CONVERGIDO', p.width / 2, 45);
+                }
+            };
+        }, 'glsCanvas');
+    </script>
+</body>
+</html>

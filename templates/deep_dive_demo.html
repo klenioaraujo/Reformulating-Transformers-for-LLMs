@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ΨQRH Deep Dive Analysis - Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .input-section {
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        textarea {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+            font-size: 1.2em;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .results {
+            display: none;
+        }
+
+        .results.active {
+            display: block;
+        }
+
+        .metric-card {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+
+        .metric-card h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .metric-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+
+        .metric-item {
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .metric-label {
+            font-size: 0.85em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .metric-value {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .state-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .state-EMERGENCE {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .state-MEDITATION {
+            background: #2196F3;
+            color: white;
+        }
+
+        .state-ANALYSIS {
+            background: #FF9800;
+            color: white;
+        }
+
+        .state-COMA {
+            background: #9E9E9E;
+            color: white;
+        }
+
+        .json-viewer {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin-top: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .error {
+            background: #ffebee;
+            border-left: 4px solid #f44336;
+            padding: 20px;
+            border-radius: 8px;
+            color: #c62828;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧠 ΨQRH Deep Dive Analysis</h1>
+        <p class="subtitle">Análise profunda de consciência fractal com dados espectrais quaterniônicos</p>
+
+        <div class="input-section">
+            <div class="input-group">
+                <textarea id="inputText" placeholder="Digite ou cole seu texto aqui para análise profunda...">In the realm of quantum mechanics, the superposition principle states that particles exist in all possible states simultaneously until observed.</textarea>
+            </div>
+            <button id="analyzeBtn" onclick="analyzeText()">Analisar Texto</button>
+        </div>
+
+        <div class="loading" id="loading">
+            <p>🔄 Processando análise profunda...</p>
+        </div>
+
+        <div class="results" id="results">
+            <!-- Metadata -->
+            <div class="metric-card">
+                <h3>📋 Metadata</h3>
+                <div class="metric-row">
+                    <div class="metric-item">
+                        <div class="metric-label">Input Text</div>
+                        <div class="metric-value" id="meta-input" style="font-size: 0.9em;"></div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-label">Timestamp</div>
+                        <div class="metric-value" id="meta-timestamp" style="font-size: 0.9em;"></div>
+                    </div>
+                </div>
+                <div class="metric-row">
+                    <div class="metric-item">
+                        <div class="metric-label">Total Execution Time</div>
+                        <div class="metric-value" id="meta-time"></div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-label">Framework Version</div>
+                        <div class="metric-value" id="meta-version"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- QRH Spectral Analysis -->
+            <div class="metric-card">
+                <h3>🌈 QRH Spectral Analysis</h3>
+                <div class="metric-row">
+                    <div class="metric-item">
+                        <div class="metric-label">Adaptive Alpha (α)</div>
+                        <div class="metric-value" id="qrh-alpha"></div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-label">Total Energy Scale (log1p)</div>
+                        <div class="metric-value" id="qrh-energy-scale"></div>
+                    </div>
+                </div>
+                <div class="metric-row">
+                    <div class="metric-item">
+                        <div class="metric-label">Energy Mean</div>
+                        <div class="metric-value" id="qrh-energy-mean"></div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-label">Energy Std</div>
+                        <div class="metric-value" id="qrh-energy-std"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fractal Consciousness Analysis -->
+            <div class="metric-card">
+                <h3>🔮 Fractal Consciousness Analysis</h3>
+
+                <h4 style="margin: 15px 0; color: #555;">Power Law Fit</h4>
+                <div class="metric-row">
+                    <div class="metric-item">
+                        <div class="metric-label">Beta Exponent (β)</div>
+                        <div class="metric-value" id="fractal-beta"></div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-label">R² (Fit Quality)</div>
+                        <div class="metric-value" id="fractal-r2"></div>
+                    </div>
+                </div>
+
+                <h4 style="margin: 15px 0; color: #555;">Fractal Dimension</h4>
+                <div class="metric-row">
+                    <div class="metric-item">
+                        <div class="metric-label">Raw Value</div>
+                        <div class="metric-value" id="fractal-d-raw"></div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-label">Final Value (Clamped)</div>
+                        <div class="metric-value" id="fractal-d-final"></div>
+                    </div>
+                </div>
+
+                <h4 style="margin: 15px 0; color: #555;">FCI Components</h4>
+                <div class="metric-row">
+                    <div class="metric-item">
+                        <div class="metric-label">D_EEG (raw / norm)</div>
+                        <div class="metric-value" id="fci-d-eeg"></div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-label">H_fMRI (raw / norm)</div>
+                        <div class="metric-value" id="fci-h-fmri"></div>
+                    </div>
+                </div>
+                <div class="metric-row">
+                    <div class="metric-item">
+                        <div class="metric-label">CLZ (raw / norm)</div>
+                        <div class="metric-value" id="fci-clz"></div>
+                    </div>
+                </div>
+
+                <h4 style="margin: 15px 0; color: #555;">Final Metrics</h4>
+                <div class="metric-row">
+                    <div class="metric-item">
+                        <div class="metric-label">FCI Score</div>
+                        <div class="metric-value" id="final-fci"></div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-label">Consciousness State</div>
+                        <div class="metric-value" id="final-state"></div>
+                    </div>
+                </div>
+                <div class="metric-row">
+                    <div class="metric-item">
+                        <div class="metric-label">Coherence</div>
+                        <div class="metric-value" id="final-coherence"></div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-label">Entropy</div>
+                        <div class="metric-value" id="final-entropy"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- JSON Viewer -->
+            <div class="metric-card">
+                <h3>📄 Full JSON Response</h3>
+                <pre class="json-viewer" id="json-viewer"></pre>
+            </div>
+        </div>
+
+        <div class="error" id="error" style="display: none;"></div>
+    </div>
+
+    <script>
+        async function analyzeText() {
+            const inputText = document.getElementById('inputText').value.trim();
+
+            if (!inputText) {
+                alert('Por favor, digite um texto para análise.');
+                return;
+            }
+
+            // UI updates
+            document.getElementById('analyzeBtn').disabled = true;
+            document.getElementById('loading').classList.add('active');
+            document.getElementById('results').classList.remove('active');
+            document.getElementById('error').style.display = 'none';
+
+            try {
+                const response = await fetch('/api/v1/analyze/deep_dive', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ text: inputText })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                // Display results
+                displayResults(data);
+
+                // Show results section
+                document.getElementById('results').classList.add('active');
+
+            } catch (error) {
+                console.error('Error:', error);
+                const errorDiv = document.getElementById('error');
+                errorDiv.textContent = `Erro na análise: ${error.message}`;
+                errorDiv.style.display = 'block';
+            } finally {
+                document.getElementById('analyzeBtn').disabled = false;
+                document.getElementById('loading').classList.remove('active');
+            }
+        }
+
+        function displayResults(data) {
+            // Metadata
+            const meta = data.metadata || {};
+            document.getElementById('meta-input').textContent = (meta.input_text || '').substring(0, 50) + '...';
+            document.getElementById('meta-timestamp').textContent = meta.timestamp_utc || 'N/A';
+            document.getElementById('meta-time').textContent = (meta.execution_times_ms?.total || 0).toFixed(2) + ' ms';
+            document.getElementById('meta-version').textContent = meta.framework_version || 'N/A';
+
+            // QRH Spectral Analysis
+            const qrh = data.qrh_spectral_analysis || {};
+            document.getElementById('qrh-alpha').textContent = (qrh.adaptive_alpha || 0).toFixed(4);
+            document.getElementById('qrh-energy-scale').textContent = (qrh.spectral_energy_stats?.total_energy_scale || 0).toFixed(2);
+            document.getElementById('qrh-energy-mean').textContent = (qrh.spectral_energy_stats?.mean || 0).toExponential(2);
+            document.getElementById('qrh-energy-std').textContent = (qrh.spectral_energy_stats?.std || 0).toExponential(2);
+
+            // Fractal Consciousness Analysis
+            const fractal = data.fractal_consciousness_analysis || {};
+
+            // Power law fit
+            const powerLaw = fractal.power_law_fit || {};
+            document.getElementById('fractal-beta').textContent = (powerLaw.beta_exponent || 0).toFixed(4);
+            document.getElementById('fractal-r2').textContent = (powerLaw.r_squared || 0).toFixed(4);
+
+            // Fractal dimension
+            const dim = fractal.fractal_dimension || {};
+            document.getElementById('fractal-d-raw').textContent = (dim.raw_value || 0).toFixed(4);
+            document.getElementById('fractal-d-final').textContent = (dim.final_value || 0).toFixed(4);
+
+            // FCI components
+            const fciComp = fractal.fci_components || {};
+            const dEeg = fciComp.d_eeg || {};
+            const hFmri = fciComp.h_fmri || {};
+            const clz = fciComp.clz || {};
+
+            document.getElementById('fci-d-eeg').textContent =
+                `${(dEeg.raw || 0).toFixed(4)} / ${(dEeg.normalized || 0).toFixed(4)}`;
+            document.getElementById('fci-h-fmri').textContent =
+                `${(hFmri.raw || 0).toFixed(4)} / ${(hFmri.normalized || 0).toFixed(4)}`;
+            document.getElementById('fci-clz').textContent =
+                `${(clz.raw || 0).toFixed(4)} / ${(clz.normalized || 0).toFixed(4)}`;
+
+            // Final metrics
+            const final = fractal.final_metrics || {};
+            document.getElementById('final-fci').textContent = (final.fci_score || 0).toFixed(4);
+
+            const state = final.consciousness_state || 'UNKNOWN';
+            const stateEl = document.getElementById('final-state');
+            stateEl.innerHTML = `<span class="state-badge state-${state}">${state}</span>`;
+
+            document.getElementById('final-coherence').textContent = (final.coherence || 0).toFixed(4);
+            document.getElementById('final-entropy').textContent = (final.entropy || 0).toFixed(4);
+
+            // JSON Viewer
+            document.getElementById('json-viewer').textContent = JSON.stringify(data, null, 2);
+        }
+    </script>
+</body>
+</html>

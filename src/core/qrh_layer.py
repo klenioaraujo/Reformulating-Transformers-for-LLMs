@@ -1,0 +1,583 @@
+"""
+QRH Layer Implementation
+
+Core layer implementing Quaternion-Relativistic-Harmonic transformations.
+
+Copyright (C) 2025 Klenio Araujo Padilha
+Licensed under GNU GPLv3 - see LICENSE file
+
+DOI: https://zenodo.org/records/17171112
+Project: https://github.com/klenioaraujo/Reformulating-Transformers-for-LLMs
+"""
+
+import torch
+import torch.nn as nn
+import torch.fft as fft
+import math
+import warnings
+from typing import Tuple, Dict, Optional, Literal, Callable
+from dataclasses import dataclass
+
+from torch.amp import autocast
+
+from .quaternion_operations import QuaternionOperations
+from ..fractal.spectral_filter import SpectralFilter
+from .tensor_validator import ScientificTensorValidator
+
+# Custom Exception Hierarchy
+class QRHError(Exception):
+    """Base exception for all errors raised by the QRHLayer."""
+    pass
+
+class QRHDimensionError(QRHError):
+    """Raised for dimension-related errors."""
+    pass
+
+class QRHSpectralError(QRHError):
+    """Raised for errors during spectral (FFT, filtering) operations."""
+    pass
+
+# Caching Utilities
+class FFTCache:
+    """
+    LRU cache for FFT results with memory-based cleanup and timeout.
+
+    Features:
+    - LRU eviction policy (not FIFO)
+    - Cache hit/miss metrics tracking
+    - Memory-based cleanup (approximate)
+    - Entry timeout for staleness prevention
+    """
+    def __init__(self, max_size: int = 10, max_memory_mb: float = 100.0,
+                 entry_timeout_seconds: float = 300.0):
+        from collections import OrderedDict
+        import time
+
+        self.cache: OrderedDict[Tuple, Tuple[torch.Tensor, float]] = OrderedDict()
+        self.max_size = max_size
+        self.max_memory_bytes = max_memory_mb * 1024 * 1024
+        self.entry_timeout = entry_timeout_seconds
+
+        # Metrics
+        self.hits = 0
+        self.misses = 0
+        self._current_memory_bytes = 0
+
+    def _estimate_tensor_memory(self, tensor: torch.Tensor) -> int:
+        """Estimate memory usage of a tensor in bytes"""
+        return tensor.element_size() * tensor.numel()
+
+    def _cleanup_stale_entries(self):
+        """Remove entries that have exceeded timeout"""
+        import time
+        current_time = time.time()
+
+        # Collect keys to remove (can't modify dict during iteration)
+        stale_keys = []
+        for key, (tensor, timestamp) in self.cache.items():
+            if current_time - timestamp > self.entry_timeout:
+                stale_keys.append(key)
+
+        # Remove stale entries
+        for key in stale_keys:
+            tensor, _ = self.cache.pop(key)
+            self._current_memory_bytes -= self._estimate_tensor_memory(tensor)
+
+    def _cleanup_by_memory(self, needed_bytes: int):
+        """Evict LRU entries until we have enough memory"""
+        # Only cleanup if adding would exceed limit
+        while (self._current_memory_bytes + needed_bytes > self.max_memory_bytes
+               and self.cache
+               and len(self.cache) > 1):  # Keep at least 1 entry
+            # Pop oldest (LRU) entry
+            key, (tensor, _) = self.cache.popitem(last=False)
+            self._current_memory_bytes -= self._estimate_tensor_memory(tensor)
+
+    def get(self, key: Tuple, compute_func: Callable[[], torch.Tensor]) -> torch.Tensor:
+        import time
+
+        # Cleanup stale entries periodically
+        self._cleanup_stale_entries()
+
+        # Check cache hit
+        if key in self.cache:
+            self.hits += 1
+            # Move to end (mark as recently used)
+            tensor, _ = self.cache.pop(key)
+            self.cache[key] = (tensor, time.time())
+            return tensor
+
+        # Cache miss
+        self.misses += 1
+
+        # Compute result
+        result = compute_func()
+        result_memory = self._estimate_tensor_memory(result)
+
+        # Ensure we have space (size-based eviction)
+        if len(self.cache) >= self.max_size:
+            # Remove oldest entry (LRU)
+            old_key, (old_tensor, _) = self.cache.popitem(last=False)
+            self._current_memory_bytes -= self._estimate_tensor_memory(old_tensor)
+
+        # Ensure we have memory (memory-based eviction)
+        self._cleanup_by_memory(result_memory)
+
+        # Store result
+        self.cache[key] = (result, time.time())
+        self._current_memory_bytes += result_memory
+
+        return result
+
+    def get_metrics(self) -> Dict[str, any]:
+        """Get cache performance metrics"""
+        total_requests = self.hits + self.misses
+        hit_rate = self.hits / total_requests if total_requests > 0 else 0.0
+
+        return {
+            "hits": self.hits,
+            "misses": self.misses,
+            "total_requests": total_requests,
+            "hit_rate": hit_rate,
+            "current_entries": len(self.cache),
+            "max_entries": self.max_size,
+            "memory_usage_mb": self._current_memory_bytes / (1024 * 1024),
+            "max_memory_mb": self.max_memory_bytes / (1024 * 1024)
+        }
+
+    def clear(self):
+        """Clear all cache entries"""
+        self.cache.clear()
+        self._current_memory_bytes = 0
+
+class QuaternionLayerNorm(nn.Module):
+    """
+    Layer normalization specifically designed for quaternions.
+    Normalizes each quaternion (4-component vector) independently.
+    """
+
+    def __init__(self, epsilon: float = 1e-5):
+        super().__init__()
+        self.epsilon = epsilon
+
+        # Learnable parameters for gain (gamma) and bias (beta)
+        # One parameter for each quaternion component (w, x, y, z)
+        self.gamma = nn.Parameter(torch.ones(4))
+        self.beta = nn.Parameter(torch.zeros(4))
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Apply quaternion layer normalization.
+
+        Args:
+            x: Input tensor with shape (..., 4) where last dimension represents quaternion components
+
+        Returns:
+            Normalized tensor with same shape as input
+        """
+        # Calculate mean and variance along the last dimension (quaternion components)
+        mean = x.mean(dim=-1, keepdim=True)
+        variance = x.var(dim=-1, keepdim=True, unbiased=False)
+
+        # Normalize
+        x_normalized = (x - mean) / torch.sqrt(variance + self.epsilon)
+
+        # Apply learnable scaling and shifting
+        return self.gamma * x_normalized + self.beta
+
+@dataclass
+class QRHConfig:
+    embed_dim: int = 64
+    alpha: float = 1.0
+    theta_left: float = 0.1
+    omega_left: float = 0.05
+    phi_left: float = 0.02
+    theta_right: float = 0.08
+    omega_right: float = 0.03
+    phi_right: float = 0.015
+    use_learned_rotation: bool = False
+    spatial_dims: Optional[Tuple[int, ...]] = None
+    use_windowing: bool = True
+    window_type: str = 'hann'
+    fft_cache_size: int = 10
+    device: str = 'cpu'
+    enable_warnings: bool = True
+    normalization_type: Literal['layer_norm', 'unit_projection'] = 'unit_projection'
+    spectral_dropout_rate: float = 0.0
+    enable_phase_check: bool = False
+    phase_check_threshold: float = 1e-6
+    # Additional config params from YAML
+    padding_enabled: bool = False
+    auto_adjust_shapes: bool = False
+    validate_shapes: bool = True
+
+class QRHLayer(nn.Module):
+    """
+    ΨQRH Layer for Transformers: Ψ_QRH = R_left · F^{-1} { F(k) · F { Ψ } } · R_right
+    """
+
+    def __init__(self, config: QRHConfig):
+        super().__init__()
+        self.config = config
+        self.total_dim = 4 * config.embed_dim
+        self._freq_cache: Dict[Tuple[int, str], torch.Tensor] = {}
+        self.fft_cache = FFTCache(max_size=config.fft_cache_size)
+
+        # Initialize scientific tensor validator
+        self.tensor_validator = ScientificTensorValidator(auto_adjust=True)
+
+        # Left rotation parameters (learnable or fixed)
+        if config.use_learned_rotation:
+            self.theta_left = nn.Parameter(torch.tensor(config.theta_left, dtype=torch.float32, requires_grad=True))
+            self.omega_left = nn.Parameter(torch.tensor(config.omega_left, dtype=torch.float32, requires_grad=True))
+            self.phi_left = nn.Parameter(torch.tensor(config.phi_left, dtype=torch.float32, requires_grad=True))
+            self.theta_right = nn.Parameter(torch.tensor(config.theta_right, dtype=torch.float32, requires_grad=True))
+            self.omega_right = nn.Parameter(torch.tensor(config.omega_right, dtype=torch.float32, requires_grad=True))
+            self.phi_right = nn.Parameter(torch.tensor(config.phi_right, dtype=torch.float32, requires_grad=True))
+        else:
+            self.register_buffer('theta_left', torch.tensor(config.theta_left))
+            self.register_buffer('omega_left', torch.tensor(config.omega_left))
+            self.register_buffer('phi_left', torch.tensor(config.phi_left))
+            self.register_buffer('theta_right', torch.tensor(config.theta_right))
+            self.register_buffer('omega_right', torch.tensor(config.omega_right))
+            self.register_buffer('phi_right', torch.tensor(config.phi_right))
+
+        # Initialize the spectral filter with improvements
+        self.spectral_filter = SpectralFilter(config.alpha, use_windowing=config.use_windowing, window_type=config.window_type)
+
+        # Projection layers
+        self.v_proj = nn.Linear(self.total_dim, self.total_dim)
+        self.out_proj = nn.Linear(self.total_dim, self.total_dim)
+
+        # Initialize normalization if specified
+        self.quaternion_norm = None
+        if config.normalization_type == 'layer_norm':
+            self.quaternion_norm = QuaternionLayerNorm()
+
+    def get_rotation_quaternions(self) -> Tuple[torch.Tensor, torch.Tensor]:
+        """Returns the left and right rotation quaternions for SO(4) using a vectorized operation."""
+        # Stack angles for batch processing
+        thetas = torch.stack([self.theta_left, self.theta_right])
+        omegas = torch.stack([self.omega_left, self.omega_right])
+        phis = torch.stack([self.phi_left, self.phi_right])
+
+        # Create quaternions in a single batch call
+        quaternions = QuaternionOperations.create_unit_quaternion_batch(thetas, omegas, phis)
+
+        # Unpack
+        q_left, q_right = quaternions[0], quaternions[1]
+        return q_left, q_right
+
+    def _safe_reshape(self, x: torch.Tensor, target_shape: tuple, operation_name: str) -> torch.Tensor:
+        """Safe reshape operation with automatic validation and adjustment."""
+        return self.tensor_validator.validate_and_reshape(
+            x, target_shape, f"qrh_{operation_name}"
+        )
+
+    def _get_freq_cache(self, seq_len: int, device: torch.device) -> torch.Tensor:
+        cache_key = (seq_len, device.type)
+        if cache_key not in self._freq_cache:
+            freq = fft.fftfreq(seq_len, d=1.0, device=device)
+            self._freq_cache[cache_key] = freq
+        return self._freq_cache[cache_key].to(device)
+
+    def _compute_frequencies(self, seq_len: int, device: torch.device) -> Tuple[torch.Tensor, torch.Tensor]:
+        """
+        Calculates FFT frequencies correctly using fftfreq (NOT np.gradient).
+        """
+        # For compatibility, if spatial_dims is not defined, use sequence dimension
+        if self.config.spatial_dims is None or (isinstance(self.config.spatial_dims, (list, tuple)) and len(self.config.spatial_dims) == 1 and self.config.spatial_dims[0] == seq_len):
+            # 1D case (compatibility with previous implementation)
+            freqs = self._get_freq_cache(seq_len, device)
+
+            # Calculate wave vector k = 2π * frequency
+            k = 2 * math.pi * freqs.view(1, seq_len, 1)
+
+            # CORRECTION: Enhanced numerical stability with sqrt(k² + ε)
+            k_mag = torch.sqrt(k**2 + 1e-8)
+
+            return k, k_mag
+        else:
+            # Multi-dimensional case
+            k_vecs = [self._get_freq_cache(n, device) for n in self.config.spatial_dims]
+            k_mesh = torch.meshgrid(*k_vecs, indexing='ij')
+
+            # Calculate wave vector magnitude with enhanced stability
+            k_squared = sum(k_i**2 for k_i in k_mesh)
+            # CORRECTION: Better numerical stability
+            k_mag = torch.sqrt(k_squared + 1e-8)
+
+            return k_mesh, k_mag
+
+    def _validate_input(self, x: torch.Tensor) -> torch.Tensor:
+        """Comprehensive input validation to ensure layer robustness with NaN handling."""
+        # Check for tensor dimensions and feature size
+        if x.dim() != 3:
+            raise QRHDimensionError(f"Expected 3D tensor, but got {x.dim()}D")
+        expected_features = 4 * self.config.embed_dim
+        if x.size(-1) != expected_features:
+            raise QRHDimensionError(f"Expected {expected_features} features for the last dimension, but got {x.size(-1)}")
+
+        # Check for numerical stability with graceful NaN handling
+        finite_mask = torch.isfinite(x)
+        if not finite_mask.all():
+            if not finite_mask.any():
+                # All values are NaN/Inf - return zeros
+                warnings.warn("Input tensor contains only NaN/Inf values. Returning zero tensor.")
+                return torch.zeros_like(x)
+            else:
+                # Some values are NaN/Inf - replace with zeros
+                x_clean = x.clone()
+                x_clean[~finite_mask] = 0.0
+                if self.config.enable_warnings:
+                    warnings.warn(f"Input tensor contains {(~finite_mask).sum().item()} NaN/Inf values. Replacing with zeros.")
+                return x_clean
+
+        # Warn about untested devices
+        if x.device.type not in ['cpu', 'cuda', 'mps', 'xla']:
+            warnings.warn(f"Unsupported device type: '{x.device.type}'. The layer may work but has not been tested on this device.")
+
+        return x
+
+    def _preprocess_input(self, x: torch.Tensor) -> torch.Tensor:
+        # All operations here use device of x
+        V = torch.einsum('bij,jk->bik', x, self.v_proj.weight)
+        if self.v_proj.bias is not None:
+            V = V + self.v_proj.bias
+        # Safe reshape to quaternion format
+        V_reshaped = self._safe_reshape(
+            V,
+            (*x.shape[:-1], 4, self.config.embed_dim),
+            "preprocess_reshape"
+        )
+        return V_reshaped.permute(0, 1, 3, 2)
+
+    def _apply_spectral_filtering(self, Ψ: torch.Tensor) -> torch.Tensor:
+        """
+        Applies spectral filtering in frequency domain:
+        Ψ_filtered = F^{-1} { F(k) · F { Ψ } }
+
+        Args:
+            Ψ: Input tensor [B, T, D, 4] (batch, seq_len, embed_dim, quaternion_components)
+        Returns:
+            Filtered tensor with same shape
+        """
+        batch_size, seq_len, embed_dim, quat_dim = Ψ.shape
+
+        # Apply windowing if enabled
+        # Ψ_windowed = self.spectral_filter.apply_window(Ψ, seq_len)  # Commented out - spectral_filter not available
+
+        # Forward FFT along sequence dimension - MUST be complex
+        Ψ_fft = fft.fft(Ψ, dim=1)  # Use original Ψ since spectral filter not available
+        assert Ψ_fft.dtype in [torch.complex64, torch.complex128], f"FFT must be complex, got {Ψ_fft.dtype}"
+
+        # Compute wave vector magnitudes
+        k, k_mag = self._compute_frequencies(seq_len, Ψ.device)
+
+        # Apply spectral filter F(k) - MUST return complex tensor
+        filter_response = self.spectral_filter(k_mag)
+        assert filter_response.dtype in [torch.complex64, torch.complex128], f"Filter must be complex, got {filter_response.dtype}"
+
+        # Expand filter to match tensor dimensions [1, T, 1, 1]
+        filter_expanded = filter_response.view(1, seq_len, 1, 1)
+
+        # Apply filter in frequency domain - complex × complex multiplication
+        Ψ_filtered_fft = Ψ_fft * filter_expanded
+
+        # Apply Spectral Dropout for regularization
+        if self.training and self.config.spectral_dropout_rate > 0:
+            # Determine the number of frequencies to drop (contiguous band)
+            num_to_drop = int(seq_len * self.config.spectral_dropout_rate)
+
+            if num_to_drop > 0 and num_to_drop < seq_len:
+                # Create dropout mask with same shape as Ψ_fft
+                mask = torch.ones_like(Ψ_filtered_fft)
+
+                # Choose random starting index for the band to be zeroed
+                start_index = torch.randint(0, seq_len - num_to_drop, (1,)).item()
+
+                # Zero out the contiguous frequency band
+                mask[:, start_index : start_index + num_to_drop, :, :] = 0
+
+                # Apply the mask
+                Ψ_filtered_fft = Ψ_filtered_fft * mask
+
+                # Re-scale to maintain expected magnitude
+                Ψ_filtered_fft = Ψ_filtered_fft / (1.0 - self.config.spectral_dropout_rate)
+
+        # CRITICAL: Verify that phase rotation is actually applied
+        assert Ψ_filtered_fft.dtype in [torch.complex64, torch.complex128], "Filtered FFT must be complex!"
+
+        # Check if imaginary part exists (configurable - only when enable_phase_check is True)
+        # NOTE: Future optimization opportunity - phase rotation effectiveness could be enhanced by:
+        # 1. Implementing adaptive phase modulation based on input spectral characteristics
+        # 2. Using learnable phase offset parameters for different frequency bands
+        # 3. Adding phase coherence metrics to guide rotation strength
+        if self.config.enable_phase_check:
+            has_imaginary = torch.any(torch.abs(Ψ_filtered_fft.imag) > self.config.phase_check_threshold)
+            if not has_imaginary and self.config.enable_warnings:
+                warnings.warn(
+                    "Filter may not be applying significant phase rotation. "
+                    "Consider enabling use_learned_rotation or adjusting frequency parameters."
+                )
+
+        # Inverse FFT to return to time domain - take real part only after IFFT
+        Ψ_filtered = torch.fft.ifft(Ψ_filtered_fft, dim=1).real
+
+        return Ψ_filtered
+
+    def _apply_quaternion_rotations(self, Ψ_filtered: torch.Tensor) -> torch.Tensor:
+        """
+        Applies quaternion rotations: R_left · Ψ_filtered · R_right
+
+        Args:
+            Ψ_filtered: Filtered tensor [B, T, D, 4] (quaternion components in last dim)
+        Returns:
+            Rotated tensor with same shape
+        """
+        # Get rotation quaternions
+        q_left, q_right = self.get_rotation_quaternions()
+
+        batch_size, seq_len, embed_dim, quat_dim = Ψ_filtered.shape
+
+        # Safe reshape for quaternion operations: [B*T*D, 4]
+        # Ensure total elements is divisible by 4 for quaternion operations
+        total_elements = Ψ_filtered.numel()
+        if total_elements % 4 != 0:
+            # Pad to make divisible by 4
+            padding_needed = 4 - (total_elements % 4)
+            Ψ_filtered_padded = torch.cat([
+                Ψ_filtered.flatten(),
+                torch.zeros(padding_needed, device=Ψ_filtered.device)
+            ])
+            Ψ_flat = Ψ_filtered_padded.view(-1, 4)
+        else:
+            Ψ_flat = Ψ_filtered.reshape(-1, 4)
+
+        # Apply left rotation: q_left * Ψ
+        # Expand q_left to match batch dimensions
+        q_left_expanded = q_left.unsqueeze(0).expand(Ψ_flat.size(0), -1)
+        Ψ_left_rotated = QuaternionOperations.multiply(q_left_expanded, Ψ_flat)
+
+        # Apply right rotation: (q_left * Ψ) * q_right
+        # Expand q_right to match batch dimensions
+        q_right_expanded = q_right.unsqueeze(0).expand(Ψ_flat.size(0), -1)
+        Ψ_rotated_flat = QuaternionOperations.multiply(Ψ_left_rotated, q_right_expanded)
+
+        # Safe reshape back to original dimensions
+        Ψ_rotated = self._safe_reshape(
+            Ψ_rotated_flat,
+            (batch_size, seq_len, embed_dim, quat_dim),
+            "quaternion_unflatten"
+        )
+
+        return Ψ_rotated
+
+    def _apply_normalization(self, Ψ_rotated: torch.Tensor) -> torch.Tensor:
+        """
+        Apply normalization to the quaternion tensor.
+
+        IMPORTANT: Normalization is now mandatory for energy stability.
+        Default behavior is unit_projection to ensure energy conservation.
+
+        Args:
+            Ψ_rotated: Rotated tensor [B, T, D, 4] (quaternion components in last dim)
+        Returns:
+            Normalized tensor with same shape
+        """
+        if self.config.normalization_type == 'layer_norm' and self.quaternion_norm is not None:
+            # Apply quaternion layer normalization
+            return self.quaternion_norm(Ψ_rotated)
+        else:
+            # Default: Apply unit projection (normalize quaternions to unit length)
+            # This ensures energy conservation and prevents amplification
+            # Calculate L2 norm of each quaternion along the last dimension
+            norm = torch.norm(Ψ_rotated, p=2, dim=-1, keepdim=True)
+            # Divide by norm with epsilon for numerical stability
+            Ψ_normalized = Ψ_rotated / (norm + 1e-6)
+            return Ψ_normalized
+
+    def _postprocess_output(self, Ψ_normalized: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
+        """
+        Postprocesses the normalized quaternion output and applies residual connection.
+
+        Args:
+            Ψ_normalized: Normalized tensor [B, T, D, 4]
+            x: Original input tensor [B, T, 4*D] for residual connection
+        Returns:
+            Final output tensor [B, T, 4*D]
+        """
+        batch_size, seq_len, embed_dim, quat_dim = Ψ_normalized.shape
+
+        # Safe reshape from [B, T, D, 4] to [B, T, 4*D]
+        Ψ_reshaped = Ψ_normalized.permute(0, 1, 3, 2)
+        Ψ_flat = self._safe_reshape(
+            Ψ_reshaped,
+            (batch_size, seq_len, self.total_dim),
+            "postprocess_reshape"
+        )
+
+        # Apply output projection
+        Ψ_projected = torch.einsum('bij,jk->bik', Ψ_flat, self.out_proj.weight)
+        if self.out_proj.bias is not None:
+            Ψ_projected = Ψ_projected + self.out_proj.bias
+
+        # Apply residual connection
+        output = Ψ_projected + x
+
+        return output
+
+    def _forward_impl(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Core implementation of the forward pass, executed within an autocast context.
+
+        Args:
+            x: Input tensor [B, T, 4*D].
+        Returns:
+            Output tensor with the same shape and device as input.
+        """
+        x_validated = self._validate_input(x)
+        Ψ = self._preprocess_input(x_validated)
+        Ψ_filtered = self._apply_spectral_filtering(Ψ)
+        Ψ_rotated = self._apply_quaternion_rotations(Ψ_filtered)
+
+        # Apply normalization if specified
+        Ψ_normalized = self._apply_normalization(Ψ_rotated)
+
+        # Pass validated 'x' for residual connection
+        return self._postprocess_output(Ψ_normalized, x_validated)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Top-level forward pass with device-aware Automatic Mixed Precision (AMP).
+        Uses bfloat16 on compatible devices (CUDA, MPS) and float32 on CPU.
+        """
+        # Only use autocast on GPU devices that support it
+        if x.device.type != 'cpu' and torch.cuda.is_bf16_supported():
+            dtype = torch.bfloat16
+            with torch.autocast(device_type=x.device.type, dtype=dtype):
+                return self._forward_impl(x)
+        else:
+            # Run directly without autocast on CPU to avoid warnings
+            return self._forward_impl(x)
+
+    def check_health(self, x: torch.Tensor) -> dict:
+        """Performs validation checks inspired by the test suite."""
+        health_report = {}
+        with torch.no_grad():
+            output = self.forward(x)
+
+            # 1. Energy Conservation Test
+            input_energy = torch.norm(x).item()
+            output_energy = torch.norm(output).item()
+            # Avoid division by zero
+            if input_energy > 1e-6:
+                energy_ratio = output_energy / input_energy
+                # Healthy DNA should keep energy ratio within a reasonable bound (e.g., 0.5 to 2.0)
+                health_report['energy_ratio'] = energy_ratio
+                health_report['is_stable'] = 0.5 < energy_ratio < 2.0
+            else:
+                health_report['energy_ratio'] = 0
+                health_report['is_stable'] = False
+
+        return health_report

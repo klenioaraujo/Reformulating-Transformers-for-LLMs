@@ -1,0 +1,97 @@
+{
+  "validation_timestamp": "2025-09-25T07:47:00.819335",
+  "system_info": {
+    "python_version": "3.12.7 (main, Jun 18 2025, 13:16:51) [GCC 14.2.0]",
+    "torch_version": "2.8.0+cu128",
+    "cuda_available": false,
+    "device_count": 0
+  },
+  "test_summary": {
+    "total_tests": 4,
+    "passed_tests": 4,
+    "failed_tests": 0,
+    "success_rate_percent": 100.0
+  },
+  "detailed_results": {
+    "Core QRH Layer": {
+      "status": "PASS",
+      "execution_time_s": 0.0303037166595459,
+      "memory_usage": {
+        "start": {
+          "cpu_memory_mb": 484.16015625,
+          "gpu_memory_mb": 0
+        },
+        "end": {
+          "cpu_memory_mb": 505.953125,
+          "gpu_memory_mb": 0
+        },
+        "peak_increase_mb": 21.79296875
+      },
+      "tensor_health": {
+        "has_nan": false,
+        "has_inf": false,
+        "shape": [
+          2,
+          32,
+          256
+        ],
+        "dtype": "torch.float32"
+      },
+      "output_shape": [
+        2,
+        32,
+        256
+      ],
+      "error": null
+    },
+    "Spectral Filter": {
+      "status": "PASS",
+      "execution_time_s": 0.0005457401275634766,
+      "tensor_health": {
+        "has_nan": false,
+        "has_inf": false,
+        "shape": [
+          10,
+          20
+        ],
+        "dtype": "torch.complex64"
+      },
+      "output_shape": [
+        10,
+        20
+      ],
+      "error": null
+    },
+    "\u03a8QRH Integration": {
+      "status": "PASS",
+      "execution_time_s": 0.015403985977172852,
+      "error": null
+    },
+    "System Initialization": {
+      "status": "PASS",
+      "execution_time_s": 0.0788431167602539,
+      "tensor_health": {
+        "has_nan": false,
+        "has_inf": false,
+        "shape": [
+          2,
+          10,
+          512
+        ],
+        "dtype": "torch.float32"
+      },
+      "output_shape": [
+        2,
+        10,
+        512
+      ],
+      "metrics_available": true,
+      "error": null
+    }
+  },
+  "criteria_met": {
+    "min_success_rate_95_percent": true,
+    "no_nan_inf_detected": true,
+    "all_imports_successful": true
+  }
+}

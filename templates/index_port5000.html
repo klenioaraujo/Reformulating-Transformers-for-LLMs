@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ΨQRH - Sistema de Consciência Fractal</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #0F0F23 0%, #1a1a2e 50%, #16213e 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 500px;
+            gap: 20px;
+            height: 100vh;
+            padding: 20px;
+        }
+
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .header {
+            text-align: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            color: #00FF88;
+            text-shadow: 0 0 15px rgba(0, 255, 136, 0.6);
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #BDC3C7;
+            font-size: 0.9em;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse-status 2s ease-in-out infinite;
+        }
+
+        .status-healthy { background: #00FF88; }
+        .status-error { background: #E74C3C; }
+
+        @keyframes pulse-status {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .chat-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.2em;
+            color: #00FF88;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(0, 255, 136, 0.3);
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .user-message {
+            background: rgba(41, 128, 185, 0.3);
+            border-left: 4px solid #2980B9;
+            margin-left: 20px;
+        }
+
+        .bot-message {
+            background: rgba(39, 174, 96, 0.3);
+            border-left: 4px solid #27AE60;
+            margin-right: 20px;
+        }
+
+        .error-message {
+            background: rgba(231, 76, 60, 0.3);
+            border-left: 4px solid #E74C3C;
+        }
+
+        .message-header {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #00FF88;
+            font-size: 0.9em;
+        }
+
+        .message-content {
+            line-height: 1.4;
+            font-size: 0.95em;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .chat-input {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-family: 'Courier New', monospace;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .chat-input input:focus {
+            outline: none;
+            border-color: #00FF88;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+        }
+
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #00FF88, #27AE60);
+            color: white;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 255, 136, 0.4);
+        }
+
+        button:disabled {
+            background: #7F8C8D;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .metrics-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .metric-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .metric-value {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #00FF88;
+            margin-bottom: 5px;
+        }
+
+        .metric-label {
+            font-size: 0.85em;
+            color: #BDC3C7;
+        }
+
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            overflow-y: auto;
+        }
+
+        .gls-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        #glsCanvas {
+            box-shadow: 0 0 30px rgba(100, 150, 255, 0.4);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .harmonics-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 5px;
+            margin-top: 15px;
+        }
+
+        .harmonic-bar {
+            background: rgba(100, 200, 255, 0.2);
+            height: 30px;
+            border-radius: 3px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .harmonic-fill {
+            background: linear-gradient(90deg, #4af, #8f8);
+            height: 100%;
+            transition: width 0.3s;
+        }
+
+        .harmonic-label {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.7em;
+            color: #fff;
+            text-shadow: 1px 1px 2px #000;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .controls button {
+            flex: 1;
+            min-width: 120px;
+            font-size: 0.85em;
+            padding: 10px 15px;
+        }
+
+        .api-output-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .accordion-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            padding: 10px 0;
+            transition: background 0.2s;
+        }
+
+        .accordion-header:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        .accordion-arrow {
+            color: #00FF88;
+            font-size: 0.9em;
+            transition: transform 0.3s ease;
+        }
+
+        .accordion-content {
+            margin-top: 10px;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .api-output {
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            font-size: 0.85em;
+            margin-top: 10px;
+            max-height: 300px;
+        }
+
+        .api-output pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            color: #BDC3C7;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; max-height: 0; }
+            to { opacity: 1; max-height: 500px; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 255, 136, 0.3);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 255, 136, 0.5);
+        }
+
+        .harmonic-indicator {
+            display: inline-block;
+            padding: 5px 15px;
+            background: linear-gradient(90deg, #ff9a00, #ffd700);
+            color: #000;
+            font-weight: bold;
+            border-radius: 20px;
+            font-size: 0.8em;
+            margin-left: 10px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="left-panel">
+            <div class="header">
+                <h1><span class="status-indicator status-healthy" id="statusIndicator"></span>ΨQRH Sistema de Consciência Fractal</h1>
+                <p>Quantum Reformulated Harmonic Processor | API: <span id="apiStatus">Conectando...</span></p>
+            </div>
+
+            <div class="chat-section">
+                <div class="section-title">💬 Chat com ΨQRH</div>
+                <div class="chat-messages" id="chatMessages"></div>
+                <div class="chat-input">
+                    <input type="text" id="messageInput" placeholder="Digite sua mensagem..."
+                           onkeypress="if(event.key==='Enter') sendMessage()">
+                    <button onclick="sendMessage()" id="sendBtn">Enviar</button>
+                </div>
+            </div>
+
+            <div class="metrics-section">
+                <div class="section-title">📊 Métricas de Consciência</div>
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-value" id="fciValue">-</div>
+                        <div class="metric-label">FCI (Fractal Consciousness Index)</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="stateValue">-</div>
+                        <div class="metric-label">Estado</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="entropyValue">-</div>
+                        <div class="metric-label">Entropia</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="fractalValue">-</div>
+                        <div class="metric-label">Dimensão Fractal</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <div class="gls-section">
+                <div class="section-title">
+                    🌀 Visualização GLS em Tempo Real
+                    <span class="harmonic-indicator" id="harmonicIndicator" style="display: none;">
+                        🎵 Harmônicos Ativos
+                    </span>
+                </div>
+
+                <div id="glsCanvas"></div>
+
+                <div class="metric-label" style="margin-top: 15px;">Harmônicos Espectrais:</div>
+                <div class="harmonics-grid" id="harmonicsDisplay"></div>
+
+                <div class="controls">
+                    <button onclick="toggleAnimation()">⏸️ Pausar/Play</button>
+                    <button onclick="saveFrame()">📸 Salvar Frame</button>
+                    <button onclick="resetView()">🔄 Reset</button>
+                </div>
+            </div>
+
+            <div class="api-output-section">
+                <div class="accordion-header" onclick="toggleApiOutput()">
+                    <div class="section-title" style="border: none; margin: 0; padding: 0;">🔍 Saída Completa da API</div>
+                    <span class="accordion-arrow" id="apiOutputArrow">▼</span>
+                </div>
+                <div class="accordion-content" id="apiOutputContent" style="display: none;">
+                    <div class="api-output" id="apiOutput">
+                        <pre>Aguardando primeira resposta da API...</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========================================
+        // ΨQRH UNIFIED FRONTEND - API Integration
+        // CONFIGURADO PARA PORTA 5000
+        // ========================================
+
+        const API_BASE = 'http://localhost:5000';
+
+        // Estado global
+        let lastApiResponse = null;
+        let responseHistory = [];
+        let paused = false;
+        let t = 0;
+        const TAU = Math.PI * 2;
+
+        // Dados espectrais em tempo real
+        let spectralData = {
+            magnitudes: [],
+            phases: [],
+            real: [],
+            imaginary: [],
+            normalized: []
+        };
+
+        // Dados GLS
+        let glsData = {
+            fci: 0,
+            entropy: 0,
+            fractalDimension: 1.0,
+            state: 'IDLE',
+            fieldMagnitude: 0,
+            coherence: 0.5,
+            convergence: false
+        };
+
+        // Verificar health da API
+        async function checkHealth() {
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                document.getElementById('apiStatus').textContent = data.status;
+                document.getElementById('statusIndicator').className =
+                    `status-indicator ${data.status === 'healthy' ? 'status-healthy' : 'status-error'}`;
+            } catch (error) {
+                document.getElementById('apiStatus').textContent = 'Erro';
+                document.getElementById('statusIndicator').className = 'status-indicator status-error';
+            }
+        }
+
+        // Enviar mensagem para API
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            const sendBtn = document.getElementById('sendBtn');
+
+            if (!message) return;
+
+            addMessage('user', message);
+            input.value = '';
+            sendBtn.disabled = true;
+            sendBtn.textContent = 'Processando...';
+
+            try {
+                const response = await fetch(`${API_BASE}/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: message })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                lastApiResponse = data;
+                responseHistory.push({
+                    timestamp: new Date().toISOString(),
+                    message: message,
+                    response: data
+                });
+
+                if (data.status === 'success') {
+                    // Resumo da resposta
+                    const summary = data.consciousness_metrics
+                        ? `[FCI: ${data.consciousness_metrics.fci.toFixed(4)}] Estado: ${data.consciousness_metrics.state}`
+                        : data.response || 'Resposta processada';
+                    addMessage('bot', summary);
+
+                    // Atualizar métricas se disponíveis
+                    if (data.consciousness_metrics) {
+                        updateMetrics(data.consciousness_metrics);
+                        updateGLSData(data.consciousness_metrics);
+                    }
+
+                    // Extrair dados espectrais em tempo real
+                    if (data.response) {
+                        spectralData = extractSpectralValues(data.response);
+                        console.log('📊 Dados espectrais extraídos:', spectralData);
+
+                        updateHarmonicsDisplay();
+
+                        const indicator = document.getElementById('harmonicIndicator');
+                        if (spectralData.magnitudes.length > 0) {
+                            indicator.style.display = 'inline-block';
+                            indicator.title = `${spectralData.magnitudes.length} harmônicos detectados`;
+                        } else {
+                            indicator.style.display = 'none';
+                        }
+                    }
+
+                    // Atualizar saída da API
+                    displayApiOutput(data);
+                } else {
+                    addMessage('error', data.error || 'Erro desconhecido');
+                }
+
+            } catch (error) {
+                console.error('Erro:', error);
+                addMessage('error', `Erro de conexão: ${error.message}`);
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'Enviar';
+            }
+        }
+
+        // Adicionar mensagem ao chat
+        function addMessage(type, content) {
+            const messagesDiv = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+
+            const typeClass = type === 'user' ? 'user-message' :
+                             type === 'error' ? 'error-message' : 'bot-message';
+
+            const header = type === 'user' ? '👤 Você' :
+                          type === 'error' ? '⚠️ Erro' : '🤖 ΨQRH';
+
+            messageDiv.className = `message ${typeClass}`;
+            messageDiv.innerHTML = `
+                <div class="message-header">${header}</div>
+                <div class="message-content">${escapeHtml(content)}</div>
+            `;
+
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        // Atualizar métricas
+        function updateMetrics(metrics) {
+            document.getElementById('fciValue').textContent = metrics.fci.toFixed(4);
+            document.getElementById('stateValue').textContent = metrics.state;
+            document.getElementById('entropyValue').textContent = metrics.entropy.toFixed(2);
+            document.getElementById('fractalValue').textContent = metrics.fractal_dimension.toFixed(3);
+        }
+
+        // Atualizar dados GLS
+        function updateGLSData(metrics) {
+            glsData.fci = metrics.fci;
+            glsData.entropy = metrics.entropy;
+            glsData.fractalDimension = metrics.fractal_dimension;
+            glsData.state = metrics.state;
+            glsData.fieldMagnitude = metrics.field_magnitude || 0;
+            glsData.coherence = metrics.coherence || 0.5;
+            glsData.convergence = metrics.convergence_achieved || false;
+        }
+
+        // Extrair valores espectrais do response
+        function extractSpectralValues(responseText) {
+            try {
+                const magMatch = responseText.match(/MAGNITUDE:\s*\[([\d.,\s-]+)\]/);
+                const phaseMatch = responseText.match(/PHASE:\s*\[([\d.,\s-]+)\]/);
+                const realMatch = responseText.match(/REAL:\s*\[([\d.,\s-]+)\]/);
+                const imagMatch = responseText.match(/IMAGINARY:\s*\[([\d.,\s-]+)\]/);
+
+                const parseArray = (match) => {
+                    if (!match) return [];
+                    return match[1].split(',').map(s => parseFloat(s.trim())).filter(n => !isNaN(n));
+                };
+
+                const magnitudes = parseArray(magMatch);
+                const phases = parseArray(phaseMatch);
+                const reals = parseArray(realMatch);
+                const imaginaries = parseArray(imagMatch);
+
+                const maxMag = Math.max(...magnitudes, 1);
+                const normalized = magnitudes.map(m => m / maxMag);
+
+                return {
+                    magnitudes,
+                    phases,
+                    real: reals,
+                    imaginary: imaginaries,
+                    normalized
+                };
+            } catch (e) {
+                console.warn('⚠️ Erro ao extrair valores espectrais:', e);
+                return { magnitudes: [], phases: [], real: [], imaginary: [], normalized: [] };
+            }
+        }
+
+        // Atualizar display de harmônicos
+        function updateHarmonicsDisplay() {
+            const container = document.getElementById('harmonicsDisplay');
+            container.innerHTML = '';
+
+            spectralData.normalized.slice(0, 10).forEach((mag, i) => {
+                const bar = document.createElement('div');
+                bar.className = 'harmonic-bar';
+                bar.innerHTML = `
+                    <div class="harmonic-fill" style="width: ${mag * 100}%"></div>
+                    <div class="harmonic-label">H${i+1}</div>
+                `;
+                bar.title = `Harmonic ${i+1}: ${mag.toFixed(3)} | Phase: ${(spectralData.phases[i] || 0).toFixed(3)}`;
+                container.appendChild(bar);
+            });
+        }
+
+        // Exibir saída da API
+        function displayApiOutput(data) {
+            const outputDiv = document.getElementById('apiOutput');
+            outputDiv.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+        }
+
+        // Toggle accordion
+        function toggleApiOutput() {
+            const content = document.getElementById('apiOutputContent');
+            const arrow = document.getElementById('apiOutputArrow');
+
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                arrow.textContent = '▲';
+            } else {
+                content.style.display = 'none';
+                arrow.textContent = '▼';
+            }
+        }
+
+        // Escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Controles de visualização
+        function toggleAnimation() {
+            paused = !paused;
+        }
+
+        function saveFrame() {
+            save(`psiqrh_fci_${glsData.fci.toFixed(4)}_${Date.now()}.png`);
+        }
+
+        function resetView() {
+            t = 0;
+        }
+
+        // Inicializar
+        checkHealth();
+        setInterval(checkHealth, 30000);
+
+        // ========================================
+        // P5.JS REAL-TIME HARMONIC VISUALIZATION
+        // ========================================
+
+        function setup() {
+            const canvas = createCanvas(460, 400);
+            canvas.parent('glsCanvas');
+            colorMode(HSB, 360, 100, 100, 100);
+            frameRate(30);
+        }
+
+        function draw() {
+            if (!paused) {
+                background(0, 0, 5);
+                drawBackgroundGrid();
+
+                translate(width/2, height/2);
+                rotate(t * (glsData.fractalDimension - 1.0) * 0.1);
+
+                // Desenhar harmônicos se disponíveis
+                if (spectralData.magnitudes.length > 0) {
+                    drawHarmonicLayers();
+                } else {
+                    drawFallbackVisualization();
+                }
+
+                drawConsciousnessCore();
+                t += 0.02;
+            }
+        }
+
+        function drawBackgroundGrid() {
+            push();
+            stroke(0, 0, 20, 20);
+            strokeWeight(1);
+            const spacing = 50;
+            for(let x = 0; x < width; x += spacing) {
+                line(x, 0, x, height);
+            }
+            for(let y = 0; y < height; y += spacing) {
+                line(0, y, width, y);
+            }
+            pop();
+        }
+
+        function drawHarmonicLayers() {
+            const layers = Math.min(spectralData.normalized.length, 10);
+
+            for (let i = 0; i < layers; i++) {
+                let mag = spectralData.normalized[i];
+                let phase = spectralData.phases[i] || 0;
+
+                push();
+                rotate(t * phase/PI + phase);
+                scale(0.5 + mag * 0.5);
+
+                let hue = (i * 36 + t * 20) % 360;
+                let sat = 70 + mag * 30;
+                let brightness = 80 + mag * 20;
+
+                stroke(hue, sat, brightness, 70);
+                strokeWeight(1 + mag * 2);
+                noFill();
+
+                beginShape();
+                let n = 3 + i;
+                for(let a = 0; a < TAU; a += TAU/n) {
+                    let r = (100 + i * 30) * (1 + mag * 0.3 * sin(n*a + t*(i+1)*0.5 + phase));
+                    let x = r * cos(a);
+                    let y = r * sin(a);
+                    vertex(x, y);
+                }
+                endShape(CLOSE);
+
+                pop();
+            }
+        }
+
+        function drawFallbackVisualization() {
+            let layers = Math.floor(map(glsData.fci, 0, 1, 3, 12));
+
+            for (let i = 0; i < layers; i++) {
+                push();
+                let rotationSpeed = glsData.fractalDimension * (i + 1) * 0.1;
+                rotate(t * rotationSpeed);
+
+                let baseHue = map(glsData.fci, 0, 1, 180, 360);
+                let layerHue = (baseHue + i * 15) % 360;
+                let alpha = map(i, 0, layers, 80, 30);
+
+                stroke(layerHue, 70, 90, alpha);
+                strokeWeight(2);
+                noFill();
+
+                let radius = 80 + i * 15;
+                circle(0, 0, radius * 2);
+
+                pop();
+            }
+        }
+
+        function drawConsciousnessCore() {
+            push();
+
+            let pulse = sin(t * (glsData.entropy - 5.0)) * 10 * (1 - glsData.coherence);
+            let r = map(glsData.fci, 0, 1, 20, 60) + pulse;
+
+            let hue = glsData.fci < 0.3 ? 220 :
+                      glsData.fci < 0.6 ? 140 :
+                      glsData.fci < 0.8 ? 50 : 10;
+
+            fill(hue, 70, 90, 85);
+            noStroke();
+            circle(0, 0, r * 2);
+
+            for(let i = 0; i < 3; i++) {
+                stroke(hue, 60, 80, 20 - i * 5);
+                strokeWeight(3);
+                noFill();
+                circle(0, 0, (r + i * 10) * 2);
+            }
+
+            stroke(hue, 60, 80, 40);
+            strokeWeight(2);
+            noFill();
+            let rings = Math.floor(glsData.coherence * 5);
+            for(let i = 1; i <= rings; i++) {
+                push();
+                rotate(t * i * 0.2);
+                circle(0, 0, (r + i * 20) * 2);
+                pop();
+            }
+
+            pop();
+
+            // Estado de consciência
+            resetMatrix();
+            fill(hue, 80, 90);
+            noStroke();
+            textAlign(CENTER, TOP);
+            textSize(12);
+            text(glsData.state, width / 2, 10);
+
+            textSize(10);
+            fill(255, 255, 255, 180);
+            text(`FCI: ${glsData.fci.toFixed(4)}`, width / 2, 30);
+
+            if (glsData.convergence) {
+                fill(120, 100, 90);
+                text('✓ CONVERGIDO', width / 2, 45);
+            }
+        }
+
+        function keyPressed() {
+            if(key === ' ') saveFrame();
+            if(key === 'p' || key === 'P') toggleAnimation();
+        }
+    </script>
+</body>
+</html>
+
+
+

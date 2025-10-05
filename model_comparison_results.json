@@ -1,0 +1,65 @@
+{
+  "model_size": "small",
+  "device": "cpu",
+  "qrh_results": {
+    "parameters": 5660448
+  },
+  "baseline_results": {
+    "parameters": 2111112
+  },
+  "comparison": {
+    "speed_score": 4.741202785806446,
+    "perplexity_score": 0.9911313508914535,
+    "memory_score": 0.3729584654783508,
+    "quality_score": 0.9272727272727274,
+    "overall_score": 1.9861323419214583
+  },
+  "speed_benchmark": {
+    "qrh_avg_time": 0.009503514766693115,
+    "baseline_avg_time": 0.04505809068679809,
+    "speedup": 4.741202785806446,
+    "qrh_std": 0.0015903302069240682,
+    "baseline_std": 0.0037354449570164644
+  },
+  "perplexity_benchmark": {
+    "qrh_perplexity": 5145.02197265625,
+    "baseline_perplexity": 5099.392578125,
+    "improvement": 0.9911313508914535
+  },
+  "quality_analysis": {
+    "qrh_avg_length": 11.0,
+    "baseline_avg_length": 34.0,
+    "qrh_diversity": 0.01090909090909091,
+    "baseline_diversity": 0.011764705882352941,
+    "sample_generations": {
+      "qrh": [
+        "=== \u03a8QRH OUTPUT ===\n\u03a8QRH RESULT: <unk> <unk> <unk> <unk>\n===================",
+        "=== \u03a8QRH OUTPUT ===\n\u03a8QRH RESULT: <unk> <unk> <unk> <unk>\n===================",
+        "=== \u03a8QRH OUTPUT ===\n\u03a8QRH RESULT: <unk> <unk> <unk> <unk>\n===================",
+        "=== \u03a8QRH OUTPUT ===\n\u03a8QRH RESULT: <unk> <unk> <unk> <unk>\n===================",
+        "=== \u03a8QRH OUTPUT ===\n\u03a8QRH RESULT: <unk> <unk> <unk> <unk>\n==================="
+      ],
+      "baseline": [
+        "The mathematical relationship between <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>",
+        "Quantum consciousness emerges from <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>",
+        "Fractal patterns demonstrate that <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>",
+        "Information theory suggests that <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>",
+        "Neural networks learn by <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk> <unk>"
+      ]
+    }
+  },
+  "memory_analysis": {
+    "qrh_memory_mb": 21.5928955078125,
+    "baseline_memory_mb": 8.053253173828125,
+    "memory_ratio": 0.3729584654783508,
+    "qrh_parameters": 5660448,
+    "baseline_parameters": 2111112
+  },
+  "summary": {
+    "winner": "QRH",
+    "overall_score": 1.9861323419214583,
+    "key_advantages": {
+      "qrh_speed": "QRH is 4.7x faster"
+    }
+  }
+}

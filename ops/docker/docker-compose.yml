@@ -1,0 +1,162 @@
+version: '3.8'
+
+services:
+  # Serviço da API ΨQRH
+  psiqrh-api:
+    build:
+      context: ../..
+      dockerfile: ops/docker/Dockerfile
+      network: host
+    container_name: psiqrh-api
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+      - 1.1.1.1
+      - 1.0.0.1
+    extra_hosts:
+      - "pypi.org:151.101.193.63"
+      - "pypi.python.org:151.101.193.63"
+      - "files.pythonhosted.org:151.101.193.63"
+    volumes:
+      # Montar código fonte para desenvolvimento
+      - ../..:/app
+      # Persistir modelos e resultados
+      - psiqrh-models:/app/models
+      - psiqrh-logs:/app/logs
+      - psiqrh-images:/app/images
+      - psiqrh-reports:/app/reports
+    environment:
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+      - TORCH_HOME=/app/.torch
+    ports:
+      - "5000:5000"  # API Flask
+    command: python app.py
+
+  # Serviço do Frontend
+  psiqrh-frontend:
+    image: nginx:alpine
+    container_name: psiqrh-frontend
+    volumes:
+      - ../..:/usr/share/nginx/html
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "3000:80"  # Frontend web
+    depends_on:
+      - psiqrh-api
+
+  # Serviço para testes e validação
+  psiqrh-test:
+    build:
+      context: ../..
+      dockerfile: ops/docker/Dockerfile
+      network: host
+    container_name: psiqrh-test
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+      - 1.1.1.1
+      - 1.0.0.1
+    extra_hosts:
+      - "pypi.org:151.101.193.63"
+      - "pypi.python.org:151.101.193.63"
+      - "files.pythonhosted.org:151.101.193.63"
+    volumes:
+      - ../..:/app
+      - psiqrh-test-results:/app/test-results
+    environment:
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+    command: >
+      bash -c "
+        echo '=== ΨQRH Framework Test Suite ==='
+        echo 'Running GLS Framework Tests...'
+        python -m src.conceptual.models.insect_specimens.gls_tests &&
+        echo 'Running Fractal Integration Validation...'
+        python -m src.fractal.validate_fractal_integration &&
+        echo '=== All tests completed ==='
+      "
+    depends_on:
+      - psiqrh-api
+
+  # Serviço para demonstrações
+  psiqrh-demo:
+    build:
+      context: ../..
+      dockerfile: ops/docker/Dockerfile
+      network: host
+    container_name: psiqrh-demo
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+      - 1.1.1.1
+      - 1.0.0.1
+    volumes:
+      - ../..:/app
+      - psiqrh-demo-output:/app/demo-output
+    environment:
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+    ports:
+      - "8090:8080"
+    command: >
+      bash -c "
+        echo '=== ΨQRH Framework Demonstrations ==='
+        python fractal_pytorch_integration.py &&
+        python emergence_simulation.py &&
+        python show_habitat_demo.py &&
+        echo '=== Demonstrations completed ==='
+      "
+    depends_on:
+      - psiqrh-api
+
+  # Serviço para visualizações interativas
+  psiqrh-viz:
+    build:
+      context: ../..
+      dockerfile: ops/docker/Dockerfile
+      network: host
+    container_name: psiqrh-visualization
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+      - 1.1.1.1
+      - 1.0.0.1
+    volumes:
+      - ../..:/app
+      - psiqrh-viz-output:/app/visualizations
+    environment:
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+    ports:
+      - "8091:8080"
+    command: >
+      bash -c "
+        echo '=== Starting ΨQRH Live Ecosystem Server ==='
+        python live_ecosystem_server.py
+      "
+    depends_on:
+      - psiqrh-api
+
+# Volumes nomeados para persistência de dados
+volumes:
+  psiqrh-models:
+    driver: local
+  psiqrh-logs:
+    driver: local
+  psiqrh-images:
+    driver: local
+  psiqrh-reports:
+    driver: local
+  psiqrh-test-results:
+    driver: local
+  psiqrh-demo-output:
+    driver: local
+  psiqrh-viz-output:
+    driver: local
+
+# Rede personalizada para comunicação entre serviços
+networks:
+  default:
+    name: psiqrh-network
+    driver: bridge

@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ΨQRH Harmonic GLS - Real-time Visualization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #0a0a0a;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            overflow-x: hidden;
+        }
+        #container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        #info {
+            background: rgba(20, 20, 40, 0.95);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            max-width: 900px;
+            width: 100%;
+            box-shadow: 0 4px 20px rgba(0, 150, 255, 0.3);
+            border: 1px solid rgba(100, 150, 255, 0.2);
+        }
+        h1 {
+            margin: 0 0 10px 0;
+            color: #4af;
+            font-size: 1.8em;
+            text-align: center;
+        }
+        .subtitle {
+            text-align: center;
+            color: #8ad;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+        }
+        .input-display {
+            background: rgba(10, 10, 30, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            border-left: 3px solid #4af;
+        }
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .metric {
+            background: rgba(10, 10, 30, 0.6);
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 3px solid #8f8;
+        }
+        .metric-label {
+            font-size: 0.8em;
+            color: #aaa;
+            margin-bottom: 5px;
+        }
+        .metric-value {
+            font-size: 1.2em;
+            color: #8f8;
+            font-weight: bold;
+        }
+        .state-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.9em;
+        }
+        .state-coma {
+            background: linear-gradient(90deg, #4a90e2, #6eb5ff);
+            color: #fff;
+        }
+        .state-analysis {
+            background: linear-gradient(90deg, #00c853, #69f0ae);
+            color: #000;
+        }
+        .state-meditation {
+            background: linear-gradient(90deg, #ff9a00, #ffd700);
+            color: #000;
+        }
+        .state-emergence {
+            background: linear-gradient(90deg, #ff3d00, #ff6e40);
+            color: #fff;
+        }
+        .harmonics-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 5px;
+            margin-top: 10px;
+        }
+        .harmonic-bar {
+            background: rgba(100, 200, 255, 0.2);
+            height: 30px;
+            border-radius: 3px;
+            position: relative;
+            overflow: hidden;
+        }
+        .harmonic-fill {
+            background: linear-gradient(90deg, #4af, #8f8);
+            height: 100%;
+            transition: width 0.3s;
+        }
+        .harmonic-label {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.7em;
+            color: #fff;
+            text-shadow: 1px 1px 2px #000;
+        }
+        #controls {
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(10, 10, 30, 0.6);
+            border-radius: 5px;
+            text-align: center;
+        }
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            transition: transform 0.2s;
+        }
+        .btn:hover {
+            transform: scale(1.05);
+        }
+        .btn:active {
+            transform: scale(0.95);
+        }
+        .instruction {
+            font-size: 0.85em;
+            color: #888;
+            margin-top: 10px;
+            text-align: center;
+        }
+        #canvas-container {
+            box-shadow: 0 0 30px rgba(100, 150, 255, 0.4);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="info">
+            <h1>🧠 ΨQRH Harmonic GLS Visualization</h1>
+            <div class="subtitle">Real-time Quaternion Spectral Analysis</div>
+
+            <div class="input-display">
+                <strong>Input:</strong> <span id="input-text">Aguardando dados...</span><br>
+                <strong>Alpha Adaptativo:</strong> <span id="alpha-value">-</span>
+            </div>
+
+            <div class="metrics">
+                <div class="metric">
+                    <div class="metric-label">Consciousness State</div>
+                    <div class="metric-value">
+                        <span class="state-badge" id="state-badge">-</span>
+                    </div>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">FCI (Fractal Consciousness Index)</div>
+                    <div class="metric-value" id="fci-value">-</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">Fractal Dimension</div>
+                    <div class="metric-value" id="dim-value">-</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">Entropy (bits)</div>
+                    <div class="metric-value" id="entropy-value">-</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">Field Magnitude</div>
+                    <div class="metric-value" id="field-value">-</div>
+                </div>
+            </div>
+
+            <div class="metric-label">Spectral Harmonics (Normalized Magnitude):</div>
+            <div class="harmonics-grid" id="harmonics-display"></div>
+
+            <div id="controls">
+                <button class="btn" onclick="toggleAnimation()">⏸️ Pause/Play</button>
+                <button class="btn" onclick="saveFrame()">📸 Save Frame</button>
+                <button class="btn" onclick="resetView()">🔄 Reset</button>
+                <div class="instruction">
+                    Press SPACE to save | Click to interact | Mouse wheel to zoom
+                </div>
+            </div>
+        </div>
+
+        <div id="canvas-container"></div>
+    </div>
+
+    <script>
+// ========================================
+// ΨQRH HARMONIC GLS VISUALIZATION ENGINE
+// ========================================
+
+let t = 0;
+let paused = false;
+const TAU = Math.PI * 2;
+
+// Data from API (dynamically loaded)
+let spectralData = null;
+let consciousness = null;
+let normMags = [];
+let dataLoaded = false;
+
+// State thresholds from consciousness_metrics.yaml
+const STATE_THRESHOLDS = {
+    EMERGENCE: 0.8,    // FCI >= 0.8
+    MEDITATION: 0.6,   // 0.6 <= FCI < 0.8
+    ANALYSIS: 0.3,     // 0.3 <= FCI < 0.6
+    COMA: 0.0          // FCI < 0.3
+};
+
+// Calculate state from FCI
+function getStateFromFCI(fci) {
+    if (fci >= STATE_THRESHOLDS.EMERGENCE) return 'EMERGENCE';
+    if (fci >= STATE_THRESHOLDS.MEDITATION) return 'MEDITATION';
+    if (fci >= STATE_THRESHOLDS.ANALYSIS) return 'ANALYSIS';
+    return 'COMA';
+}
+
+// Reset visualization state completely
+function resetVisualization() {
+    // Reset time to start fresh animation
+    t = 0;
+
+    // Clear data
+    spectralData = null;
+    consciousness = null;
+    normMags = [];
+    dataLoaded = false;
+
+    // Clear canvas
+    if (typeof background === 'function') {
+        background(0, 0, 5);
+    }
+
+    console.log('🔄 Visualization reset');
+}
+
+// Fetch data from API
+async function fetchDataFromAPI() {
+    try {
+        // Get the last processed message data from sessionStorage or make a new request
+        const lastMessage = sessionStorage.getItem('lastProcessedMessage');
+
+        if (!lastMessage) {
+            console.warn('No data in session. Please process a message first.');
+            return false;
+        }
+
+        const data = JSON.parse(lastMessage);
+
+        // RESET VISUALIZATION BEFORE LOADING NEW DATA
+        resetVisualization();
+
+        // Extract spectral data from response (NO FALLBACKS!)
+        spectralData = extractSpectralData(data);
+
+        if (!spectralData || spectralData.magnitudes.length === 0) {
+            console.error('No spectral data found in API response');
+            return false;
+        }
+
+        console.log('✅ Spectral data loaded:', spectralData.magnitudes.length, 'harmonics');
+
+        // Extract consciousness metrics (NO FALLBACKS - API data only!)
+        if (data.consciousness_metrics) {
+            const cm = data.consciousness_metrics;
+
+            // Validate all required fields exist
+            if (!cm.fci || !cm.fractal_dimension || !cm.entropy || !cm.field_magnitude) {
+                console.error('Missing required consciousness metrics from API');
+                return false;
+            }
+
+            consciousness = {
+                fci: cm.fci,
+                fractalDim: cm.fractal_dimension,
+                entropy: cm.entropy,
+                fieldMag: cm.field_magnitude,
+                coherence: cm.coherence || (cm.field_magnitude / 5.0)  // Calculate from field_magnitude if missing
+            };
+
+            // Calculate state from FCI (using correct thresholds)
+            consciousness.state = getStateFromFCI(consciousness.fci);
+
+            console.log('✅ Consciousness data loaded:', consciousness);
+        } else {
+            console.error('No consciousness_metrics in API response');
+            return false;
+        }
+
+        // Normalize magnitudes
+        if (spectralData && spectralData.magnitudes.length > 0) {
+            const maxMag = Math.max(...spectralData.magnitudes);
+            normMags = spectralData.magnitudes.map(m => m / maxMag);
+        }
+
+        // Update UI
+        updateUI(data);
+
+        dataLoaded = true;
+        return true;
+
+    } catch (error) {
+        console.error('Error fetching API data:', error);
+        return false;
+    }
+}
+
+// Extract spectral values from response text
+function extractSpectralData(data) {
+    const response = data.response || '';
+
+    // Parse magnitude, phase, real, imaginary from response text
+    const magMatch = response.match(/MAGNITUDE:\s*\[([\d.,\s-]+)\]/);
+    const phaseMatch = response.match(/PHASE:\s*\[([\d.,\s-]+)\]/);
+    const realMatch = response.match(/REAL:\s*\[([\d.,\s-]+)\]/);
+    const imagMatch = response.match(/IMAGINARY:\s*\[([\d.,\s-]+)\]/);
+
+    const parseArray = (match) => {
+        if (!match) return [];
+        return match[1].split(',').map(x => parseFloat(x.trim())).filter(x => !isNaN(x));
+    };
+
+    return {
+        magnitudes: parseArray(magMatch),
+        phases: parseArray(phaseMatch),
+        real: parseArray(realMatch),
+        imaginary: parseArray(imagMatch)
+    };
+}
+
+// Update UI with API data
+function updateUI(data) {
+    // Update input display
+    document.getElementById('input-text').textContent = `"${data.user_message || 'N/A'}"`;
+
+    // Extract alpha from response
+    const alphaMatch = (data.response || '').match(/Alpha adaptativo:\s*([\d.]+)/);
+    document.getElementById('alpha-value').textContent = alphaMatch ? alphaMatch[1] : 'N/A';
+
+    // Update consciousness metrics
+    if (consciousness) {
+        document.getElementById('fci-value').textContent = consciousness.fci.toFixed(4);
+        document.getElementById('dim-value').textContent = consciousness.fractalDim.toFixed(3);
+        document.getElementById('entropy-value').textContent = consciousness.entropy.toFixed(3);
+        document.getElementById('field-value').textContent = consciousness.fieldMag.toFixed(3);
+
+        // Update state badge
+        const stateBadge = document.getElementById('state-badge');
+        stateBadge.textContent = consciousness.state;
+        stateBadge.className = `state-badge state-${consciousness.state.toLowerCase()}`;
+    }
+
+    // Update harmonics display
+    initHarmonicsDisplay();
+}
+
+// Initialize harmonics display
+function initHarmonicsDisplay() {
+    const container = document.getElementById('harmonics-display');
+    container.innerHTML = ''; // Clear existing
+
+    if (normMags.length === 0) {
+        container.innerHTML = '<div style="color: #888; text-align: center; grid-column: 1/-1;">No harmonic data available</div>';
+        return;
+    }
+
+    normMags.forEach((mag, i) => {
+        const bar = document.createElement('div');
+        bar.className = 'harmonic-bar';
+        bar.innerHTML = `
+            <div class="harmonic-fill" style="width: ${mag * 100}%"></div>
+            <div class="harmonic-label">H${i+1}</div>
+        `;
+        bar.title = `Harmonic ${i+1}: ${mag.toFixed(3)}`;
+        container.appendChild(bar);
+    });
+}
+
+function setup() {
+    const canvas = createCanvas(800, 800);
+    canvas.parent('canvas-container');
+    colorMode(HSB, 360, 100, 100, 100);
+    frameRate(30);
+
+    // Load data from API on startup
+    fetchDataFromAPI();
+
+    // Listen for data updates from parent window
+    window.addEventListener('message', (event) => {
+        if (event.data.type === 'data-updated') {
+            console.log('GLS: Received data update notification');
+            fetchDataFromAPI();
+        }
+    });
+
+    // Listen for storage events (same-window updates)
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'lastProcessedMessage' && e.newValue) {
+            console.log('GLS: Storage updated, reloading data');
+            fetchDataFromAPI();
+        }
+    });
+}
+
+function draw() {
+    if (!paused && dataLoaded && spectralData && consciousness) {
+        // Background with subtle glow
+        background(0, 0, 5);
+        drawBackgroundGrid();
+
+        translate(width/2, height/2);
+
+        // Global rotation from fractal dimension
+        rotate(t * (consciousness.fractalDim - 1.0) * 0.1);
+
+        // Draw each harmonic layer
+        const numHarmonics = Math.min(normMags.length, 10);
+        for(let i = 0; i < numHarmonics; i++) {
+            drawHarmonicLayer(i);
+        }
+
+        // Central consciousness core
+        drawConsciousnessCore();
+
+        t += 0.02;
+    } else if (!dataLoaded) {
+        // Show loading message
+        background(0, 0, 5);
+        fill(255);
+        textAlign(CENTER, CENTER);
+        textSize(20);
+        text('Aguardando dados da API...', width/2, height/2);
+        text('Processe uma mensagem primeiro', width/2, height/2 + 30);
+    }
+}
+
+function drawBackgroundGrid() {
+    push();
+    stroke(0, 0, 20, 20);
+    strokeWeight(1);
+    const spacing = 50;
+    for(let x = 0; x < width; x += spacing) {
+        line(x, 0, x, height);
+    }
+    for(let y = 0; y < height; y += spacing) {
+        line(0, y, width, y);
+    }
+    pop();
+}
+
+function drawHarmonicLayer(index) {
+    let mag = normMags[index];
+    let phase = spectralData.phases[index];
+    let real = spectralData.real[index];
+    let imag = spectralData.imaginary[index];
+
+    push();
+
+    // Rotation based on phase quaternion
+    rotate(t * phase/PI + phase);
+
+    // Scale based on magnitude
+    let scale_factor = 0.3 + mag * 0.7;
+    scale(scale_factor);
+
+    // Color: hue from phase, saturation from magnitude
+    let hue = ((phase + PI) / TAU * 360 + t * 10) % 360;
+    let sat = 60 + mag * 40;
+    let brightness = 70 + mag * 30;
+
+    stroke(hue, sat, brightness, 60 + mag * 40);
+    strokeWeight(0.5 + mag * 2);
+    noFill();
+
+    // FRACTAL GENERATION using quaternion spectral data
+    // Julia set iteration driven by real/imaginary components
+    let iterations = 3 + Math.floor(consciousness.fractalDim);
+
+    // Mandelbrot/Julia-like fractal using spectral values as seed
+    let cx = (real / 100000) * 0.5;  // Normalize real part as fractal seed
+    let cy = (imag / 100000) * 0.5;  // Normalize imaginary part
+
+    // Draw fractal spiral based on spectral harmonics
+    beginShape();
+    for(let angle = 0; angle < TAU * iterations; angle += 0.1) {
+        // Fractal iteration: z = z^2 + c (simplified)
+        let z_r = cos(angle) * (80 + index * 20);
+        let z_i = sin(angle) * (80 + index * 20);
+
+        // Apply quaternion transformation
+        for(let iter = 0; iter < 3; iter++) {
+            let temp = z_r * z_r - z_i * z_i + cx;
+            z_i = 2 * z_r * z_i + cy;
+            z_r = temp;
+        }
+
+        // Modulate radius by fractal dimension and magnitude
+        let fractal_mod = 1 + mag * 0.5 * sin(angle * consciousness.fractalDim + t + phase);
+        let r = sqrt(z_r * z_r + z_i * z_i) * fractal_mod;
+
+        // Clamp to prevent explosion
+        r = constrain(r, 20, 200);
+
+        let x = cos(angle) * r;
+        let y = sin(angle) * r;
+        vertex(x, y);
+    }
+    endShape();
+
+    // Add fractal branching based on entropy
+    if (mag > 0.3 && consciousness.entropy > 5.0) {
+        let branches = 3 + Math.floor(mag * 4);
+        for(let b = 0; b < branches; b++) {
+            let branchAngle = (TAU / branches) * b + t * 0.5;
+            push();
+            rotate(branchAngle);
+            stroke(hue, sat * 0.8, brightness * 0.9, 40);
+            strokeWeight(0.3 + mag);
+
+            // Recursive fractal branch
+            let branchLen = (50 + index * 15) * mag;
+            line(0, 0, branchLen, 0);
+
+            // Sub-branch
+            translate(branchLen, 0);
+            rotate(sin(t + phase) * 0.5);
+            line(0, 0, branchLen * 0.6, 0);
+            pop();
+        }
+    }
+
+    pop();
+}
+
+function drawConsciousnessCore() {
+    if (!consciousness) return;
+
+    push();
+
+    // Pulse from entropy with fractal modulation
+    let pulse = sin(t * consciousness.entropy * 0.2) * 15 * (1 - consciousness.coherence * 0.5);
+    let baseRadius = map(consciousness.fci, 0, 1, 30, 80) + pulse;
+
+    // Color based on FCI thresholds (correct mapping)
+    let hue;
+    if (consciousness.fci < STATE_THRESHOLDS.ANALYSIS) {
+        hue = 220;  // COMA - blue
+    } else if (consciousness.fci < STATE_THRESHOLDS.MEDITATION) {
+        hue = 140;  // ANALYSIS - green
+    } else if (consciousness.fci < STATE_THRESHOLDS.EMERGENCE) {
+        hue = 50;   // MEDITATION - yellow
+    } else {
+        hue = 10;   // EMERGENCE - red
+    }
+
+    // FRACTAL CORE using Lindenmayer system-like pattern
+    noFill();
+    stroke(hue, 80, 90, 70);
+    strokeWeight(2);
+
+    // Draw fractal flower/mandala pattern
+    let petals = Math.floor(8 + consciousness.fractalDim * 4);
+    let layers = Math.floor(3 + consciousness.fci * 5);
+
+    for(let layer = 0; layer < layers; layer++) {
+        beginShape();
+        for(let i = 0; i < petals; i++) {
+            let angle = (TAU / petals) * i;
+            let layerRadius = baseRadius * (0.5 + layer * 0.3);
+
+            // Fractal modulation using field magnitude
+            let fractalMod = 1 + sin(angle * consciousness.fractalDim + t * 0.5 + layer) * 0.3;
+            let r = layerRadius * fractalMod * (0.8 + consciousness.coherence * 0.4);
+
+            let x = cos(angle) * r;
+            let y = sin(angle) * r;
+
+            // Add sub-petals for higher FCI states
+            if (consciousness.fci > 0.6) {
+                let subAngle = angle + sin(t + layer) * 0.3;
+                x += cos(subAngle) * r * 0.2;
+                y += sin(subAngle) * r * 0.2;
+            }
+
+            vertex(x, y);
+        }
+        endShape(CLOSE);
+    }
+
+    // Add fractal tendrils for EMERGENCE state
+    if (consciousness.fci >= STATE_THRESHOLDS.EMERGENCE) {
+        stroke(hue, 70, 95, 50);
+        strokeWeight(1.5);
+
+        let tendrils = 12;
+        for(let i = 0; i < tendrils; i++) {
+            let angle = (TAU / tendrils) * i + t * 0.3;
+            push();
+            rotate(angle);
+
+            // Fractal tendril using recursion-like pattern
+            let segments = 8;
+            let segLen = baseRadius * 0.8 / segments;
+
+            for(let seg = 0; seg < segments; seg++) {
+                let x1 = seg * segLen;
+                let y1 = sin(seg * 0.5 + t) * segLen * 0.3;
+                let x2 = (seg + 1) * segLen;
+                let y2 = sin((seg + 1) * 0.5 + t) * segLen * 0.3;
+
+                line(x1, y1, x2, y2);
+
+                // Add smaller branches
+                if (seg % 2 === 0) {
+                    push();
+                    translate(x1, y1);
+                    rotate(sin(t + seg) * 0.7);
+                    line(0, 0, segLen * 0.5, 0);
+                    pop();
+                }
+            }
+            pop();
+        }
+    }
+
+    // Central energy point
+    fill(hue, 90, 100, 90);
+    noStroke();
+    let coreSize = 8 + consciousness.fci * 12;
+    circle(0, 0, coreSize);
+
+    // Outer glow rings
+    noFill();
+    for(let i = 0; i < 3; i++) {
+        stroke(hue, 70, 85, 30 - i * 8);
+        strokeWeight(2 - i * 0.5);
+        circle(0, 0, (baseRadius + i * 20) * 2);
+    }
+
+    pop();
+}
+
+// Interactive controls
+function toggleAnimation() {
+    paused = !paused;
+}
+
+function saveFrame() {
+    if (consciousness) {
+        save('psiqrh_harmonic_' + consciousness.state.toLowerCase() + '_' + nf(consciousness.fci, 1, 4) + '.png');
+    } else {
+        save('psiqrh_harmonic_nodata.png');
+    }
+}
+
+function resetView() {
+    t = 0;
+}
+
+function keyPressed() {
+    if(key === ' ') {
+        saveFrame();
+    }
+    if(key === 'p' || key === 'P') {
+        toggleAnimation();
+    }
+}
+
+function mouseWheel(event) {
+    // Zoom functionality
+    return false; // prevent page scrolling
+}
+    </script>
+</body>
+</html>

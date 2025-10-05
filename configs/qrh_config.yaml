@@ -1,0 +1,160 @@
+qrh_layer:
+  embed_dim: 64
+  alpha: 1.0
+  theta_left: 0.1
+  omega_left: 0.05
+  phi_left: 0.02
+  theta_right: 0.08
+  omega_right: 0.03
+  phi_right: 0.015
+  use_learned_rotation: true
+  spatial_dims: null
+  use_windowing: true
+  window_type: 'hann'
+  fft_cache_size: 10
+  device: 'cpu' # Mude para 'cuda' se uma GPU estiver disponível
+
+  # Warning and validation controls
+  enable_warnings: true
+  enable_phase_check: false
+  phase_check_threshold: 1.0e-6
+
+  # Shape handling
+  padding_enabled: false
+  auto_adjust_shapes: false
+  validate_shapes: true
+
+  # Normalization
+  # IMPORTANT: Normalization is now mandatory for energy stability
+  # Default is unit_projection to ensure energy conservation
+  normalization_type: 'unit_projection'  # Options: 'layer_norm', 'unit_projection'
+
+  # Regularization
+  spectral_dropout_rate: 0.0
+
+# Configurações do Fractal Consciousness Processor
+consciousness_processor:
+  embedding_dim: 256  # embed_dim * 4 (64 * 4)
+  sequence_length: 64
+  device: 'cpu'
+
+  # Fractal dimension range
+  fractal_dimension_range: [1.0, 3.0]
+
+  # Diffusion coefficient range
+  diffusion_coefficient_range: [0.01, 10.0]
+
+  # Consciousness frequency range (Hz - brain wave range)
+  consciousness_frequency_range: [0.5, 5.0]
+
+  # Phase consciousness (π/4 rad - optimal phase)
+  phase_consciousness: 0.7854
+
+  # Chaotic parameter (edge of chaos)
+  chaotic_parameter: 3.9
+
+  # Time integration
+  time_step: 0.01
+  max_iterations: 100
+
+  # FCI thresholds for state classification
+  fci_threshold_meditation: 0.8
+  fci_threshold_analysis: 0.6
+  fci_threshold_coma: 0.2
+  fci_threshold_emergence: 0.9
+
+# Configurações do Consciousness Metrics (FCI)
+# Referência completa: configs/consciousness_metrics.yaml
+consciousness_metrics:
+  # Dimensão fractal de referência
+  fractal_dimension:
+    min: 1.0
+    max: 3.0
+    normalizer: 2.0
+
+  # Thresholds para estados de consciência
+  state_thresholds:
+    emergence:
+      min_fci: 0.8
+      fractal_dimension_min: 2.6
+    meditation:
+      min_fci: 0.6
+      fractal_dimension_min: 2.2
+    analysis:
+      min_fci: 0.3
+      fractal_dimension_min: 1.6
+    coma:
+      max_fci: 0.3
+      fractal_dimension_max: 1.6
+
+  # Parâmetros de normalização para componentes do FCI
+  # Valores baseados em dados reais observados
+  component_max_values:
+    d_eeg_max: 0.05    # Observado: ~0.013-0.014
+    h_fmri_max: 1.0    # Observado: ~0.75-0.80
+    clz_max: 0.1       # Observado: ~0.057-0.063
+
+  # Pesos para componentes do FCI
+  fci_weights:
+    d_eeg: 0.4
+    h_fmri: 0.3
+    clz: 0.3
+
+  # Qualidade de medição
+  measurement_quality:
+    enable_nan_protection: true
+    default_fci_on_nan: 0.5
+    max_history: 1000
+
+# ======================================================================
+# 🔬 INSTRUÇÕES DE VALIDAÇÃO DO NÚCLEO
+# ======================================================================
+# Para garantir que qualquer alteração nesta configuração não quebre as
+# propriedades matemáticas fundamentais do sistema ΨQRH (como a
+# conservação de energia), execute o teste de validação do núcleo.
+#
+# Este teste verifica:
+#   1. Conservação de Energia
+#   2. Teorema de Parseval (Corretude da FFT)
+#   3. Eficiência de Memória e Parâmetros
+#   4. Propriedades do Quaternion Rotacional
+#
+# COMO EXECUTAR:
+# No diretório raiz do projeto, execute o seguinte comando:
+#
+# make validate-core
+#
+# Se o teste falhar, revise suas configurações ou o código modificado.
+# A normalização de energia agora é obrigatória para garantir a
+# estabilidade do sistema.
+# ======================================================================
+
+  # Método de correlação
+  correlation_method:
+    method: "autocorrelation"
+    fallback_value: 0.5
+    use_absolute_value: true
+    clamp_range: [0.0, 1.0]
+
+  # Debug
+  debug:
+    log_fci_calculations: false
+    log_component_details: false
+    warn_on_threshold_violations: false
+    verbose_state_transitions: false
+
+# Configurações do modelo Ψcws
+psicws_model:
+  enabled: true  # Habilitar uso do modelo Ψcws
+  model_dir: 'data/Ψcws'
+  cache_dir: 'data/Ψcws_cache'
+  use_cache: true
+  default_model: 'latest'  # 'latest' para mais recente, ou hash específico
+  fallback_to_qrh: true  # Se falhar, usar QRH padrão
+  load_on_init: false  # Carregar modelo na inicialização ou sob demanda
+
+# Configurações do pipeline de modelos
+pipeline_config:
+  temp_model_dir: './temp_models'
+  max_temp_models: 10
+  cleanup_on_exit: true

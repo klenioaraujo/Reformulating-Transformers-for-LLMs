@@ -1,0 +1,49 @@
+ΨTWS_FILE_FORMAT_v1.0
+MAGIC_HEADER: ΨTWS_SPECTRAL_DATA
+VERSION: 1.0
+CREATION_DATE: 2025-09-30
+ENCRYPTION_LAYERS: 7
+SPECTRAL_DIMENSION: 256
+
+# Test Data Set
+# Final testing dataset for ΨCWS system evaluation
+
+INPUT_TEXT: "Final testing dataset for comprehensive evaluation of ΨCWS system performance, including spectral accuracy, encryption security, and text reconstruction quality."
+
+SPECTRAL_DATA:
+  - DIMENSIONS: [256, 128]
+  - COMPRESSION: log
+  - NORMALIZATION: per_channel
+  - ENCODING: utf-8
+  - FFT_BINS: 128
+  - WINDOW_SIZE: 64
+  - HOP_LENGTH: 32
+  - N_MELS: 80
+  - FMIN: 80.0
+  - FMAX: 8000.0
+
+ENCRYPTION_INFO:
+  - LAYER_1: AES-256-GCM
+  - LAYER_2: ChaCha20-Poly1305
+  - LAYER_3: Fernet
+  - LAYER_4: XOR-Custom
+  - LAYER_5: Transposition
+  - LAYER_6: HMAC-AES
+  - LAYER_7: Obfuscation
+  - KEY_DERIVATION_ITERATIONS: 1000000
+  - HMAC_ALGORITHM: SHA256
+
+SCIENTIFIC_MASK:
+  - PATTERN: fractal_gaussian
+  - ENTROPY_THRESHOLD: 0.8
+  - APPLIED: true
+  - MASK_ENTROPY: 0.87
+
+TEST_METRICS:
+  - CONVERSION_ACCURACY: 0.95
+  - SPECTRAL_FIDELITY: 0.92
+  - ENCRYPTION_STRENGTH: 0.98
+  - RECONSTRUCTION_QUALITY: 0.94
+
+TEST_HASH: d4e5f67890a1b2c3
+END_OF_FILE

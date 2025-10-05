@@ -1,0 +1,140 @@
+# Configuração de Acoplamento Harmônico entre Camadas ΨQRH
+# ===========================================================
+#
+# Define os parâmetros para sincronização harmônica entre:
+# - Self-Attention
+# - Kuramoto Spectral Neurons
+# - Conscious Working Memory
+# - Feed-Forward Network
+
+harmonic_coupling:
+  # ===== Parâmetros Básicos =====
+  enabled: true                      # Habilitar acoplamento harmônico
+
+  # ===== Força de Acoplamento =====
+  coupling_strength: 0.5             # K ∈ [0, 1] - força do termo de Kuramoto
+  coupling_decay: 0.0                # Taxa de decaimento do acoplamento
+
+  # ===== Frequência Alvo =====
+  target_frequency: 1.0              # ω_target - frequência para alinhamento
+  frequency_adaptation_rate: 0.01    # Taxa de adaptação das frequências
+
+  # ===== Frequências Naturais das Camadas =====
+  natural_frequencies:
+    attention: 0.8                   # Frequência natural da camada de atenção
+    kuramoto: 1.0                    # Frequência natural do Kuramoto
+    memory: 1.1                      # Frequência natural da memória
+    feedforward: 1.2                 # Frequência natural do feed-forward
+    frequency_range: [0.5, 1.5]      # Range permitido para frequências
+
+  # ===== Pesos das Camadas =====
+  layer_weights:
+    adaptive: true                   # Pesos adaptativos (aprendíveis)
+    initial_weights:                 # Pesos iniciais (se não adaptativo)
+      attention: 0.25
+      kuramoto: 0.25
+      memory: 0.25
+      feedforward: 0.25
+    weight_regularization: 0.0       # Regularização L2 nos pesos
+
+  # ===== Sincronização de Fase =====
+  phase_synchronization:
+    enabled: true                    # Aplicar termo de Kuramoto
+    threshold: 0.7                   # r > threshold = sincronizado
+    use_global_phase: true           # Usar fase média global
+    phase_noise: 0.0                 # Ruído gaussiano nas fases
+
+  # ===== Alinhamento de Frequências =====
+  frequency_alignment:
+    enabled: true                    # Alinhar frequências ao target
+    alignment_strength: 1.0          # Força do alinhamento [0, 1]
+    adaptive_target: false           # Target adaptativo baseado em métricas
+
+  # ===== Conservação de Energia =====
+  energy_conservation:
+    enabled: true                    # Normalizar para conservar energia
+    method: 'mean'                   # 'mean', 'sum', 'max'
+    tolerance: 0.1                   # Tolerância [0.9, 1.1]
+    apply_per_layer: false           # Aplicar antes de combinar
+
+  # ===== Gating Adaptativo =====
+  adaptive_gating:
+    enabled: false                   # Habilitar gates adaptativos
+    sync_dependent: true             # Gates dependem de sincronização
+    gate_threshold: 0.5              # Threshold para abrir gates
+
+  # ===== Histórico e Tracking =====
+  tracking:
+    history_size: 100                # Tamanho do buffer de histórico
+    log_frequency: 10                # Log a cada N iterações
+    save_layer_states: false         # Salvar estados detalhados
+
+  # ===== Visualização =====
+  visualization:
+    enabled: false                   # Gerar visualizações automáticas
+    save_plots: false                # Salvar gráficos
+    plot_frequency: 100              # Plotar a cada N iterações
+    output_dir: 'visualizations/harmonic/'
+
+# ===== Presets Rápidos =====
+presets:
+  # Acoplamento suave (padrão)
+  standard:
+    coupling_strength: 0.5
+    target_frequency: 1.0
+    phase_synchronization:
+      threshold: 0.7
+    energy_conservation:
+      enabled: true
+
+  # Acoplamento forte (alta sincronização)
+  strong:
+    coupling_strength: 0.9
+    target_frequency: 1.0
+    phase_synchronization:
+      threshold: 0.8
+    energy_conservation:
+      enabled: true
+
+  # Acoplamento fraco (mais independência)
+  weak:
+    coupling_strength: 0.2
+    target_frequency: 1.0
+    phase_synchronization:
+      threshold: 0.5
+    energy_conservation:
+      enabled: true
+
+  # Acoplamento adaptativo (experimental)
+  adaptive:
+    coupling_strength: 0.5
+    target_frequency: 1.0
+    layer_weights:
+      adaptive: true
+    frequency_alignment:
+      adaptive_target: true
+    adaptive_gating:
+      enabled: true
+
+# ======================================================================
+# 🔬 INSTRUÇÕES DE VALIDAÇÃO DO NÚCLEO
+# ======================================================================
+# Para garantir que qualquer alteração nesta configuração não quebre as
+# propriedades matemáticas fundamentais do sistema ΨQRH (como a
+# conservação de energia), execute o teste de validação do núcleo.
+#
+# Este teste verifica:
+#   1. Conservação de Energia
+#   2. Teorema de Parseval (Corretude da FFT)
+#   3. Eficiência de Memória e Parâmetros
+#   4. Propriedades do Quaternion Rotacional
+#
+# COMO EXECUTAR:
+# No diretório raiz do projeto, execute o seguinte comando:
+#
+# make validate-core
+#
+# Se o teste falhar, revise suas configurações ou o código modificado.
+# A normalização de energia agora é obrigatória para garantir a
+# estabilidade do sistema.
+# ======================================================================
