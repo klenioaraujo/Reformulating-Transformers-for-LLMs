@@ -294,6 +294,10 @@ class QuaternionicAttentionRetriever(nn.Module):
         self.num_heads = attn_cfg['num_heads']
         self.head_dim = (embed_dim * 4) // self.num_heads
 
+        # Parâmetros para filtro espectral
+        self.alpha = attn_cfg.get('alpha', 1.5)
+        self.epsilon = attn_cfg.get('epsilon', 1e-10)
+
         # Projeções quaterniônicas otimizadas
         # Usar projeções lineares regulares com reshape para eficiência
         self.q_proj = nn.Linear(embed_dim * 4, embed_dim * 4)
@@ -308,7 +312,14 @@ class QuaternionicAttentionRetriever(nn.Module):
         memory: torch.Tensor
     ) -> torch.Tensor:
         """
-        Recupera informações relevantes da memória via atenção.
+        Recupera informações relevantes da memória via atenção espectral ΨQRH.
+
+        Implementa atenção espectral baseada em doe.md 2.9.2:
+        - Mapeamento para quaternions Ψ(Q), Ψ(K), Ψ(V)
+        - Transformada de Fourier
+        - Filtragem espectral F(k) = exp(i α · arctan(ln(|k| + ε)))
+        - Interação via produto de Hamilton
+        - Transformada inversa
 
         Args:
             query: Query tensor [batch, seq_len, embed_dim * 4]
@@ -319,27 +330,40 @@ class QuaternionicAttentionRetriever(nn.Module):
         """
         batch_size = query.shape[0]
 
-        # Projetar
-        Q = self.q_proj(query)
-        K = self.k_proj(memory)
-        V = self.v_proj(memory)
+        # Projetar para estados quaterniônicos Ψ(Q), Ψ(K), Ψ(V)
+        Q = self.q_proj(query)  # Ψ(Q) [batch, seq_len, embed_dim * 4]
+        K = self.k_proj(memory)  # Ψ(K) [batch, memory_size, embed_dim * 4]
+        V = self.v_proj(memory)  # Ψ(V) [batch, memory_size, embed_dim * 4]
 
-        # Multi-head reshape
-        Q = Q.view(batch_size, -1, self.num_heads, self.head_dim).transpose(1, 2)
-        K = K.view(batch_size, -1, self.num_heads, self.head_dim).transpose(1, 2)
-        V = V.view(batch_size, -1, self.num_heads, self.head_dim).transpose(1, 2)
+        # Aplicar FFT aos estados quaterniônicos
+        Q_fft = torch.fft.fft(Q, dim=-2)  # FFT sobre dimensão de sequência
+        K_fft = torch.fft.fft(K, dim=-2)
+        V_fft = torch.fft.fft(V, dim=-2)
 
-        # Scaled dot-product attention
-        scores = torch.matmul(Q, K.transpose(-2, -1)) / np.sqrt(self.head_dim)
-        attn_weights = F.softmax(scores, dim=-1)
-        attn_weights = self.dropout(attn_weights)
+        # Criar filtro espectral F(k) = exp(i α · arctan(ln(|k| + ε)))
+        seq_len = Q.shape[-2]
+        k = torch.arange(seq_len, device=Q.device, dtype=torch.float32)
+        filter_kernel = torch.exp(1j * self.alpha * torch.arctan(torch.log(k + self.epsilon)))
 
-        # Apply attention
-        attended = torch.matmul(attn_weights, V)
+        # Aplicar filtro espectral
+        Q_filtered = Q_fft * filter_kernel.unsqueeze(-1).unsqueeze(0)
+        K_filtered = K_fft * filter_kernel.unsqueeze(-1).unsqueeze(0)
+        V_filtered = V_fft * filter_kernel.unsqueeze(-1).unsqueeze(0)
 
-        # Concatenate heads
-        attended = attended.transpose(1, 2).contiguous()
-        attended = attended.view(batch_size, -1, self.num_heads * self.head_dim)
+        # Interação via produto de Hamilton: F[Ψ(Q)] ⊗ F[Ψ(K)] ⊗ F[Ψ(V)]
+        # Primeiro Q ⊗ K
+        QK_interaction = quaternion_multiply(Q_filtered, K_filtered)
+        # Depois ⊗ V
+        QKV_interaction = quaternion_multiply(QK_interaction, V_filtered)
+
+        # Aplicar IFFT para retornar ao domínio tempo/espaço
+        attended_spectral = torch.fft.ifft(QKV_interaction, dim=-2)
+
+        # Retornar parte real e garantir formato correto
+        attended = attended_spectral.real
+
+        # Aplicar dropout se necessário
+        attended = self.dropout(attended)
 
         return attended
 
