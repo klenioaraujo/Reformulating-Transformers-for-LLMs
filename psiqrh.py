@@ -754,8 +754,8 @@ class ΨQRHPipeline:
         ANÁLISE DE FORMANTES PARA DISCRIMINAÇÃO FONÉTICA PRECISA
         F1, F2, F3 determinam a qualidade das vogais e consoantes
         """
-        # Converter para numpy para processamento
-        spectrum_np = spectrum.detach().cpu().numpy()
+        # Converter para numpy para processamento, achatando para 1D
+        spectrum_np = spectrum.flatten().detach().cpu().numpy()
 
         # Calcular formantes usando LPC aproximado
         formants = self._compute_lpc_formants(spectrum_np)
@@ -899,9 +899,9 @@ class ΨQRHPipeline:
 
         Padrão ouro em análise de voz - F1, F2, F3 determinam qualidade fonética precisa.
         """
-        # Converter quaternion para representação espectral
-        magnitude = psi[:, 0].abs()  # [embed_dim]
-        phase = torch.atan2(psi[:, 1], psi[:, 0])  # [embed_dim]
+        # Converter quaternion para representação espectral, média sobre embed_dim
+        magnitude = psi[:, 0].abs().mean(dim=-1)  # [seq_len]
+        phase = torch.atan2(psi[:, 1], psi[:, 0]).mean(dim=-1)  # [seq_len]
 
         # ========== ANÁLISE DE FORMANTES AVANÇADA ==========
         # Usar Linear Predictive Coding para extração precisa de formantes
@@ -1892,13 +1892,11 @@ class ΨQRHPipeline:
         }
         print(f"      ✅ FCI calculado: {FCI:.3f} (simplificado)")
 
-        # ========== PASSO 7: OPTICAL PROBE GENERATION ==========
-        print(f"   🔍 Passo 7: Sonda óptica (Padilha wave equation)...")
-        generated_text = self._emergent_language_generation(
-            psi_rotated, alpha_calibrated, beta_calibrated,
-            temperature=temperature, max_length=max_length, input_text=text
-        )
-        print(f"      ✅ Linguagem emergente gerada: '{generated_text[:50]}...'")
+        # ========== PASSO 7: SAIDA ESPECTRAL SEM FILTROS ==========
+        print(f"   🔍 Passo 7: Saída espectral sem filtros...")
+        spectral_output = self._analyze_spectral_patterns(psi_rotated.squeeze(0))
+        generated_text = f"Saída Espectral: {json.dumps(spectral_output, indent=2)}"
+        print(f"      ✅ Saída spectral sem filtros gerada")
 
         # ========== VALIDAÇÃO MATEMÁTICA FINAL ==========
         validation_results = self._validate_mathematical_consistency(
