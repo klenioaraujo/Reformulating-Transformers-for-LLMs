@@ -17,6 +17,8 @@ from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass
 import math
 
+from src.core.quaternion_operations import quaternion_multiply
+
 
 def smooth_dimension_handling(x: torch.Tensor) -> Tuple[torch.Tensor, Tuple[int, int, int]]:
     """
@@ -207,6 +209,10 @@ class SyntheticAcetylcholine(nn.Module):
         self.config = config
         self.embed_dim = config.embed_dim * 4
 
+        # Parâmetros para atenção espectral
+        self.alpha = 1.5
+        self.epsilon = 1e-10
+
         # Receptores nicotínicos e muscarínicos
         self.nicotinic_receptor = nn.MultiheadAttention(
             self.embed_dim, num_heads=4, dropout=0.0, batch_first=True
@@ -220,6 +226,38 @@ class SyntheticAcetylcholine(nn.Module):
 
         # Foco atencional
         self.attention_focus = nn.Parameter(torch.ones(1))
+
+    def _spectral_attention(self, signal: torch.Tensor) -> torch.Tensor:
+        """
+        Atenção espectral ΨQRH baseada em doe.md 2.9.2
+        """
+        batch_size, seq_len, embed_dim = signal.shape
+
+        # Mapeamento para quaternions (reshape para [batch, seq_len, embed_dim//4, 4])
+        d_model = embed_dim // 4
+        signal_quat = signal.view(batch_size, seq_len, d_model, 4)
+
+        # FFT
+        signal_fft = torch.fft.fft(signal_quat, dim=-3)
+
+        # Filtro espectral
+        k = torch.arange(seq_len, device=signal.device, dtype=torch.float32)
+        filter_kernel = torch.exp(1j * self.alpha * torch.arctan(torch.log(k + self.epsilon)))
+        filter_kernel = filter_kernel.unsqueeze(-1).unsqueeze(-1).unsqueeze(0)
+
+        # Aplicar filtro
+        signal_filtered = signal_fft * filter_kernel
+
+        # Interação Hamilton (Q ⊗ K ⊗ V, aqui auto-atenção)
+        interaction = quaternion_multiply(quaternion_multiply(signal_filtered, signal_filtered), signal_filtered)
+
+        # IFFT
+        attended = torch.fft.ifft(interaction, dim=-3).real
+
+        # Reshape de volta
+        attended = attended.view(batch_size, seq_len, embed_dim)
+
+        return attended
 
     def forward(self, x: torch.Tensor, attention_targets: Optional[torch.Tensor] = None) -> torch.Tensor:
         """
@@ -240,9 +278,9 @@ class SyntheticAcetylcholine(nn.Module):
             (1.0 - self.config.acetylcholine_focus) * muscarinic_output
         )
 
-        # Aplicar seletividade atencional
-        attention_weights = torch.softmax(
-            cholinergic_signal * self.config.acetylcholine_selectivity, dim=-1
+        # Aplicar seletividade atencional via atenção espectral
+        attention_weights = self._spectral_attention(
+            cholinergic_signal * self.config.acetylcholine_selectivity
         )
 
         focused_output = x * attention_weights

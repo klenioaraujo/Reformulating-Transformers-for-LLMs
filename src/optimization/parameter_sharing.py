@@ -5,18 +5,30 @@ Implements cross-layer parameter sharing for attention weights
 to reduce memory usage while maintaining performance.
 """
 
+import os
+import sys
 import torch
 import torch.nn as nn
 from typing import Dict, Any, List
 
+# Adicionar diretório base ao path
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, BASE_DIR)
+
+from src.core.quaternion_operations import quaternion_multiply
+
 
 class SharedAttentionWeights:
-    """Shared attention weights across transformer layers"""
+    """Shared attention weights across transformer layers with spectral attention"""
 
-    def __init__(self, d_model: int, n_heads: int):
+    def __init__(self, d_model: int, n_heads: int, alpha: float = 1.5, epsilon: float = 1e-10):
         self.d_model = d_model
         self.n_heads = n_heads
         self.head_dim = (d_model * 4) // n_heads
+
+        # Parâmetros para filtro espectral
+        self.alpha = alpha
+        self.epsilon = epsilon
 
         # Shared attention projections otimizadas
         # Usar projeções lineares regulares com reshape para eficiência
@@ -26,27 +38,48 @@ class SharedAttentionWeights:
         self.out_proj = nn.Linear(d_model * 4, d_model * 4)
 
     def forward(self, x: torch.Tensor, layer_idx: int = 0):
-        """Forward pass with shared weights"""
+        """Forward pass with shared spectral attention weights"""
         batch_size, seq_len, _ = x.shape
+        full_dim = self.d_model * 4
 
-        # Project to query, key, value
-        Q = self.q_proj(x)
-        K = self.k_proj(x)
-        V = self.v_proj(x)
+        # Mapeamento para estados quaterniônicos Ψ(Q), Ψ(K), Ψ(V)
+        Q = self.q_proj(x)  # Ψ(Q) [batch, seq_len, d_model * 4]
+        K = self.k_proj(x)  # Ψ(K) [batch, seq_len, d_model * 4]
+        V = self.v_proj(x)  # Ψ(V) [batch, seq_len, d_model * 4]
 
-        # Reshape for multi-head attention
-        actual_head_dim = Q.size(-1) // self.n_heads
-        Q = Q.view(batch_size, seq_len, self.n_heads, actual_head_dim)
-        K = K.view(batch_size, seq_len, self.n_heads, actual_head_dim)
-        V = V.view(batch_size, seq_len, self.n_heads, actual_head_dim)
+        # Reshape para formato quaternion [batch, seq_len, d_model, 4]
+        Q = Q.view(batch_size, seq_len, self.d_model, 4)
+        K = K.view(batch_size, seq_len, self.d_model, 4)
+        V = V.view(batch_size, seq_len, self.d_model, 4)
 
-        # Apply attention (simplified for demonstration)
-        attention_scores = torch.matmul(Q, K.transpose(-2, -1)) / (actual_head_dim ** 0.5)
-        attention_weights = torch.softmax(attention_scores, dim=-1)
-        attention_output = torch.matmul(attention_weights, V)
+        # Aplicar FFT aos estados quaterniônicos
+        Q_fft = torch.fft.fft(Q, dim=-3)  # FFT sobre dimensão de sequência (dim=-3)
+        K_fft = torch.fft.fft(K, dim=-3)
+        V_fft = torch.fft.fft(V, dim=-3)
 
-        # Combine heads
-        attention_output = attention_output.reshape(batch_size, seq_len, -1)
+        # Criar filtro espectral F(k) = exp(i α · arctan(ln(|k| + ε)))
+        k = torch.arange(seq_len, device=x.device, dtype=torch.float32)
+        filter_kernel = torch.exp(1j * self.alpha * torch.arctan(torch.log(k + self.epsilon)))
+
+        # Aplicar filtro espectral
+        Q_filtered = Q_fft * filter_kernel.unsqueeze(-1).unsqueeze(-1).unsqueeze(0)
+        K_filtered = K_fft * filter_kernel.unsqueeze(-1).unsqueeze(-1).unsqueeze(0)
+        V_filtered = V_fft * filter_kernel.unsqueeze(-1).unsqueeze(-1).unsqueeze(0)
+
+        # Interação via produto de Hamilton: F[Ψ(Q)] ⊗ F[Ψ(K)] ⊗ F[Ψ(V)]
+        # Primeiro Q ⊗ K
+        QK_interaction = quaternion_multiply(Q_filtered, K_filtered)
+        # Depois ⊗ V
+        QKV_interaction = quaternion_multiply(QK_interaction, V_filtered)
+
+        # Aplicar IFFT para retornar ao domínio tempo/espaço
+        attention_output = torch.fft.ifft(QKV_interaction, dim=-3)
+
+        # Retornar parte real
+        attention_output = attention_output.real
+
+        # Reshape de volta para [batch, seq_len, d_model * 4]
+        attention_output = attention_output.view(batch_size, seq_len, full_dim)
 
         # Output projection
         output = self.out_proj(attention_output)
