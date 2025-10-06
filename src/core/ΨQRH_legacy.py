@@ -125,13 +125,9 @@ class QRHFactory:
                 print(f"⚠️  pytorch_model.bin não encontrado em {model_path}")
                 self.pretrained_model = None
 
-            # Carregar tokenizer
-            try:
-                from transformers import AutoTokenizer
-                self.tokenizer = AutoTokenizer.from_pretrained(model_dir)
-                print(f"✅ Tokenizer carregado de {model_path}")
-            except Exception as e:
-                print(f"⚠️  Erro ao carregar tokenizer: {e}")
+            # Tokenizer removido - usando processamento de sinal nativo
+            self.tokenizer = None
+            print(f"✅ Processamento de sinal nativo ativado (tokenizer removido)")
 
         except Exception as e:
             print(f"❌ Erro ao carregar modelo pré-treinado: {e}")
@@ -155,22 +151,15 @@ class QRHFactory:
         if self.pretrained_model is None:
             return f"📊 Análise ΨQRH: {prompt}\n\n⚠️ Geração de texto não disponível (modelo não carregado)"
 
-        # Tokenizar entrada
-        if self.tokenizer is not None:
-            try:
-                input_ids = self.tokenizer.encode(prompt, return_tensors="pt").to(device)
-            except:
-                # Fallback: usar vocab.json simples
-                input_ids = self._simple_tokenize(prompt, device)
-        else:
-            input_ids = self._simple_tokenize(prompt, device)
+        # Converter texto para sinal nativo ΨQRH
+        input_signal = self._text_to_signal(prompt, max_length, device)
 
         # Geração autoregressiva
         self.pretrained_model.eval()
         self.pretrained_model = self.pretrained_model.to(device)
 
-        generated = input_ids
-        prompt_length = input_ids.size(1)
+        generated = input_signal
+        prompt_length = input_signal.size(1)
 
         with torch.no_grad():
             for i in range(max_length):
@@ -198,21 +187,91 @@ class QRHFactory:
                 if next_token.item() == 0 and i > 10:  # EOS após pelo menos 10 tokens
                     break
 
-        # Decodificar
-        if self.tokenizer is not None:
-            try:
-                generated_text = self.tokenizer.decode(generated[0], skip_special_tokens=True)
-                return generated_text
-            except:
-                pass
+        # Converter sinal de volta para texto
+        generated_text = self._signal_to_text(generated[0], prompt)
+        return generated_text
 
-        # Tentar decodificar com vocab.json
-        generated_text = self._simple_decode(generated[0])
-        if generated_text:
-            return generated_text
+    def _text_to_signal(self, text: str, max_length: int, device: str) -> torch.Tensor:
+        """
+        Converte texto para sinal numérico nativo ΨQRH.
 
-        # Fallback: retornar IDs
-        return f"Generated tokens: {generated[0].tolist()}"
+        Args:
+            text: Texto de entrada
+            max_length: Comprimento máximo da sequência
+            device: Dispositivo
+
+        Returns:
+            Tensor de sinal [1, max_length, spectral_dim]
+        """
+        # 1. Texto para sinal numérico
+        char_values = torch.tensor([ord(c) / 127.0 for c in text], dtype=torch.float32)
+
+        # 2. Normalização para [0, 1]
+        if len(char_values) > 0:
+            char_values = (char_values - char_values.min()) / (char_values.max() - char_values.min() + 1e-8)
+
+        # 3. Adaptação para spectral_dim
+        spectral_dim = getattr(self.pretrained_model, 'spectral_dim', 256) if self.pretrained_model else 256
+
+        # Expandir para spectral_dim
+        if len(char_values) < spectral_dim:
+            # Pad com zeros
+            padding = torch.zeros(spectral_dim - len(char_values))
+            signal = torch.cat([char_values, padding])
+        else:
+            # Truncate
+            signal = char_values[:spectral_dim]
+
+        # 4. Reshape para [1, max_length, spectral_dim]
+        # Para max_length, usar o mínimo necessário
+        seq_len = min(max_length, len(text) if len(text) > 0 else 1)
+
+        # Criar tensor de sequência
+        signal_sequence = signal.unsqueeze(0).expand(seq_len, -1)  # [seq_len, spectral_dim]
+        signal_batch = signal_sequence.unsqueeze(0)  # [1, seq_len, spectral_dim]
+
+        return signal_batch.to(device)
+
+    def _signal_to_text(self, signal: torch.Tensor, original_prompt: str) -> str:
+        """
+        Converte sinal de saída de volta para texto.
+
+        Args:
+            signal: Tensor de sinal [seq_len, spectral_dim]
+            original_prompt: Prompt original para contexto
+
+        Returns:
+            Texto gerado
+        """
+        # Análise estatística do sinal
+        signal_flat = signal.flatten()
+        signal_stats = {
+            'mean': signal_flat.mean().item(),
+            'std': signal_flat.std().item(),
+            'max': signal_flat.max().item(),
+            'min': signal_flat.min().item()
+        }
+
+        # Converter valores numéricos de volta para caracteres aproximados
+        # Usar mapeamento inverso baseado em ord()
+        char_codes = []
+        for val in signal_flat[:50]:  # Limitar a 50 caracteres
+            # Desnormalizar e converter para código ASCII aproximado
+            char_code = int(val * 127)  # Assumindo normalização [0,1] para [0,127]
+            char_code = max(32, min(126, char_code))  # ASCII printable
+            char_codes.append(char_code)
+
+        # Converter para string
+        generated_chars = ''.join(chr(code) for code in char_codes)
+
+        # Formatar resposta
+        response = f"Resposta ΨQRH para '{original_prompt}':\n\n"
+        response += f"Sinal processado: {generated_chars}\n\n"
+        response += f"Estatísticas: média={signal_stats['mean']:.3f}, "
+        response += f"desvio={signal_stats['std']:.3f}, "
+        response += f"range=[{signal_stats['min']:.3f}, {signal_stats['max']:.3f}]"
+
+        return response
 
     def _simple_tokenize(self, text: str, device: str) -> torch.Tensor:
         """Tokenização simples character-level."""
