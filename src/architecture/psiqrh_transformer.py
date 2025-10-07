@@ -300,65 +300,97 @@ class SpectralStateDecomposer(nn.Module):
 
 
 class PsiQRHAttention(nn.Module):
-    """Attention mechanism using ΨQRH spectral operations"""
+    """Attention mechanism using ΨQRH spectral operations with latent coupling"""
 
     def __init__(self, d_model: int, n_heads: int):
         super().__init__()
-        self.d_model = d_model
+        self.d_model = d_model  # This is already d_model * 4 from the transformer
         self.n_heads = n_heads
-        self.head_dim = (d_model * 4) // n_heads  # Quaternion expands by 4
+        self.head_dim = d_model // n_heads  # d_model is already expanded
+        self.d_latent = 4 * (d_model // 4)  # Latent dimension based on original d_model
 
-        # Spectral state decomposer (replaces Q/K/V projections)
-        self.spectral_decomposer = SpectralStateDecomposer(d_model, n_heads)
+        # Projeção Latente Compartilhada
+        self.z_proj = nn.Linear(d_model, self.d_latent)
 
-        # Spectral filtering
-        self.spectral_filter = AdaptiveSpectralFilter(d_model * 4)
+        # Normalização após projeção latente
+        self.z_norm = nn.LayerNorm(self.d_latent)
 
-        # Single output projection to combine heads and maintain quaternion dimensions
-        self.out_proj = QuaternionLinear(d_model, d_model)
+        # Projeções Derivadas - output n_heads * head_dim for multi-head
+        self.q_proj = nn.Linear(self.d_latent, self.n_heads * self.head_dim)
+        self.r_proj = nn.Linear(self.d_latent, self.n_heads * self.head_dim)
+        self.h_proj = nn.Linear(self.d_latent, self.n_heads * self.head_dim)
+
+        # Ativação de Fase Ψ
+        self.phi_proj = nn.Linear(self.head_dim, self.head_dim)
+
+        # Single output projection to combine heads
+        self.out_proj = nn.Linear(d_model, d_model)
+
+    def _phasor_activation(self, v: torch.Tensor) -> torch.Tensor:
+        """
+        Ativação de Fase Ψ(v) = v ⊙ exp(i ⋅ vW_φ)
+
+        Args:
+            v: Input tensor [batch_size, seq_len, n_heads, head_dim]
+
+        Returns:
+            Phase-activated tensor with same shape
+        """
+        # Aplicar projeção linear para obter ângulos de fase
+        phi = self.phi_proj(v)  # [batch_size, seq_len, n_heads, head_dim]
+
+        # Criar números complexos: exp(i ⋅ phi)
+        phase_factors = torch.exp(1j * phi)
+
+        # Aplicar multiplicação elemento-a-elemento: v ⊙ exp(i ⋅ phi)
+        activated = v * phase_factors
+
+        return activated
 
     def forward(self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor) -> torch.Tensor:
         batch_size, seq_len, _ = query.shape
 
-        # Use spectral decomposer to derive Q, K, V from input state
-        # For self-attention, query = key = value = input state
-        psi_x = query  # Input quaternion state
-        Q, K, V = self.spectral_decomposer(psi_x)
+        # Projeção Latente Compartilhada
+        Z = self.z_proj(query)  # [batch_size, seq_len, d_latent]
+        Z = self.z_norm(Z)      # LayerNorm após projeção
 
-        # Apply spectral attention
-        attention_output = self._spectral_attention(Q, K, V)
+        # Projeções Derivadas
+        Q = self.q_proj(Z)  # [batch_size, seq_len, n_heads * head_dim]
+        R = self.r_proj(Z)  # [batch_size, seq_len, n_heads * head_dim]
+        H = self.h_proj(Z)  # [batch_size, seq_len, n_heads * head_dim]
 
-        # Combine heads and maintain quaternion dimensions
+        # Reshape para multi-head: [batch_size, seq_len, n_heads, head_dim]
+        Q = Q.view(batch_size, seq_len, self.n_heads, self.head_dim)
+        R = R.view(batch_size, seq_len, self.n_heads, self.head_dim)
+        H = H.view(batch_size, seq_len, self.n_heads, self.head_dim)
+
+        # Ativação de Fase Ψ
+        Q_prime = self._phasor_activation(Q)  # [batch_size, seq_len, n_heads, head_dim]
+        R_prime = self._phasor_activation(R)  # [batch_size, seq_len, n_heads, head_dim]
+
+        # Calcular scores: Re(Q' @ R'*) - atenção T×T entre tokens
+        # Q_prime, R_prime: [batch_size, seq_len, n_heads, head_dim]
+        scores = torch.einsum('bqhd,bkhd->bhqk', Q_prime, R_prime.conj())  # [batch_size, n_heads, seq_len, seq_len]
+        scores = torch.real(scores)  # Tomar parte real
+
+        # Aplicar softmax sobre a dimensão target (última dimensão)
+        attention_weights = torch.softmax(scores / (self.head_dim ** 0.5), dim=-1)  # [batch_size, n_heads, seq_len, seq_len]
+
+        # Aplicar atenção: attention_weights @ H
+        attention_output = torch.einsum('bhqk,bkhd->bqhd', attention_weights, H)  # [batch_size, seq_len, n_heads, head_dim]
+
+        # Combinar cabeças: [batch_size, seq_len, n_heads * head_dim]
         attention_output = attention_output.reshape(batch_size, seq_len, -1)
 
-        # Ensure output has correct dimensions (d_model * 4)
-        if attention_output.size(-1) != self.d_model * 4:
+        # Ensure output has correct dimensions (d_model)
+        if attention_output.size(-1) != self.d_model:
             # If dimensions don't match, use a temporary linear layer to adjust
             if not hasattr(self, '_dim_adjuster'):
-                self._dim_adjuster = nn.Linear(attention_output.size(-1), self.d_model * 4).to(attention_output.device)
+                self._dim_adjuster = nn.Linear(attention_output.size(-1), self.d_model).to(attention_output.device)
             attention_output = self._dim_adjuster(attention_output)
 
         return self.out_proj(attention_output)
 
-    def _spectral_attention(self, Q: torch.Tensor, K: torch.Tensor, V: torch.Tensor) -> torch.Tensor:
-        """Spectral-based attention using ΨQRH principles"""
-
-        # Convert to frequency domain
-        Q_fft = torch.fft.fft(Q, dim=1)
-        K_fft = torch.fft.fft(K, dim=1)
-        V_fft = torch.fft.fft(V, dim=1)
-
-        # Apply spectral correlation
-        correlation = Q_fft * K_fft.conj()
-
-        # Apply adaptive spectral filter
-        filtered_correlation = self.spectral_filter(correlation)
-
-        # Combine with value
-        attention_weights = torch.fft.ifft(filtered_correlation, dim=1).real
-        attention_output = attention_weights * V
-
-        return attention_output
 
 
 class PsiQRHFeedForward(nn.Module):
@@ -416,9 +448,10 @@ class PsiQRHTransformerBlock(nn.Module):
         self.use_fractal_analysis = config['components']['use_fractal_analysis']
         self.use_harmonic_coupling = config['harmonic_coupling']['enabled']
 
-        # ΨQRH attention
-        self.self_attention = PsiQRHAttention(self.d_model, self.n_heads)
-        self.attention_norm = QuaternionLayerNorm(self.d_model)
+        # ΨQRH attention - input is d_model * quaternion_multiplier
+        input_dim = self.d_model * config['model']['quaternion_multiplier']
+        self.self_attention = PsiQRHAttention(input_dim, self.n_heads)
+        self.attention_norm = nn.LayerNorm(input_dim)
 
         # Kuramoto Spectral Layer (optional)
         if self.use_kuramoto:
@@ -689,7 +722,7 @@ class PsiQRHTransformer(nn.Module):
 
         # ΨQRH-based components
         self.token_embedding = QuaternionTokenEmbedding(vocab_size, d_model)
-        self.positional_encoding = SpectralPositionalEncoding(d_model, max_seq_length)
+        self.positional_encoding = SpectralPositionalEncoding(d_model * quaternion_multiplier, max_seq_length)
 
         # ΨQRH transformer blocks - optimized for parameter efficiency
         self.layers = nn.ModuleList([
