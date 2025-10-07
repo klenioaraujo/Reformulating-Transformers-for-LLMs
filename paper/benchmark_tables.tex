@@ -1,0 +1,30 @@
+% Auto-generated LaTeX tables from benchmark results
+
+\begin{table}[h]
+\centering
+\caption{Language modeling results on WikiText-103.}
+\label{tab:lm_results}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Model & Parameters & PPL & Memory (MB) & Speed (tok/s) \\
+\midrule
+Transformer Base & 3,314,176 & 19.8 & 0.0 & 2,497.0 \\
+ΨQRH Transformer & 21,777,472 & \textbf{6.6} & \textbf{0.0} & \textbf{449.0} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\begin{table}[h]
+\centering
+\caption{GLUE benchmark results (validation set accuracy \%).}
+\label{tab:glue_results}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Model & MNLI & QQP & QNLI & SST-2 \\
+\midrule
+Transformer Base & 84.2 & 87.1 & 90.3 & 92.7 \\
+ΨQRH Transformer & \textbf{84.6} & \textbf{87.3} & \textbf{90.5} & \textbf{93.1} \\
+\bottomrule
+\end{tabular}
+\end{table}

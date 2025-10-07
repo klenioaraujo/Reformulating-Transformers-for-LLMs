@@ -31,13 +31,13 @@ The ΨQRH Transformer achieves competitive perplexity with reduced memory footpr
 
 | Model | Parameters | PPL | Memory (MB) | Speed (tok/s) |
 |-------|------------|-----|-------------|---------------|
-| Transformer Base | 3.3M | 21.1 | 0.0 | 2,031 |
-| ΨQRH Transformer | 21.8M | 7.9 | 0.0 | 367 |
+| Transformer Base | 3.3M | 19.8 | 0.0 | 2,497 |
+| ΨQRH Transformer | 21.8M | 6.6 | 0.0 | 449 |
 
 **Key Findings:**
-- ΨQRH achieves 62.6% lower perplexity (21.1 → 7.9) with 85.7% more parameters (3.3M → 21.8M)
+- ΨQRH achieves 66.7% lower perplexity (19.8 → 6.6) with 85.7% more parameters (3.3M → 21.8M)
 - Both models show minimal memory usage on CPU (0.0MB measured)
-- Baseline shows 5.5× faster inference speed (2,031 vs 367 tok/s) due to parameter efficiency
+- Baseline shows 5.6× faster inference speed (2,497 vs 449 tok/s) due to parameter efficiency
 
 ### GLUE Benchmark Results
 
