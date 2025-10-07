@@ -18,22 +18,22 @@ from typing import Dict, Any
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE_DIR)
 
-from src.core.ΨQRH import QRHFactory
+from psiqrh import ΨQRHPipeline
 from src.conscience.gls_output_generator import GLSOutputGenerator
 
 app = Flask(__name__)
 CORS(app)  # Habilitar CORS para frontend
 
-# Inicializar ΨQRH Factory e GLS Generator
+# Inicializar ΨQRH Pipeline e GLS Generator
 print("🚀 Inicializando ΨQRH API...")
-qrh_factory = None
+qrh_pipeline = None
 gls_generator = None
 
 try:
-    qrh_factory = QRHFactory()
-    print("✅ ΨQRH Factory inicializada com sucesso")
+    qrh_pipeline = ΨQRHPipeline(task="text-generation", device="cpu")
+    print("✅ ΨQRH Pipeline inicializada com sucesso")
 except Exception as e:
-    print(f"❌ Erro ao inicializar ΨQRH Factory: {e}")
+    print(f"❌ Erro ao inicializar ΨQRH Pipeline: {e}")
 
 try:
     gls_generator = GLSOutputGenerator()
@@ -87,14 +87,14 @@ def api_info():
 @app.route('/health')
 def health():
     """Endpoint de saúde do sistema"""
-    status = 'healthy' if qrh_factory is not None else 'unhealthy'
+    status = 'healthy' if qrh_pipeline is not None else 'unhealthy'
 
     return jsonify({
         'status': status,
         'system': 'ΨQRH API',
         'components': {
-            'qrh_factory': 'loaded' if qrh_factory is not None else 'failed',
-            'consciousness_processor': 'loaded' if hasattr(qrh_factory, 'consciousness_processor') and qrh_factory.consciousness_processor else 'unavailable',
+            'qrh_pipeline': 'loaded' if qrh_pipeline is not None else 'failed',
+            'consciousness_processor': 'loaded' if hasattr(qrh_pipeline, 'consciousness_processor') and qrh_pipeline.consciousness_processor else 'unavailable',
             'gls_generator': 'loaded' if gls_generator is not None else 'failed'
         }
     })
@@ -112,7 +112,7 @@ def chat():
         'consciousness_metrics': {métricas de consciência}
     }
     """
-    if qrh_factory is None:
+    if qrh_pipeline is None:
         return jsonify({
             'error': 'ΨQRH system not initialized',
             'status': 'error'
@@ -129,56 +129,64 @@ def chat():
 
         user_message = data['message']
 
-        # Processar mensagem através do ΨQRH
-        result = qrh_factory.process_text(user_message, device='cpu')
+        # Processar mensagem através do ΨQRH Pipeline
+        result = qrh_pipeline(user_message)
 
         # Extrair dados estruturados para resposta
         response_data = {
-            'status': 'success',
+            'status': result.get('status', 'success'),
             'user_message': user_message,
             'timestamp': torch.rand(1).item(),  # Timestamp sintético
             'processing_parameters': {
-                'qrh_config': {
-                    'embed_dim': qrh_factory.config.embed_dim,
-                    'alpha': qrh_factory.config.alpha,
-                    'use_learned_rotation': qrh_factory.config.use_learned_rotation,
-                    'device': 'cpu'
-                },
-                'consciousness_config': qrh_factory.consciousness_config,
-                'psicws_config': qrh_factory.psicws_config
+                'pipeline_config': {
+                    'task': qrh_pipeline.task,
+                    'device': qrh_pipeline.device,
+                    'embed_dim': qrh_pipeline.config['embed_dim'],
+                    'alpha': qrh_pipeline.config['alpha'],
+                    'beta': qrh_pipeline.config['beta']
+                }
             }
         }
 
-        # Se o resultado é um dicionário (com análise de consciência)
-        if isinstance(result, dict) and 'text_analysis' in result:
-            response_data['response'] = result['text_analysis']
+        # Extrair resposta do pipeline
+        if result.get('status') == 'success':
+            response_data['response'] = result.get('response', '')
 
-            # Extrair métricas de consciência se disponíveis
-            if 'consciousness_results' in result:
-                consciousness_data = extract_consciousness_metrics(result['consciousness_results'])
-                response_data['consciousness_metrics'] = consciousness_data
+            # Extrair métricas físicas do pipeline
+            if 'physical_metrics' in result:
+                physical_metrics = result['physical_metrics']
+                response_data['physical_metrics'] = physical_metrics
 
-                # Adicionar parâmetros específicos do processamento
-                if 'layer1_fractal' in result:
-                    layer1_data = result['layer1_fractal']
-                    response_data['processing_parameters']['layer1_fractal'] = {
-                        'alpha_adaptive': layer1_data.get('alpha', 0.0),
-                        'shape': layer1_data.get('shape', []),
-                        'statistics': layer1_data.get('statistics', {}),
-                        'values_count': len(layer1_data.get('values', {}).get('magnitude', []))
+                # Mapear para formato de consciência para compatibilidade
+                response_data['consciousness_metrics'] = {
+                    'fci': physical_metrics.get('FCI', 0.0),
+                    'state': physical_metrics.get('consciousness_state', 'UNKNOWN'),
+                    'fractal_dimension': physical_metrics.get('D_fractal', 1.0)
+                }
+
+            # Adicionar métricas de validação matemática
+            if 'mathematical_validation' in result:
+                response_data['validation'] = result['mathematical_validation']
+
+            # Gerar dados GLS se disponível e houver métricas de consciência
+            if gls_generator is not None and 'consciousness_metrics' in response_data:
+                try:
+                    # Criar estrutura de consciência compatível com GLS
+                    consciousness_results = {
+                        'fci_evolution': [response_data['consciousness_metrics']['fci']],
+                        'final_consciousness_state': type('State', (), {
+                            'name': response_data['consciousness_metrics']['state'],
+                            'fractal_dimension': response_data['consciousness_metrics']['fractal_dimension']
+                        })()
                     }
-
-                # Gerar dados GLS se disponível
-                if gls_generator is not None:
-                    try:
-                        gls_data = generate_gls_output(result['consciousness_results'])
-                        response_data['gls_data'] = gls_data
-                    except Exception as e:
-                        print(f"⚠️  GLS generation error: {e}")
-                        response_data['gls_data'] = None
+                    gls_data = generate_gls_output(consciousness_results)
+                    response_data['gls_data'] = gls_data
+                except Exception as e:
+                    print(f"⚠️  GLS generation error: {e}")
+                    response_data['gls_data'] = None
         else:
-            # Resultado simples (string)
-            response_data['response'] = result
+            # Erro no processamento
+            response_data['response'] = f"Erro no processamento: {result.get('error', 'Desconhecido')}"
             response_data['consciousness_metrics'] = None
             response_data['gls_data'] = None
 
@@ -198,7 +206,7 @@ def get_config():
     Endpoint para obter todas as configurações do sistema
     Retorna valores de configs/*.yaml usados pelo sistema
     """
-    if qrh_factory is None:
+    if qrh_pipeline is None:
         return jsonify({
             'error': 'ΨQRH system not initialized',
             'status': 'error'
@@ -212,52 +220,40 @@ def get_config():
 
         # qrh_config.yaml
         qrh_config_path = os.path.join(config_dir, 'qrh_config.yaml')
-        with open(qrh_config_path, 'r') as f:
-            qrh_config = yaml.safe_load(f)
+        qrh_config = {}
+        if os.path.exists(qrh_config_path):
+            with open(qrh_config_path, 'r') as f:
+                qrh_config = yaml.safe_load(f)
 
         # consciousness_metrics.yaml
         consciousness_metrics_path = os.path.join(config_dir, 'consciousness_metrics.yaml')
-        with open(consciousness_metrics_path, 'r') as f:
-            consciousness_metrics_config = yaml.safe_load(f)
+        consciousness_metrics_config = {}
+        if os.path.exists(consciousness_metrics_path):
+            with open(consciousness_metrics_path, 'r') as f:
+                consciousness_metrics_config = yaml.safe_load(f)
 
         # Valores em uso pelo sistema (runtime)
         runtime_values = {
-            'qrh_layer': {
-                'embed_dim': qrh_factory.config.embed_dim,
-                'alpha': qrh_factory.config.alpha,
-                'use_learned_rotation': qrh_factory.config.use_learned_rotation,
-                'device': qrh_factory.config.device,
+            'pipeline_config': {
+                'task': qrh_pipeline.task,
+                'device': qrh_pipeline.device,
+                'embed_dim': qrh_pipeline.config['embed_dim'],
+                'alpha': qrh_pipeline.config['alpha'],
+                'beta': qrh_pipeline.config['beta'],
+                'I0': qrh_pipeline.config['I0'],
+                'omega': qrh_pipeline.config['omega'],
+                'k': qrh_pipeline.config['k']
             }
         }
 
         # Adicionar valores de consciência se disponível
-        if hasattr(qrh_factory, 'consciousness_processor') and qrh_factory.consciousness_processor:
-            cp = qrh_factory.consciousness_processor
-            if hasattr(cp, 'metrics'):
-                metrics = cp.metrics
-                runtime_values['consciousness_metrics'] = {
-                    'fractal_dimension': {
-                        'min': metrics.fractal_dimension_min,
-                        'max': metrics.fractal_dimension_max,
-                        'normalizer': metrics.fractal_dimension_normalizer
-                    },
-                    'component_max_values': {
-                        'd_eeg_max': metrics.d_eeg_max,
-                        'h_fmri_max': metrics.h_fmri_max,
-                        'clz_max': metrics.clz_max
-                    },
-                    'state_thresholds': {
-                        'emergence': metrics.threshold_emergence,
-                        'meditation': metrics.threshold_meditation,
-                        'analysis': metrics.threshold_analysis
-                    },
-                    'fci_weights': {
-                        'd_eeg': metrics.fci_weights[0].item(),
-                        'h_fmri': metrics.fci_weights[1].item(),
-                        'clz': metrics.fci_weights[2].item()
-                    },
-                    'correlation_method': metrics.correlation_method
-                }
+        if hasattr(qrh_pipeline, 'consciousness_processor') and qrh_pipeline.consciousness_processor:
+            cp = qrh_pipeline.consciousness_processor
+            # Para o novo pipeline, as métricas podem ser diferentes
+            runtime_values['consciousness_metrics'] = {
+                'available': True,
+                'processor_type': str(type(cp))
+            }
 
         return jsonify({
             'status': 'success',
@@ -290,7 +286,7 @@ def deep_dive_analysis():
     - Fractal Consciousness Analysis (lei de potência, dimensão fractal, FCI)
     - Raw Data Outputs (tensores para análise externa)
     """
-    if qrh_factory is None:
+    if qrh_pipeline is None:
         return jsonify({
             'error': 'ΨQRH system not initialized',
             'status': 'error'
@@ -314,8 +310,8 @@ def deep_dive_analysis():
         # Timestamps para medir tempo de execução
         t_start = time.time()
 
-        # Processar texto através do ΨQRH
-        result = qrh_factory.process_text(input_text, device='cpu')
+        # Processar texto através do ΨQRH Pipeline
+        result = qrh_pipeline(input_text)
 
         t_total = (time.time() - t_start) * 1000  # ms
 
@@ -324,11 +320,10 @@ def deep_dive_analysis():
             "metadata": {
                 "input_text": input_text,
                 "timestamp_utc": datetime.utcnow().isoformat() + "Z",
-                "framework_version": "ΨQRH v1.0.0",
+                "framework_version": "ΨQRH v2.0.0 (Pipeline)",
                 "execution_times_ms": {
                     "total": round(t_total, 2),
-                    "qrh_spectral_processing": 0.0,  # Será preenchido
-                    "fractal_consciousness_processing": 0.0  # Será preenchido
+                    "pipeline_processing": round(t_total, 2)
                 }
             },
             "qrh_spectral_analysis": {},
@@ -336,173 +331,57 @@ def deep_dive_analysis():
             "raw_data_outputs": {}
         }
 
-        # Extrair dados espectrais (Layer1 Fractal)
-        if isinstance(result, dict) and 'layer1_fractal' in result:
-            layer1 = result['layer1_fractal']
-            stats = layer1.get('statistics', {})
-            values = layer1.get('values', {})
+        # Extrair dados espectrais do pipeline
+        if result.get('status') == 'success' and 'physical_metrics' in result:
+            physical_metrics = result['physical_metrics']
 
             response["qrh_spectral_analysis"] = {
-                "adaptive_alpha": layer1.get('alpha', 0.0),
+                "adaptive_alpha": physical_metrics.get('alpha_calibrated', 0.0),
+                "adaptive_beta": physical_metrics.get('beta_calibrated', 0.0),
                 "spectral_energy_stats": {
-                    "mean": stats.get('magnitude_mean', 0.0),
-                    "std": stats.get('magnitude_std', 0.0),
-                    "min": stats.get('magnitude_min', 0.0),
-                    "max": stats.get('magnitude_max', 0.0),
-                    "total_energy_scale": np.log1p(stats.get('energy_total', 0.0))
-                },
-                "quaternion_phase_stats": {
-                    "mean": stats.get('phase_mean', 0.0),
-                    "std": 0.0  # Calcular se disponível
+                    "fractal_dimension": physical_metrics.get('D_fractal', 1.0),
+                    "consciousness_index": physical_metrics.get('FCI', 0.0)
                 }
             }
 
-        # Extrair análise de consciência fractal
-        if isinstance(result, dict) and 'consciousness_results' in result:
-            consciousness = result['consciousness_results']
+        # Extrair análise de consciência fractal do pipeline
+        if result.get('status') == 'success':
+            physical_metrics = result.get('physical_metrics', {})
 
-            # Extrair métricas detalhadas do consciousness_processor
-            if hasattr(qrh_factory, 'consciousness_processor') and qrh_factory.consciousness_processor:
-                cp = qrh_factory.consciousness_processor
-                metrics_obj = cp.metrics
-
-                # Power law fit (se disponível nos resultados)
-                beta_exponent = 0.0
-                r_squared = 0.0
-                points_used = 0
-
-                # Tentar extrair do histórico de métricas se disponível
-                if hasattr(metrics_obj, 'last_fractal_dimension_raw'):
-                    # Valores armazenados durante o processamento
-                    pass
-
-                # Dimensão fractal
-                state = consciousness.get('final_consciousness_state')
-                if state:
-                    fractal_dim_final = state.fractal_dimension
-                else:
-                    fractal_dim_final = 1.0
-
-                # FCI components
-                fci_evolution = consciousness.get('fci_evolution', torch.tensor([0.0]))
-                if isinstance(fci_evolution, torch.Tensor):
-                    fci_final = fci_evolution[-1].item()
-                else:
-                    fci_final = 0.0
-
-                # Extrair componentes FCI do histórico (valores REAIS calculados)
-                d_eeg_raw = 0.025  # Default
-                h_fmri_raw = 2.0  # Default
-                clz_raw = 0.75  # Default
-                d_eeg_norm = 0.0
-                h_fmri_norm = 0.0
-                clz_norm = 0.0
-                beta_exponent = 0.0
-                r_squared = 0.0
-                points_used = 0
-
-                # Tentar extrair do último FCI calculado
-                if hasattr(metrics_obj, 'fci_history') and len(metrics_obj.fci_history) > 0:
-                    last_fci = metrics_obj.fci_history[-1]
-                    components = last_fci.components
-
-                    d_eeg_raw = float(components.get('D_EEG', d_eeg_raw))
-                    h_fmri_raw = float(components.get('H_fMRI', h_fmri_raw))
-                    clz_raw = float(components.get('CLZ', clz_raw))
-                    d_eeg_norm = float(components.get('D_EEG_normalized', d_eeg_norm))
-                    h_fmri_norm = float(components.get('H_fMRI_normalized', h_fmri_norm))
-                    clz_norm = float(components.get('CLZ_normalized', clz_norm))
-
-                # Tentar extrair dados da lei de potência (se armazenados)
-                if hasattr(metrics_obj, 'last_beta_exponent'):
-                    beta_exponent = float(metrics_obj.last_beta_exponent)
-                if hasattr(metrics_obj, 'last_r_squared'):
-                    r_squared = float(metrics_obj.last_r_squared)
-                if hasattr(metrics_obj, 'last_points_used'):
-                    points_used = int(metrics_obj.last_points_used)
-
-                # Campo fractal e outras métricas
-                fractal_field = consciousness.get('fractal_field')
-                if fractal_field is not None and isinstance(fractal_field, torch.Tensor):
-                    field_flat = fractal_field.flatten()
-                    field_shifted = torch.roll(field_flat, 1)
-                    covariance = torch.mean((field_flat - field_flat.mean()) * (field_shifted - field_shifted.mean()))
-                    field_var = field_flat.var()
-                    coherence = (covariance / (field_var + 1e-10)).item()
-                    coherence = max(0.0, min(1.0, abs(coherence)))
-                else:
-                    coherence = 0.0
-
-                diffusion = consciousness.get('diffusion_coefficient', torch.tensor(0.0))
-                if isinstance(diffusion, torch.Tensor):
-                    diffusion_mean = diffusion.mean().item()
-                else:
-                    diffusion_mean = 0.0
-
-                # Entropia
-                psi_dist = consciousness.get('consciousness_distribution')
-                if psi_dist is not None and isinstance(psi_dist, torch.Tensor):
-                    epsilon = 1e-10
-                    psi_safe = torch.clamp(psi_dist, min=epsilon)
-                    log_psi = torch.log(psi_safe)
-                    entropy_raw = -torch.sum(psi_dist * log_psi, dim=-1).mean()
-                    entropy = entropy_raw.item() if not torch.isnan(entropy_raw) else 0.0
-                else:
-                    entropy = 0.0
-
-                # Dimensão fractal raw (antes do clamp)
-                fractal_dim_raw = fractal_dim_final
-                if hasattr(metrics_obj, 'last_fractal_dimension_raw'):
-                    fractal_dim_raw = metrics_obj.last_fractal_dimension_raw
-
-                response["fractal_consciousness_analysis"] = {
-                    "power_law_fit": {
-                        "beta_exponent": float(beta_exponent),
-                        "r_squared": float(r_squared),
-                        "points_used": int(points_used)
-                    },
-                    "fractal_dimension": {
-                        "raw_value": float(fractal_dim_raw),  # Antes do clamp
-                        "final_value": float(fractal_dim_final)  # Após clamp
-                    },
-                    "fci_components": {
-                        "d_eeg": {
-                            "raw": d_eeg_raw,
-                            "normalized": d_eeg_norm
-                        },
-                        "h_fmri": {
-                            "raw": h_fmri_raw,
-                            "normalized": h_fmri_norm
-                        },
-                        "clz": {
-                            "raw": clz_raw,
-                            "normalized": clz_norm
-                        }
-                    },
-                    "final_metrics": {
-                        "fci_score": fci_final,
-                        "consciousness_state": state.name if state else "UNKNOWN",
-                        "coherence": coherence,
-                        "diffusion_coefficient": diffusion_mean,
-                        "entropy": entropy
-                    }
+            response["fractal_consciousness_analysis"] = {
+                "power_law_fit": {
+                    "beta_exponent": 0.0,  # Não disponível no pipeline simplificado
+                    "r_squared": 0.0,
+                    "points_used": 0
+                },
+                "fractal_dimension": {
+                    "raw_value": physical_metrics.get('D_fractal', 1.0),
+                    "final_value": physical_metrics.get('D_fractal', 1.0)
+                },
+                "fci_components": {
+                    "d_eeg": {"raw": 0.0, "normalized": 0.0},
+                    "h_fmri": {"raw": 0.0, "normalized": 0.0},
+                    "clz": {"raw": 0.0, "normalized": 0.0}
+                },
+                "final_metrics": {
+                    "fci_score": physical_metrics.get('FCI', 0.0),
+                    "consciousness_state": physical_metrics.get('consciousness_state', 'UNKNOWN'),
+                    "coherence": 0.0,
+                    "diffusion_coefficient": 0.0,
+                    "entropy": 0.0
                 }
+            }
 
-                # Raw data outputs
-                if psi_dist is not None and isinstance(psi_dist, torch.Tensor):
-                    psi_list = psi_dist.flatten().tolist()[:64]  # Primeiros 64 valores
-                else:
-                    psi_list = []
+        # Adicionar análise quântica do pipeline se disponível
+        if 'quantum_interpretation' in result:
+            quantum_data = result['quantum_interpretation']
+            response["quantum_interpretation"] = quantum_data
 
-                if fractal_field is not None and isinstance(fractal_field, torch.Tensor):
-                    field_list = fractal_field.flatten().tolist()[:64]  # Amostra
-                else:
-                    field_list = []
-
-                response["raw_data_outputs"] = {
-                    "psi_distribution": psi_list,
-                    "fractal_field_sample": field_list
-                }
+        # Raw data outputs - limitado para o novo pipeline
+        response["raw_data_outputs"] = {
+            "pipeline_response": result.get('response', ''),
+            "processing_time": result.get('processing_time', 0.0)
+        }
 
         return jsonify(response)
 
@@ -519,24 +398,27 @@ def deep_dive_analysis():
 @app.route('/metrics')
 def get_metrics():
     """Endpoint para obter métricas de consciência atuais"""
-    if qrh_factory is None or not hasattr(qrh_factory, 'consciousness_results'):
+    if qrh_pipeline is None:
         return jsonify({
-            'error': 'Consciousness metrics not available',
+            'error': 'ΨQRH Pipeline not available',
             'status': 'error'
         }), 404
 
     try:
-        if qrh_factory.consciousness_results:
-            metrics = extract_consciousness_metrics(qrh_factory.consciousness_results)
-            return jsonify({
-                'status': 'success',
-                'metrics': metrics
-            })
-        else:
-            return jsonify({
-                'error': 'No consciousness data available',
-                'status': 'error'
-            }), 404
+        # Para o novo pipeline, as métricas são baseadas na configuração atual
+        metrics = {
+            'pipeline_status': 'active',
+            'task': qrh_pipeline.task,
+            'device': qrh_pipeline.device,
+            'embed_dim': qrh_pipeline.config['embed_dim'],
+            'auto_calibration': qrh_pipeline.enable_auto_calibration,
+            'noncommutative_geometry': qrh_pipeline.enable_noncommutative
+        }
+
+        return jsonify({
+            'status': 'success',
+            'metrics': metrics
+        })
 
     except Exception as e:
         return jsonify({

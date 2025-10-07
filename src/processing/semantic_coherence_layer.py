@@ -1,4 +1,25 @@
 """
+DEPRECATED: This module has been replaced by QuantumStateInterpreter
+
+This file is scheduled for removal. Its functionality has been integrated
+into the QuantumStateInterpreter class in quantum_interpreter.py.
+
+The semantic coherence logic is now part of the .to_text() method.
+
+Please use:
+    from src.processing.quantum_interpreter import QuantumStateInterpreter
+
+Instead of importing from this module.
+"""
+
+import warnings
+warnings.warn(
+    "semantic_coherence_layer.py is deprecated. Use QuantumStateInterpreter from quantum_interpreter.py instead.",
+    DeprecationWarning,
+    stacklevel=2
+)
+
+"""
 Semantic Coherence Layer - OPÇÃO 3 do Sistema de Calibração ΨQRH
 ================================================================
 

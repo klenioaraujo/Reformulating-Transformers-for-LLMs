@@ -1,4 +1,23 @@
 """
+DEPRECATED: This module has been replaced by QuantumStateInterpreter
+
+This file is scheduled for removal. Its functionality has been unified
+into the QuantumStateInterpreter class in quantum_interpreter.py.
+
+Please use:
+    from src.processing.quantum_interpreter import QuantumStateInterpreter
+
+Instead of importing from this module.
+"""
+
+import warnings
+warnings.warn(
+    "chaotic_wave_to_text.py is deprecated. Use QuantumStateInterpreter from quantum_interpreter.py instead.",
+    DeprecationWarning,
+    stacklevel=2
+)
+
+"""
 Chaotic Wave to Text Converter - Scientific Method Implementation
 ==================================================================
 

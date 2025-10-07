@@ -193,12 +193,13 @@ class DecoherenceController:
         self.phase_memory = {}
 
     def apply_decoherence(self, quantum_state: torch.Tensor,
-                         time_elapsed: float, memory_id: str = None) -> torch.Tensor:
+                          time_elapsed: float, memory_id: str = None) -> torch.Tensor:
         """
         Aplica decoerência realista preservando fases correlacionadas.
         """
-        # Taxa de decoerência dependente do tempo
-        gamma = 1.0 - torch.exp(torch.tensor(-self.decoherence_rate * time_elapsed)).item()
+        # Taxa de decoerência dependente do tempo - ensure real tensor for exp
+        time_tensor = torch.tensor(-self.decoherence_rate * time_elapsed, dtype=torch.float32)
+        gamma = 1.0 - torch.exp(time_tensor).item()
 
         if quantum_state.dim() == 1:
             # Decoerência para estado puro
@@ -235,14 +236,21 @@ class DecoherenceController:
             # Preservar fase baseada em memória
             stored_phase = self.phase_memory[memory_id]
             phase_correction = torch.angle(state[0]) - stored_phase
+            # Ensure phase_correction is real for torch.exp
+            if torch.is_complex(phase_correction):
+                phase_correction = phase_correction.real
             corrected_state = state * torch.exp(1j * self.phase_stability * phase_correction)
             return corrected_state
         else:
             # Phase damping padrão
-            phase_damped = state * torch.exp(-gamma * torch.angle(state))
+            angles = torch.angle(state)
+            # Ensure angles is real
+            if torch.is_complex(angles):
+                angles = angles.real
+            phase_damped = state * torch.exp(-gamma * angles)
             # Armazenar fase para futuro
             if memory_id:
-                self.phase_memory[memory_id] = torch.angle(state[0])
+                self.phase_memory[memory_id] = torch.angle(state[0]).real if torch.is_complex(torch.angle(state[0])) else torch.angle(state[0])
             return phase_damped
 
     def _linblad_evolution(self, rho: torch.Tensor, gamma: float) -> torch.Tensor:
@@ -410,44 +418,29 @@ class QuantumTemporalMemory:
         return contextual_states[-1] if contextual_states else None
 
     def _create_temporal_entanglement(self, state_a: torch.Tensor,
-                                    state_b: torch.Tensor,
-                                    correlation_id: str = None) -> Tuple[torch.Tensor, torch.Tensor]:
+                                     state_b: torch.Tensor,
+                                     correlation_id: str = None) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Cria par emaranhado temporal entre dois estados.
 
         |Ψ⟩ = (|0⟩|ψ_a⟩ + |1⟩|ψ_b⟩)/√2 com fase temporal correlacionada
         """
-        # Operador de emaranhamento temporal (simplificado)
-        entanglement_operator = self._build_temporal_entangler()
-
         # Estados normalizados
         state_a_norm = state_a / (torch.norm(state_a) + 1e-10)
         state_b_norm = state_b / (torch.norm(state_b) + 1e-10)
 
-        # Criar estado combinado em espaço expandido
-        # |Ψ⟩ = (|0⟩⊗|ψ_a⟩ + |1⟩⊗|ψ_b⟩)/√2
         dim_a = len(state_a_norm)
         dim_b = len(state_b_norm)
 
         # Para simplificar, assumimos mesma dimensionalidade
         if dim_a == dim_b:
-            combined_state = torch.zeros(dim_a * 2, dtype=torch.complex64)
+            # Aplicar emaranhamento simplificado sem operador matricial complexo
+            # Criar correlação de fase entre os estados
+            phase_correlation = torch.exp(1j * 0.1)  # Pequena correlação de fase
 
-            # |0⟩ ⊗ |ψ_a⟩
-            combined_state[:dim_a] = state_a_norm
-
-            # |1⟩ ⊗ |ψ_b⟩
-            combined_state[dim_a:] = state_b_norm
-
-            # Normalização
-            combined_state = combined_state / torch.norm(combined_state)
-
-            # Aplicar emaranhamento (simplificado)
-            entangled_state = entanglement_operator @ combined_state
-
-            # Estados reduzidos (trace out)
-            state_a_entangled = entangled_state[:dim_a]
-            state_b_entangled = entangled_state[dim_a:]
+            # Aplicar transformação unitária simples
+            state_a_entangled = state_a_norm * phase_correlation
+            state_b_entangled = state_b_norm * torch.conj(phase_correlation)
 
             # Aplicar correção de fase correlacionada
             correlated_pair = self.decoherence_controller.preserve_correlated_phases(

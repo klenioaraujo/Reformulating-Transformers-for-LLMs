@@ -228,33 +228,39 @@ def create_ecg_character_map() -> Dict[str, List[float]]:
 
 
 def ecg_wave_to_character(psi: torch.Tensor,
-                         character_map: Dict[str, List[float]] = None) -> str:
+                         character_map: Dict[str, List[float]] = None,
+                         verbose: bool = True) -> str:
     """
     Converte estado quaterniônico em caractere via análise ECG.
 
     Args:
         psi: Estado quaterniônico [embed_dim, 4]
         character_map: Mapeamento de caracteres (opcional)
+        verbose: Se deve imprimir logs detalhados
 
     Returns:
         Caractere gerado
     """
-    print(f"    🫀 [ecg_wave_to_character] Convertendo estado quaterniônico em padrão ECG...")
+    if verbose:
+        print(f"    🫀 [ecg_wave_to_character] Convertendo estado quaterniônico em padrão ECG...")
 
     if character_map is None:
         character_map = create_ecg_character_map()
 
     # Gerar sinal ECG-like
     ecg_signal = create_ecg_waveform_from_quaternion(psi)
-    print(f"    📈 [ecg_wave_to_character] Sinal ECG gerado: {len(ecg_signal)} amostras")
+    if verbose:
+        print(f"    📈 [ecg_wave_to_character] Sinal ECG gerado: {len(ecg_signal)} amostras")
 
     # Extrair características
     ecg_features = extract_ecg_features(ecg_signal)
-    print(f"    🔍 [ecg_wave_to_character] Características extraídas: {len(ecg_features)} features")
+    if verbose:
+        print(f"    🔍 [ecg_wave_to_character] Características extraídas: {len(ecg_features)} features")
 
     # Mapear para caractere
     character = map_ecg_features_to_character(ecg_features, character_map)
-    print(f"    ✅ [ecg_wave_to_character] Caractere selecionado: '{character}'")
+    if verbose:
+        print(f"    ✅ [ecg_wave_to_character] Caractere selecionado: '{character}'")
 
     return character
 
@@ -295,9 +301,10 @@ def ecg_wave_to_text(psi_sequence: torch.Tensor,
 
     for i in range(len(psi_sequence)):
         psi = psi_sequence[i]
-        print(f"  📝 [ecg_wave_to_text] Processando caractere {i+1}/{len(psi_sequence)} via ECG")
-        char = ecg_wave_to_character(psi, character_map)
-        print(f"  ✅ [ecg_wave_to_text] Caractere {i+1}: '{char}'")
+        # Show progress every 10 characters to reduce verbosity
+        if (i + 1) % 10 == 0 or i == 0:
+            print(f"  📝 [ecg_wave_to_text] Processando caractere {i+1}/{len(psi_sequence)} via ECG")
+        char = ecg_wave_to_character(psi, character_map, verbose=(i < 2))  # Only verbose for first 2 characters
         characters.append(char)
 
     result = ''.join(characters)

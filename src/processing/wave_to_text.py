@@ -1,3 +1,22 @@
+"""
+DEPRECATED: This module has been replaced by QuantumStateInterpreter
+
+This file is scheduled for removal. All functionality has been unified
+into the QuantumStateInterpreter class in quantum_interpreter.py.
+
+Please use:
+    from src.processing.quantum_interpreter import QuantumStateInterpreter
+
+Instead of importing from this module.
+"""
+
+import warnings
+warnings.warn(
+    "wave_to_text.py is deprecated. Use QuantumStateInterpreter from quantum_interpreter.py instead.",
+    DeprecationWarning,
+    stacklevel=2
+)
+
 import torch
 import torch.fft
 import numpy as np

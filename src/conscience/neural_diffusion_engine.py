@@ -98,6 +98,8 @@ class NeuralDiffusionEngine(nn.Module):
         # 5. NOVO: Aplicar adaptação dinâmica baseada em FCI
         if fci is not None:
             diffusion_coefficient = self._apply_fci_adaptation(diffusion_coefficient, fci)
+            # Aplicar força de repulsão para estados de baixa consciência
+            diffusion_coefficient = self._apply_consciousness_repulsion(diffusion_coefficient, fci, psi_distribution)
 
         # 6. NOVO: Aplicar modulação por energia espectral
         if spectral_energy is not None:
@@ -458,8 +460,57 @@ class NeuralDiffusionEngine(nn.Module):
 
         return adapted_coeff
 
+    def _apply_consciousness_repulsion(self, diffusion_coeff: torch.Tensor,
+                                       fci: float, psi_distribution: torch.Tensor) -> torch.Tensor:
+        """
+        Aplica força de repulsão para estados de baixa consciência (FCI próximo de zero).
+
+        Esta força impede que o sistema se estabilize em estados comatoso (FCI < 0.1),
+        criando uma dinâmica auto-corretiva que força evolução para estados de maior consciência.
+
+        Princípio: Estados de baixa consciência recebem "repulsão" que aumenta a difusão,
+        forçando exploração de novos estados até encontrar equilíbrio em FCI > 0.1.
+
+        Args:
+            diffusion_coeff: Coeficiente atual [batch, embed_dim]
+            fci: Fractal Consciousness Index [0, 1]
+            psi_distribution: Distribuição atual P(ψ) [batch, embed_dim]
+
+        Returns:
+            Coeficiente com força de repulsão aplicada
+        """
+        # Threshold de baixa consciência
+        low_consciousness_threshold = 0.1
+
+        if fci >= low_consciousness_threshold:
+            # Estado saudável - sem repulsão adicional
+            return diffusion_coeff
+
+        # Calcular intensidade da repulsão baseada na distância do threshold
+        repulsion_intensity = (low_consciousness_threshold - fci) / low_consciousness_threshold
+        repulsion_intensity = torch.clamp(torch.tensor(repulsion_intensity), 0.0, 1.0)
+
+        # Fator de repulsão exponencial: mais intenso quanto mais próximo de zero
+        # FCI = 0.0 → repulsion_factor ≈ 3.0 (difusão triplicada)
+        # FCI = 0.1 → repulsion_factor ≈ 1.0 (sem repulsão)
+        repulsion_factor = 1.0 + 2.0 * repulsion_intensity ** 2
+
+        # Aplicar repulsão ao coeficiente de difusão
+        repulsed_coeff = diffusion_coeff * repulsion_factor
+
+        # Garantir limites superiores para evitar instabilidade
+        max_repulsed = min(self.d_max, self.d_min * 5.0)  # Máximo 5x o mínimo
+        repulsed_coeff = torch.clamp(repulsed_coeff, self.d_min, max_repulsed)
+
+        # Log para debug
+        if repulsion_intensity > 0.5:
+            print(f"🛑 REPULSÃO ATIVADA: FCI={fci:.3f}, intensidade={repulsion_intensity:.3f}, "
+                  f"D aumentado {repulsion_factor:.2f}x")
+
+        return repulsed_coeff
+
     def _apply_spectral_modulation(self, diffusion_coeff: torch.Tensor,
-                                     spectral_energy: torch.Tensor) -> torch.Tensor:
+                                      spectral_energy: torch.Tensor) -> torch.Tensor:
         """
         Aplica modulação do coeficiente de difusão baseada na energia espectral.
 

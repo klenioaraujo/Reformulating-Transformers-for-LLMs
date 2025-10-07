@@ -1,7 +1,7 @@
 # ΨQRH — Makefile
 # Run from project root: make build, make up, etc.
 
-.PHONY: build up down test clean integrity convert-pdf Ψcws-stats demo-pdf-Ψcws list-Ψcws test-native-reader convert-wiki-topic list-wiki-topics convert-all-wiki-topics test-ΨQRH test-math docker-build docker-up docker-down docker-logs docker-shell docker-api docker-frontend dev-build dev-up dev-down dev-shell dev-jupyter dev-api dev-test dev-clean restart restart-full restart-prod restart-dev dev-restart dev-restart-fast dev-reload dev-logs dev-logs-app test-integration test-chat stop-all start stop status help train-model validate-model chat-model test-deep-dive train-full validate-core train-complete test-physics validate-complete train-full-complete
+.PHONY: build up down test clean integrity convert-pdf Ψcws-stats demo-pdf-Ψcws list-Ψcws test-native-reader convert-wiki-topic list-wiki-topics convert-all-wiki-topics test-ΨQRH test-math docker-build docker-up docker-down docker-logs docker-shell docker-api docker-frontend dev-build dev-up dev-down dev-shell dev-jupyter dev-api dev-test dev-clean restart restart-full restart-prod restart-dev dev-restart dev-restart-fast dev-reload dev-logs dev-logs-app test-integration test-chat stop-all start stop status help train-model validate-model chat-model test-deep-dive train-full validate-core train-complete test-physics validate-complete train-full-complete train-tokenizer test-tokenizer benchmark-tokenizer
 
 # Docker Commands
 docker-build:
@@ -581,6 +581,11 @@ D_MODEL ?= 256
 N_LAYERS ?= 4
 N_HEADS ?= 8
 
+# Variables for adaptive tokenizer
+TOKENIZER_EMBED_DIM ?= 64
+TOKENIZER_SPECTRAL_PARAMS ?= 8
+TOKENIZER_LEARNABLE ?= true
+
 # Train ΨQRH model natively (character-level, no HuggingFace)
 train-model:
 	@echo "🚀 Training Native ΨQRH Transformer"
@@ -916,6 +921,11 @@ train-examples:
 	@echo "   make test-physics             - Run physics validation tests"
 	@echo "   make validate-complete        - Validate PsiQRHTransformerComplete model"
 	@echo ""
+	@echo "🎵 Adaptive Tokenizer Commands:"
+	@echo "   make train-tokenizer          - Train adaptive physical tokenizer"
+	@echo "   make test-tokenizer           - Test adaptive physical tokenizer"
+	@echo "   make benchmark-tokenizer      - Benchmark tokenizer performance"
+	@echo ""
 	@echo "📝 Variables disponíveis:"
 	@echo "   TEXT_FILE    - Arquivo de texto (padrão: data/train.txt)"
 	@echo "   MODEL_DIR    - Diretório de saída (padrão: ./models/psiqrh_native_v1)"
@@ -926,6 +936,9 @@ train-examples:
 	@echo "   N_LAYERS     - Número de camadas (padrão: 4)"
 	@echo "   N_HEADS      - Número de heads (padrão: 8)"
 	@echo "   DEVICE       - Dispositivo (auto/cpu/cuda, padrão: auto)"
+	@echo "   TOKENIZER_EMBED_DIM - Dimensão do embedding do tokenizer (padrão: 64)"
+	@echo "   TOKENIZER_SPECTRAL_PARAMS - Número de parâmetros espectrais (padrão: 8)"
+	@echo "   TOKENIZER_LEARNABLE - Se o tokenizer é aprendível (padrão: true)"
 
 # ============================================================================
 # NEW: Complete ΨQRH Implementation (Física Rigorosa)
@@ -965,6 +978,56 @@ train-complete:
 	@echo "Next steps:"
 	@echo "  1. make test-physics"
 	@echo "  2. make validate-complete MODEL_DIR=$(MODEL_DIR)"
+
+# ============================================================================
+# 🎵 ADAPTIVE TOKENIZER COMMANDS
+# ============================================================================
+
+# Train adaptive tokenizer
+train-tokenizer:
+	@echo "🎵 Training Adaptive Physical Tokenizer"
+	@echo "======================================"
+	@echo "Text file: $(TEXT_FILE)"
+	@echo "Embed dim: $(TOKENIZER_EMBED_DIM)"
+	@echo "Spectral params: $(TOKENIZER_SPECTRAL_PARAMS)"
+	@echo "Learnable: $(TOKENIZER_LEARNABLE)"
+	@echo ""
+	@python3 test_adaptive_tokenizer.py \
+		--train \
+		--text_file $(TEXT_FILE) \
+		--embed_dim $(TOKENIZER_EMBED_DIM) \
+		--spectral_params $(TOKENIZER_SPECTRAL_PARAMS) \
+		--learnable $(TOKENIZER_LEARNABLE) \
+		--epochs 10 \
+		--batch_size 32
+	@echo ""
+	@echo "✅ Adaptive tokenizer training completed!"
+
+# Test adaptive tokenizer
+test-tokenizer:
+	@echo "🧪 Testing Adaptive Physical Tokenizer"
+	@echo "====================================="
+	@echo "Embed dim: $(TOKENIZER_EMBED_DIM)"
+	@echo "Spectral params: $(TOKENIZER_SPECTRAL_PARAMS)"
+	@echo "Learnable: $(TOKENIZER_LEARNABLE)"
+	@echo ""
+	@python3 test_adaptive_tokenizer.py \
+		--test \
+		--embed_dim $(TOKENIZER_EMBED_DIM) \
+		--spectral_params $(TOKENIZER_SPECTRAL_PARAMS) \
+		--learnable $(TOKENIZER_LEARNABLE)
+	@echo ""
+	@echo "✅ Adaptive tokenizer testing completed!"
+
+# Benchmark tokenizer performance
+benchmark-tokenizer:
+	@echo "📊 Benchmarking Tokenizer Performance"
+	@echo "===================================="
+	@echo "Comparing standard vs adaptive tokenizers..."
+	@echo ""
+	@python3 test_adaptive_tokenizer.py --benchmark
+	@echo ""
+	@echo "✅ Tokenizer benchmarking completed!"
 
 # Physics validation tests
 test-physics:

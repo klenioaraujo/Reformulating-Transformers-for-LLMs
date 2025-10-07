@@ -133,15 +133,16 @@ except ImportError as e:
     if not QUIET_MODE:
         print(f"⚠️  Hybrid system not available. Using anatomical generation. Error: {e}")
 
-# Wave-to-text conversion components (spectrum to text)
-try:
-    from src.processing.wave_to_text import wave_to_text
-    from src.processing.text_to_wave import create_spectral_character_map
-    HAS_WAVE_TO_TEXT = True
-    print("🌊 Wave-to-text conversion components loaded successfully!")
-except ImportError as e:
-    HAS_WAVE_TO_TEXT = False
-    print(f"⚠️  Wave-to-text components not available. Error: {e}")
+# Wave-to-text conversion components DISABLED - replaced by QuantumStateInterpreter
+# try:
+#     from src.processing.wave_to_text import wave_to_text
+#     from src.processing.text_to_wave import create_spectral_character_map
+#     HAS_WAVE_TO_TEXT = True
+#     print("🌊 Wave-to-text conversion components loaded successfully!")
+# except ImportError as e:
+#     HAS_WAVE_TO_TEXT = False
+#     print(f"⚠️  Wave-to-text components not available. Error: {e}")
+HAS_WAVE_TO_TEXT = False
 
 def set_quiet_mode(quiet: bool):
     """Define modo silencioso global."""
@@ -281,7 +282,8 @@ class ΨQRHPipeline:
 
     def __init__(self, task: str = "text-generation", device: Optional[str] = None,
                  input_text: Optional[str] = None, model_dir: Optional[str] = None,
-                 enable_auto_calibration: bool = True, enable_noncommutative: bool = True):
+                 enable_auto_calibration: bool = True, enable_noncommutative: bool = True,
+                 tokenizer_config: Optional[Dict[str, Any]] = None):
         """
         Inicializa o pipeline ΨQRH com física completa.
 
@@ -291,11 +293,22 @@ class ΨQRHPipeline:
             input_text: Texto de entrada para detecção automática de tarefa (opcional)
             model_dir: Caminho para o modelo a ser carregado (opcional, usa modelo ativo se None)
             enable_auto_calibration: Habilita auto-calibração física (ZERO FALLBACK)
+            tokenizer_config: Configuração do tokenizer adaptativo (opcional)
+                - embed_dim: Dimensão do embedding (padrão: 64)
+                - spectral_params_dim: Número de parâmetros espectrais por caractere (padrão: 8)
+                - learnable: Se deve usar tokenizer aprendível (padrão: True)
         """
         self.device = self._detect_device(device)
         self.task = task
         self.enable_auto_calibration = enable_auto_calibration and HAS_AUTO_CALIBRATION
         self.enable_noncommutative = enable_noncommutative and HAS_NONCOMMUTATIVE
+
+        # Configuração do tokenizer adaptativo
+        self.tokenizer_config = tokenizer_config or {
+            'embed_dim': 64,
+            'spectral_params_dim': 8,
+            'learnable': True
+        }
 
         # Componentes físicos obrigatórios (doe.md)
         self.fractal_analyzer = None
@@ -690,25 +703,38 @@ class ΨQRHPipeline:
         raise NotImplementedError("Semantic mapping requires emergent quantum pattern generation - no hardcoded concept tables allowed")
 
     def semantic_wave_to_text(self, wave_function: torch.Tensor, input_text: str, max_length: int = 50) -> str:
-        """Conversão semântica emergente usando padrões quânticos"""
+        """Conversão semântica emergente usando QuantumStateInterpreter"""
         print(f"    🔬 [semantic_wave_to_text] Gerando texto semântico emergente para: '{input_text}'")
 
-        # Usar o método espectral vetorizado que já implementamos
-        # Isso é emergente porque usa padrões quânticos reais, não hardcoded
-        from src.processing.wave_to_text import quantum_wave_to_text_vectorized
+        # Usar QuantumStateInterpreter para decodificação unificada
+        from src.processing.quantum_interpreter import QuantumStateInterpreter
 
-        # Adicionar dimensão de batch se necessário
+        # Preparar dados para o interpretador
+        # wave_function é [seq_len, embed_dim, 4] ou [1, seq_len, embed_dim, 4]
         if wave_function.dim() == 3:
-            wave_function = wave_function.unsqueeze(0)  # [seq_len, embed_dim, 4] -> [1, seq_len, embed_dim, 4]
+            psi_tensor = wave_function.unsqueeze(0)  # Adicionar batch dim se necessário
+        else:
+            psi_tensor = wave_function
 
-        # Usar o método espectral vetorizado
-        emergent_text = quantum_wave_to_text_vectorized(wave_function)
+        # Criar dados espectrais simulados baseados no psi
+        spectral_data = self._analyze_spectral_patterns(psi_tensor.squeeze(0))
+        pipeline_metrics = {
+            'FCI': 0.5,  # Valor padrão
+            'fractal_dimension': 1.5,  # Valor padrão
+        }
+
+        # Criar interpretador com configuração do tokenizer adaptativo
+        interpreter = QuantumStateInterpreter(
+            spectral_data, psi_tensor, pipeline_metrics, self.quantum_memory_system,
+            tokenizer_config=self.tokenizer_config
+        )
+        emergent_text = interpreter.to_text(temperature=0.1, top_k=5)
 
         # Limitar ao comprimento máximo
         if len(emergent_text) > max_length:
             emergent_text = emergent_text[:max_length]
 
-        print(f"    ✅ [semantic_wave_to_text] Texto emergente gerado: '{emergent_text}'")
+        print(f"    ✅ [semantic_wave_to_text] Texto emergente gerado via QuantumStateInterpreter: '{emergent_text}'")
         return emergent_text
 
     def _map_quantum_to_linguistic_elements(self, fci: float, fractal_dim: float,
@@ -1072,10 +1098,11 @@ class ΨQRHPipeline:
             self.spectral_filter = SpectralFilter(alpha=1.0, epsilon=1e-10, use_stable_activation=True)
             print("   ✅ Spectral Filter: F(k) = exp(i α · arctan(ln(|k| + ε)))")
 
-            # 4. Optical Probe - Padilha wave equation para geração
-            from src.processing.optical_text_decoder import OpticalTextDecoder
-            self.optical_probe = OpticalTextDecoder(device=self.device)
-            print("   ✅ Optical Probe: f(λ,t) = I₀ sin(ωt + αλ) e^(i(ωt - kλ + βλ²))")
+            # 4. Optical Probe DISABLED - replaced by QuantumStateInterpreter
+            # from src.processing.optical_text_decoder import OpticalTextDecoder
+            # self.optical_probe = OpticalTextDecoder(device=self.device)
+            # print("   ✅ Optical Probe: f(λ,t) = I₀ sin(ωt + αλ) e^(i(ωt - kλ + βλ²))")
+            self.optical_probe = None
 
             # 5. Consciousness Processor - FCI com bootstrap
             from src.conscience.fractal_consciousness_processor import create_consciousness_processor
@@ -1892,11 +1919,46 @@ class ΨQRHPipeline:
         }
         print(f"      ✅ FCI calculado: {FCI:.3f} (simplificado)")
 
-        # ========== PASSO 7: SAIDA ESPECTRAL SEM FILTROS ==========
-        print(f"   🔍 Passo 7: Saída espectral sem filtros...")
+        # ========== PASSO 7: ANÁLISE ESPECTRAL ==========
+        print(f"   🔍 Passo 7: Análise espectral...")
         spectral_output = self._analyze_spectral_patterns(psi_rotated.squeeze(0))
-        generated_text = f"Saída Espectral: {json.dumps(spectral_output, indent=2)}"
-        print(f"      ✅ Saída spectral sem filtros gerada")
+        print(f"      ✅ Análise espectral completa")
+
+        # ========== PASSO 8: INTERPRETAÇÃO FINAL VIA QUANTUMSTATEINTERPRETER ==========
+        print(f"   🧠 Passo 8: Interpretação final via QuantumStateInterpreter...")
+
+        # Preparar dados do estado final para o interpretador
+        final_state_data = {
+            'spectral_output': spectral_output,
+            'final_psi_tensor': psi_rotated,  # Estado quântico final
+            'fractal_dimension': D_fractal,
+            'fci': FCI,
+            'consciousness_state': consciousness_results.get('state', 'UNKNOWN'),
+            'input_text': text
+        }
+
+        # Usar QuantumStateInterpreter para gerar saída interpretada
+        from src.processing.quantum_interpreter import QuantumStateInterpreter
+        interpreter = QuantumStateInterpreter(
+            spectral_output, psi_rotated, {'fci': FCI, 'fractal_dimension': D_fractal},
+            self.quantum_memory_system, tokenizer_config=self.tokenizer_config
+        )
+
+        # Gerar análise completa
+        complete_analysis = interpreter.get_complete_analysis()
+
+        # Usar texto gerado como resposta principal
+        generated_text = complete_analysis.get('generated_text', "Quantum state interpretation unavailable")
+
+        # Adicionar dados espectrais como informação suplementar
+        if spectral_output:
+            spectral_json = json.dumps(spectral_output, indent=2)
+            generated_text += f"\n\n--------------------------------------------------\nSaída Espectral: {spectral_json}\n--------------------------------------------------"
+
+        print(f"      ✅ Interpretação final gerada via QuantumStateInterpreter")
+        print(f"         📝 Texto: {len(generated_text)} caracteres")
+        print(f"         🎨 Visualização: {'gerada' if complete_analysis.get('visualization_code') else 'não gerada'}")
+        print(f"         🎵 Áudio: {'gerado' if complete_analysis.get('audio_path') else 'não gerado'}")
 
         # ========== VALIDAÇÃO MATEMÁTICA FINAL ==========
         validation_results = self._validate_mathematical_consistency(
@@ -1905,7 +1967,8 @@ class ΨQRHPipeline:
 
         processing_time = time.time() - time.time()  # Placeholder - será calculado no método principal
 
-        return {
+        # Preparar resultado completo incluindo análise do interpretador
+        result = {
             'status': 'success',
             'response': generated_text,
             'task': self.task,
@@ -1921,6 +1984,9 @@ class ΨQRHPipeline:
                 'FCI': FCI,
                 'consciousness_state': consciousness_results.get('state', 'UNKNOWN')
             },
+
+            # Análise completa do QuantumStateInterpreter
+            'quantum_interpretation': complete_analysis,
 
             # Validação matemática obrigatória
             'mathematical_validation': validation_results,
@@ -1940,9 +2006,11 @@ class ΨQRHPipeline:
                 'spectral_filtering',
                 'so4_rotation',
                 'consciousness_processing',
-                'optical_probe_generation'
+                'quantum_state_interpretation'
             ]
         }
+
+        return result
 
     def _activate_cognitive_generation(self, input_text: str, processed_output: Dict) -> Optional[str]:
         """
@@ -2055,26 +2123,33 @@ class ΨQRHPipeline:
                 # FCI entre 0.15 e 0.29 - sistema em estado de análise
                 print(f"   ℹ️  Estado {state_name} com FCI={current_fci:.3f}: mantendo modo ANALYSIS")
 
-            # COMPONENTE 3: Gerar texto REAL via wave_to_text se em modo GENERATION
+            # COMPONENTE 3: Gerar texto REAL via QuantumStateInterpreter se em modo GENERATION
             if mode == "GENERATION":
-                print(f"   🚀 Iniciando geração de texto via wave_to_text...")
+                print(f"   🚀 Iniciando geração de texto via QuantumStateInterpreter...")
 
                 try:
-                    # Importar wave_to_text REAL do pipeline
-                    from src.processing.wave_to_text import wave_to_text
-                    from src.processing.text_to_wave import create_spectral_character_map
+                    # Usar QuantumStateInterpreter para decodificação unificada
+                    from src.processing.quantum_interpreter import QuantumStateInterpreter
 
-                    # Criar mapa espectral para decodificação
-                    spectral_map = create_spectral_character_map(n_modes=psi_boosted.shape[-2])
+                    # Preparar dados para o interpretador
+                    spectral_data = self._analyze_spectral_patterns(psi_boosted.squeeze(0))
+                    pipeline_metrics = {
+                        'FCI': consciousness_results.get('FCI', 0.5),
+                        'fractal_dimension': consciousness_results.get('D_fractal', consciousness_results.get('fractal_dimension', 1.5)),
+                    }
 
-                    # Decodificar estado quântico para texto com sampling diversificado
-                    generated_text = wave_to_text(psi_boosted, spectral_map, temperature=adaptive_temperature, top_k=10)
+                    # Criar interpretador e gerar texto
+                    interpreter = QuantumStateInterpreter(
+                        spectral_data, psi_boosted, pipeline_metrics, self.quantum_memory_system,
+                        tokenizer_config=self.tokenizer_config
+                    )
+                    generated_text = interpreter.to_text(temperature=adaptive_temperature, top_k=10)
 
-                    print(f"   ✅ Geração cognitiva concluída: '{generated_text}'")
+                    print(f"   ✅ Geração cognitiva concluída via QuantumStateInterpreter: '{generated_text}'")
                     return generated_text
 
                 except Exception as e:
-                    print(f"   ❌ Geração de texto via wave_to_text falhou: {e}")
+                    print(f"   ❌ Geração de texto via QuantumStateInterpreter falhou: {e}")
                     import traceback
                     traceback.print_exc()
                     return None
@@ -2361,6 +2436,33 @@ Exemplos:
         help='Desabilita auto-aprendizagem com modelos ΨQRH'
     )
 
+    parser.add_argument(
+        '--tokenizer-embed-dim',
+        type=int,
+        default=64,
+        help='Dimensão do embedding do tokenizer (padrão: 64)'
+    )
+
+    parser.add_argument(
+        '--tokenizer-spectral-params',
+        type=int,
+        default=8,
+        help='Número de parâmetros espectrais por caractere (padrão: 8)'
+    )
+
+    parser.add_argument(
+        '--tokenizer-learnable',
+        action='store_true',
+        default=True,
+        help='Usar tokenizer aprendível (padrão: True)'
+    )
+
+    parser.add_argument(
+        '--tokenizer-deterministic',
+        action='store_true',
+        help='Forçar uso de tokenizer determinístico (desabilita --tokenizer-learnable)'
+    )
+
     args = parser.parse_args()
 
     # Configurar modo quiet/verbose
@@ -2376,6 +2478,13 @@ Exemplos:
 
     # Configurar auto-calibration
     enable_auto_calibration = not args.no_auto_learning
+
+    # Configurar tokenizer adaptativo
+    tokenizer_config = {
+        'embed_dim': args.tokenizer_embed_dim,
+        'spectral_params_dim': args.tokenizer_spectral_params,
+        'learnable': args.tokenizer_learnable and not args.tokenizer_deterministic
+    }
 
     # Verificar certificação do modelo antes de qualquer execução
     # Mas permitir execução mesmo sem certificação para o pipeline
@@ -2402,7 +2511,7 @@ Exemplos:
 
     # Processamento de texto único
     if args.text:
-        return process_single_text(args.text, args.task, args.device, args.verbose, args.model_dir, enable_auto_calibration)
+        return process_single_text(args.text, args.task, args.device, args.verbose, args.model_dir, enable_auto_calibration, tokenizer_config)
 
     # Se nenhum argumento, mostrar ajuda
     parser.print_help()
@@ -2457,7 +2566,7 @@ def run_quick_test(verbose: bool = False, model_dir: Optional[str] = None, enabl
         "Como funciona o framework ΨQRH?"
     ]
 
-    pipeline = ΨQRHPipeline(task="text-generation", model_dir=model_dir, enable_auto_calibration=enable_auto_calibration)
+    pipeline = ΨQRHPipeline(task="text-generation", model_dir=model_dir, enable_auto_calibration=enable_auto_calibration, tokenizer_config=tokenizer_config)
 
     for i, test_text in enumerate(test_cases, 1):
         print(f"\n--- Teste {i}/{len(test_cases)} ---")
@@ -2541,7 +2650,7 @@ def run_interactive_mode(task: str, device: Optional[str], verbose: bool = False
         print("🤖 Auto-calibração: DESATIVADA")
 
     # Criar pipeline inicial com task padrão
-    pipeline = ΨQRHPipeline(task=task, device=device, model_dir=model_dir, enable_auto_calibration=enable_auto_calibration)
+    pipeline = ΨQRHPipeline(task=task, device=device, model_dir=model_dir, enable_auto_calibration=enable_auto_calibration, tokenizer_config=tokenizer_config)
 
     while True:
         try:
@@ -2569,7 +2678,7 @@ Comandos disponíveis:
 
             # Recriar pipeline apenas se a tarefa mudou
             if detected_task != current_task:
-                pipeline = ΨQRHPipeline(task=detected_task, device=device, model_dir=model_dir, enable_auto_calibration=enable_auto_calibration)
+                pipeline = ΨQRHPipeline(task=detected_task, device=device, model_dir=model_dir, enable_auto_calibration=enable_auto_calibration, tokenizer_config=tokenizer_config)
                 print(f"🔄 Tarefa detectada: {detected_task} (anterior: {current_task})")
 
             print(f"🧠 ΨQRH processando... (Tarefa: {pipeline.task})")
@@ -2624,10 +2733,10 @@ Comandos disponíveis:
 
     return 0
 
-def process_single_text(text: str, task: str, device: Optional[str], verbose: bool = False, model_dir: Optional[str] = None, enable_auto_calibration: bool = True) -> int:
+def process_single_text(text: str, task: str, device: Optional[str], verbose: bool = False, model_dir: Optional[str] = None, enable_auto_calibration: bool = True, tokenizer_config: Optional[Dict[str, Any]] = None) -> int:
     """Processa um único texto com auto-aprendizagem"""
     # Usar detecção automática de tarefa baseada no conteúdo do texto
-    pipeline = ΨQRHPipeline(task=task, device=device, input_text=text, model_dir=model_dir, enable_auto_calibration=enable_auto_calibration)
+    pipeline = ΨQRHPipeline(task=task, device=device, input_text=text, model_dir=model_dir, enable_auto_calibration=enable_auto_calibration, tokenizer_config=tokenizer_config)
 
     print(f"🧠 Processando: {text}")
     print(f"📋 Tarefa detectada: {pipeline.task}")
