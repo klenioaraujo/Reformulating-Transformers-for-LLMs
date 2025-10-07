@@ -199,7 +199,7 @@ def benchmark_language_modeling(model_type: str, device: str = 'cuda', seq_len: 
         'best_val_loss': round(best_val_loss, 4),
         'final_train_loss': round(training_losses[-1], 4),
         'epochs_trained': epochs,
-        'converged': best_val_loss < 3.5  # Reasonable convergence threshold
+        'converged': str(best_val_loss < 3.5)  # Convert bool to string for JSON
     }
 
     print(f"✅ {model_type.upper()} Results: PPL={results['perplexity']}, Memory={results['memory_mb']}MB, Speed={results['inference_speed_tokens_per_sec']} tok/s")
