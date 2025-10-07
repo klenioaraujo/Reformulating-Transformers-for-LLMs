@@ -1,179 +1,118 @@
 #!/usr/bin/env python3
 """
-Test script for ΨQRH API integration with new pipeline
-Tests the integration without requiring Flask to be installed
+Teste de integração da API com o novo ΨQRHPipeline
 """
 
 import sys
 import os
-import json
 
-# Add current directory to path
+# Adicionar diretório base ao path
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE_DIR)
 
-def test_pipeline_import():
-    """Test importing the ΨQRHPipeline"""
-    print("🧪 Testing ΨQRHPipeline import...")
-    try:
-        from psiqrh import ΨQRHPipeline
-        print("✅ ΨQRHPipeline import successful")
-        return True
-    except Exception as e:
-        print(f"❌ ΨQRHPipeline import failed: {e}")
-        return False
-
 def test_pipeline_initialization():
-    """Test initializing the ΨQRHPipeline"""
-    print("\n🧪 Testing ΨQRHPipeline initialization...")
+    """Testa se o pipeline inicializa corretamente"""
+    print("🧪 Testando inicialização do ΨQRHPipeline...")
+
     try:
         from psiqrh import ΨQRHPipeline
         pipeline = ΨQRHPipeline(task="text-generation", device="cpu")
-        print("✅ ΨQRHPipeline initialization successful")
-        print(f"   📋 Task: {pipeline.task}")
-        print(f"   💻 Device: {pipeline.device}")
-        print(f"   🔢 Embed dim: {pipeline.config['embed_dim']}")
+        print("✅ Pipeline inicializado com sucesso")
         return pipeline
     except Exception as e:
-        print(f"❌ ΨQRHPipeline initialization failed: {e}")
+        print(f"❌ Erro na inicialização do pipeline: {e}")
         return None
 
 def test_pipeline_processing(pipeline):
-    """Test processing text with the pipeline"""
-    print("\n🧪 Testing pipeline text processing...")
-    try:
-        test_text = "Hello, this is a test of the ΨQRH pipeline integration."
-        result = pipeline(test_text)
+    """Testa se o pipeline processa texto corretamente"""
+    print("\n🧪 Testando processamento de texto...")
 
-        print("✅ Pipeline processing successful")
-        print(f"   📝 Input: {test_text[:50]}...")
-        print(f"   📤 Status: {result.get('status', 'unknown')}")
-        print(f"   📊 Response length: {len(result.get('response', ''))}")
-        print(f"   🔬 Physical metrics available: {'physical_metrics' in result}")
-
-        if 'physical_metrics' in result:
-            pm = result['physical_metrics']
-            print(f"   🌌 Fractal dimension: {pm.get('D_fractal', 'N/A')}")
-            print(f"   ⚛️ FCI: {pm.get('FCI', 'N/A')}")
-            print(f"   🎯 Consciousness state: {pm.get('consciousness_state', 'N/A')}")
-
-        return result
-    except Exception as e:
-        print(f"❌ Pipeline processing failed: {e}")
-        import traceback
-        traceback.print_exc()
-        return None
-
-def test_api_structure(pipeline):
-    """Test that the API structure works with the pipeline"""
-    print("\n🧪 Testing API structure compatibility...")
-
-    # Simulate what the API endpoints would do
-    test_message = "Test API integration"
-
-    try:
-        # Simulate chat endpoint
-        result = pipeline(test_message)
-
-        # Check response structure expected by API
-        api_response = {
-            'status': result.get('status', 'success'),
-            'user_message': test_message,
-            'timestamp': 1234567890.0,  # Mock timestamp
-            'processing_parameters': {
-                'pipeline_config': {
-                    'task': pipeline.task,
-                    'device': pipeline.device,
-                    'embed_dim': pipeline.config['embed_dim'],
-                    'alpha': pipeline.config['alpha'],
-                    'beta': pipeline.config['beta']
-                }
-            }
-        }
-
-        if result.get('status') == 'success':
-            api_response['response'] = result.get('response', '')
-
-            # Add physical metrics as consciousness metrics
-            if 'physical_metrics' in result:
-                physical_metrics = result['physical_metrics']
-                api_response['physical_metrics'] = physical_metrics
-                api_response['consciousness_metrics'] = {
-                    'fci': physical_metrics.get('FCI', 0.0),
-                    'state': physical_metrics.get('consciousness_state', 'UNKNOWN'),
-                    'fractal_dimension': physical_metrics.get('D_fractal', 1.0)
-                }
-
-        print("✅ API structure compatibility test passed")
-        print(f"   📋 API response keys: {list(api_response.keys())}")
-        return True
-
-    except Exception as e:
-        print(f"❌ API structure compatibility test failed: {e}")
+    if pipeline is None:
+        print("❌ Pipeline não disponível para teste")
         return False
 
-def test_health_endpoint(pipeline):
-    """Test health endpoint structure"""
-    print("\n🧪 Testing health endpoint structure...")
     try:
-        status = 'healthy' if pipeline is not None else 'unhealthy'
+        test_text = "Olá, este é um teste de integração."
+        result = pipeline(test_text)
 
-        health_response = {
-            'status': status,
-            'system': 'ΨQRH API',
-            'components': {
-                'qrh_pipeline': 'loaded' if pipeline is not None else 'failed',
-                'consciousness_processor': 'loaded' if hasattr(pipeline, 'consciousness_processor') and pipeline.consciousness_processor else 'unavailable',
-                'gls_generator': 'not tested'  # GLS not available in test
-            }
-        }
+        if result.get('status') == 'success':
+            print("✅ Processamento bem-sucedido")
+            print(f"   📝 Resposta: {result.get('response', '')[:100]}...")
+            print(f"   📊 Métricas físicas: {result.get('physical_metrics', {})}")
+            return True
+        else:
+            print(f"❌ Processamento falhou: {result.get('error', 'Erro desconhecido')}")
+            return False
 
-        print("✅ Health endpoint structure test passed")
-        print(f"   💚 Status: {health_response['status']}")
+    except Exception as e:
+        print(f"❌ Erro no processamento: {e}")
+        return False
+
+def test_api_structure():
+    """Testa se a estrutura da API está correta"""
+    print("\n🧪 Testando estrutura da API...")
+
+    try:
+        # Simular a estrutura da API sem Flask
+        from psiqrh import ΨQRHPipeline
+
+        # Simular inicialização da API
+        qrh_pipeline = ΨQRHPipeline(task="text-generation", device="cpu")
+
+        # Simular processamento de chat
+        test_message = "Teste de mensagem"
+
+        # Simular o processamento que aconteceria na API
+        result = qrh_pipeline(test_message)
+
+        # Verificar se a resposta tem a estrutura esperada
+        expected_keys = ['status', 'response', 'physical_metrics', 'mathematical_validation']
+        actual_keys = list(result.keys())
+
+        # Verificar se pelo menos as chaves essenciais estão presentes
+        essential_keys = ['status', 'response']
+        missing_essential = [key for key in essential_keys if key not in actual_keys]
+
+        if missing_essential:
+            print(f"❌ Chaves essenciais faltando na resposta: {missing_essential}")
+            print(f"   Chaves disponíveis: {actual_keys}")
+            return False
+
+        # Verificar se response é uma string não vazia
+        if not isinstance(result.get('response'), str) or not result.get('response').strip():
+            print(f"❌ Resposta inválida: {result.get('response')}")
+            return False
+
+        print("✅ Estrutura da API compatível")
         return True
 
     except Exception as e:
-        print(f"❌ Health endpoint structure test failed: {e}")
+        print(f"❌ Erro na estrutura da API: {e}")
         return False
 
 def main():
-    """Run all integration tests"""
-    print("🚀 Starting ΨQRH API Integration Tests")
-    print("=" * 50)
+    """Função principal de teste"""
+    print("🚀 Iniciando testes de integração ΨQRH API ↔ Pipeline")
+    print("=" * 60)
 
-    # Test 1: Import
-    if not test_pipeline_import():
-        print("\n❌ Integration tests failed at import stage")
-        return 1
-
-    # Test 2: Initialization
+    # Teste 1: Inicialização do pipeline
     pipeline = test_pipeline_initialization()
-    if pipeline is None:
-        print("\n❌ Integration tests failed at initialization stage")
+
+    # Teste 2: Processamento de texto
+    processing_ok = test_pipeline_processing(pipeline)
+
+    # Teste 3: Estrutura da API
+    api_ok = test_api_structure()
+
+    print("\n" + "=" * 60)
+    print("📊 RESULTADO DOS TESTES:")
+
+    if pipeline is not None and processing_ok and api_ok:
+        print("✅ Todos os testes passaram! Integração bem-sucedida.")
+        return 0
+    else:
+        print("❌ Alguns testes falharam. Verificar implementação.")
         return 1
-
-    # Test 3: Processing
-    result = test_pipeline_processing(pipeline)
-    if result is None:
-        print("\n❌ Integration tests failed at processing stage")
-        return 1
-
-    # Test 4: API Structure
-    if not test_api_structure(pipeline):
-        print("\n❌ Integration tests failed at API structure stage")
-        return 1
-
-    # Test 5: Health Endpoint
-    if not test_health_endpoint(pipeline):
-        print("\n❌ Integration tests failed at health endpoint stage")
-        return 1
-
-    print("\n" + "=" * 50)
-    print("🎉 All integration tests passed!")
-    print("✅ ΨQRH API successfully integrated with new pipeline")
-    print("=" * 50)
-
-    return 0
 
 if __name__ == "__main__":
     sys.exit(main())

@@ -86,13 +86,11 @@ class ChatSession:
                 logits = self.model(input_tensor)
 
                 # Pegar logits do último token
-                last_logits = logits[0, -1, :] / temperature
+                last_logits = logits[0, -1, :]
 
-                # Softmax
-                probs = torch.softmax(last_logits, dim=-1)
-
-                # Sample
-                next_idx = torch.multinomial(probs, 1).item()
+                # Physical decoding - Medição por Pico de Ressonância (SEM softmax)
+                from src.processing.physical_decoding import decode_resonance_to_token_id
+                next_idx = decode_resonance_to_token_id(last_logits, temperature=temperature)
 
                 # Converter para caractere
                 next_char = self.idx_to_char.get(str(next_idx), '')

@@ -1589,8 +1589,9 @@ class SpectralGPT2Integration:
             temperature = 1.2
             next_token_logits = next_token_logits / temperature
 
-            # Softmax para probabilidades
-            probs = torch.softmax(next_token_logits, dim=-1)
+            # Physical decoding - Medição por Pico de Ressonância (SEM softmax)
+            from src.processing.physical_decoding import decode_resonance_to_token_id
+            next_token = decode_resonance_to_token_id(next_token_logits, temperature=temperature)
 
             # Top-k sampling (k=50 para diversidade)
             top_k = 50

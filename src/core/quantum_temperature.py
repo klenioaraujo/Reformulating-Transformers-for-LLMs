@@ -181,6 +181,7 @@ class QuantumTemperatureCalculator:
         logits = torch.log(resonance_thermal + 1e-10)
 
         # Distribuição de Boltzmann
+        # TODO: Consider physical temperature-based decoding instead of softmax in future evolution
         # P ∝ exp(-E / k_B·T) → softmax(logits / T)
         probs = torch.softmax(logits / (T_q + 1e-8), dim=-1)
 
@@ -219,6 +220,7 @@ class QuantumTemperatureCalculator:
         for T_candidate in np.linspace(0.1, 5.0, 50):
             # Distribuição teórica com T_candidate
             logits = torch.log(resonance + 1e-10)
+            # TODO: Consider physical temperature-based decoding instead of softmax in future evolution
             theoretical_dist = torch.softmax(logits / T_candidate, dim=-1)
 
             # KL divergence

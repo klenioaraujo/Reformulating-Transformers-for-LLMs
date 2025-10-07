@@ -173,8 +173,9 @@ class QRHFactory:
                 top_k = 10
                 top_k_logits, top_k_indices = torch.topk(next_token_logits, top_k)
 
-                # Aplicar softmax apenas nos top-k
-                probs = torch.softmax(top_k_logits, dim=-1)
+                # Physical decoding - Medição por Pico de Ressonância (SEM softmax)
+                from src.processing.physical_decoding import decode_resonance_to_token_id
+                next_token = decode_resonance_to_token_id(top_k_logits, temperature=temperature)
 
                 # Amostrar do top-k
                 next_token_idx = torch.multinomial(probs, num_samples=1)

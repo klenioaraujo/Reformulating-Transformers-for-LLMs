@@ -313,6 +313,7 @@ class IrrelevanceFilter(nn.Module):
 
         # Compute attention scores to extract main topic
         topic_scores = torch.bmm(topic_query, x.transpose(1, 2))  # [B, 1, T]
+        # TODO: Consider replacing softmax with physical attention mechanism in future ΨQRH evolution
         topic_weights = torch.softmax(topic_scores / self.config.temperature, dim=-1)
 
         # Weighted sum to get main topic representation

@@ -147,6 +147,7 @@ class MultiHeadAttention(nn.Module):
         if mask is not None:
             scores = scores.masked_fill(mask == 0, -1e9)
 
+        # TODO: Consider replacing softmax with physical attention mechanism in future ΨQRH evolution
         attn_weights = torch.softmax(scores, dim=-1)
         attn_output = torch.matmul(attn_weights, V)
 

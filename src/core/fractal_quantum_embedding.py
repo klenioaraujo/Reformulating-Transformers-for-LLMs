@@ -1017,9 +1017,16 @@ class PsiQRHTransformerComplete(nn.Module):
                     indices_to_remove = next_token_logits < torch.topk(next_token_logits, top_k)[0][..., -1, None]
                     next_token_logits[indices_to_remove] = -float('Inf')
 
-                # Sample
-                probs = torch.nn.functional.softmax(next_token_logits, dim=-1)
-                next_token = torch.multinomial(probs, num_samples=1)  # [batch, 1]
+                # Physical decoding - Medição por Pico de Ressonância (SEM softmax)
+                from src.processing.physical_decoding import decode_resonance_to_token_id
+
+                # Decode each batch element
+                next_token_list = []
+                for i in range(next_token_logits.shape[0]):
+                    token_id = decode_resonance_to_token_id(next_token_logits[i], temperature=temperature)
+                    next_token_list.append(token_id)
+
+                next_token = torch.tensor(next_token_list, dtype=torch.long, device=next_token_logits.device).unsqueeze(-1)
 
                 # Append
                 generated = torch.cat([generated, next_token], dim=1)

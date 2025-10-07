@@ -1834,7 +1834,8 @@ class ΨQRHPipeline:
 
         try:
             if self.task in ["text-generation", "chat"]:
-                return self._generate_text_physical(text, **kwargs)
+                verbose = kwargs.get('verbose', False)
+                return self._generate_text_physical(text, verbose=verbose, **kwargs)
             elif self.task == "analysis":
                 return self._analyze_text_physical(text, **kwargs)
             elif self.task == "signal-processing":
@@ -1853,7 +1854,7 @@ class ΨQRHPipeline:
                 'mathematical_validation': False
             }
 
-    def _generate_text_physical(self, text: str, **kwargs) -> Dict[str, Any]:
+    def _generate_text_physical(self, text: str, verbose: bool = False, **kwargs) -> Dict[str, Any]:
         """
         Geração de Texto Físico Completa - doe.md Seções 2.9.1-2.9.4
 
@@ -1950,8 +1951,8 @@ class ΨQRHPipeline:
         # Usar texto gerado como resposta principal
         generated_text = complete_analysis.get('generated_text', "Quantum state interpretation unavailable")
 
-        # Adicionar dados espectrais como informação suplementar
-        if spectral_output:
+        # Adicionar dados espectrais como informação suplementar apenas se verbose
+        if spectral_output and verbose:
             spectral_json = json.dumps(spectral_output, indent=2)
             generated_text += f"\n\n--------------------------------------------------\nSaída Espectral: {spectral_json}\n--------------------------------------------------"
 

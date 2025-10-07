@@ -401,6 +401,7 @@ def test_optical_probe_physics():
     print(f"   Range: [{logits.min():.3f}, {logits.max():.3f}]")
     print(f"   Mean:  {logits.mean():.3f}")
 
+    # TODO: Consider replacing softmax with physical decoding in test validation
     # Convert to probabilities
     probs = torch.softmax(logits, dim=-1)
     entropy = -torch.sum(probs * torch.log(probs + 1e-10), dim=-1).mean().item()

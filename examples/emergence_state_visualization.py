@@ -53,6 +53,7 @@ def create_emergence_visualizations():
 
     # Distribuição P(ψ) com alta complexidade
     psi_distribution = torch.randn(batch_size, embed_dim)
+    # TODO: Consider physical distribution generation instead of softmax normalization
     psi_distribution = torch.softmax(psi_distribution, dim=-1)
 
     # Campo fractal com D = 2.8 (máxima complexidade)
