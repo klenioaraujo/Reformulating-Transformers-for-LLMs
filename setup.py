@@ -80,7 +80,6 @@ setup(
         "export": [
             "onnx>=1.14.0",
             "onnxruntime>=1.15.0",
-            "transformers>=4.30.0",
         ],
     },
     entry_points={

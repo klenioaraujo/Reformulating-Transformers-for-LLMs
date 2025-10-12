@@ -648,8 +648,8 @@ class StabilizedPsiQRHPipeline:
             return measurement
 
         except (OverflowError, RuntimeError) as e:
-            print(f"⚠️  Processamento não-comutativo falhou: {e}")
-            return self.anatomical_fallback(text_embedding)
+            print(f"❌ Processamento não-comutativo falhou: {e}")
+            raise RuntimeError("Non-commutative geometry processing failed - ZERO FALLBACK POLICY")
 
     def _embed_in_noncommutative_space(self, embedding: torch.Tensor) -> torch.Tensor:
         """Mapeia embedding para espaço de fase não-comutativo"""
@@ -755,10 +755,6 @@ class StabilizedPsiQRHPipeline:
 
         return measurement
 
-    def anatomical_fallback(self, text_embedding: torch.Tensor) -> torch.Tensor:
-        """Fallback para processamento anatômico quando não-comutativo falha"""
-        # Retornar embedding original com pequena modificação
-        return text_embedding * 0.9 + torch.randn_like(text_embedding) * 0.1
 
     def quantum_phoneme_generation_stable(self, spectral_data: torch.Tensor) -> str:
         """

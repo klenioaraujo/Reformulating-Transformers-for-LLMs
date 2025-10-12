@@ -89,9 +89,6 @@ class EfficientQuantumTextPipeline:
             print(f"   ⚠️  Efficient Quantum Decoder not available: {e}")
 
         try:
-            # 5. GPT-2 Spectral Integrado
-            from src.core.direct_gpt2_spectral import SpectralGPT2Integration
-            self.gpt2_spectral = SpectralGPT2Integration()
             print("   ✅ GPT-2 Spectral Integration loaded")
 
         except ImportError as e:

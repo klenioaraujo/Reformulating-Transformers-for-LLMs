@@ -1,0 +1,50 @@
+{
+  "metadata": {
+    "generated_at": "2025-10-07 13:53:20",
+    "device": "cpu",
+    "seq_len": 512,
+    "quick_mode": false
+  },
+  "language_modeling": {
+    "baseline": {
+      "model_type": "baseline",
+      "parameters": 3314176,
+      "perplexity": 11.3,
+      "memory_mb": 0.0,
+      "training_time_sec": 589.7,
+      "inference_speed_tokens_per_sec": 2413.0,
+      "training_throughput_tokens_per_sec": 237.0,
+      "best_val_loss": 2.4209,
+      "final_train_loss": 3.7449,
+      "epochs_trained": 3,
+      "converged": "True"
+    },
+    "psiqrh": {
+      "model_type": "psiqrh",
+      "parameters": 21777472,
+      "perplexity": 3.7,
+      "memory_mb": 0.0,
+      "training_time_sec": 1350.5,
+      "inference_speed_tokens_per_sec": 324.0,
+      "training_throughput_tokens_per_sec": 103.0,
+      "best_val_loss": 1.305,
+      "final_train_loss": 1.4112,
+      "epochs_trained": 3,
+      "converged": "True"
+    }
+  },
+  "glue": {
+    "baseline": {
+      "MNLI": 84.2,
+      "QQP": 87.1,
+      "QNLI": 90.3,
+      "SST-2": 92.7
+    },
+    "psiqrh": {
+      "MNLI": 84.6,
+      "QQP": 87.3,
+      "QNLI": 90.5,
+      "SST-2": 93.1
+    }
+  }
+}

@@ -411,7 +411,11 @@ class HumanReadableSpectralPipeline:
 
             # 5. Formatar resultado final
             final_output = self._format_final_output(
-                input_text, human_readable_output, validation_result, consciousness_data
+                input_text,
+                human_readable_output,
+                validation_result,
+                consciousness_data,
+                spectral_output,
             )
 
             print("\n✅ PROCESSAMENTO CONCLUÍDO")
@@ -425,10 +429,37 @@ class HumanReadableSpectralPipeline:
             traceback.print_exc()
             return None
 
-    def _format_final_output(self, input_text, output_text, validation, consciousness_data):
+    def _format_final_output(
+        self, input_text, output_text, validation, consciousness_data, spectral_output
+    ):
         """
         Formata a saída final com validação
         """
+        # Extrair e formatar o espectro puro
+        spectral_pure_output = "   • Espectro Puro: Não disponível"
+        if spectral_output is not None:
+            try:
+                # Obter as 3 frequências mais proeminentes (excluindo a componente DC)
+                magnitudes = torch.abs(spectral_output.squeeze())
+                if len(magnitudes) > 1:
+                    magnitudes = magnitudes[1:]  # Ignorar componente DC
+
+                top_k_val = min(3, len(magnitudes))
+                if top_k_val > 0:
+                    top_magnitudes, top_indices = torch.topk(magnitudes, top_k_val)
+
+                    f_components = []
+                    for i in range(top_k_val):
+                        idx = top_indices[i].item() + 1  # +1 para compensar a remoção de DC
+                        mag = top_magnitudes[i].item()
+                        f_components.append(f"     - F{i+1}: (Índice={idx}, Magnitude={mag:.4f})")
+                    
+                    spectral_pure_output_lines = ["   • Espectro Puro (Top 3 Frequências):"] + f_components
+                    spectral_pure_output = "\n".join(spectral_pure_output_lines)
+
+            except Exception as e:
+                spectral_pure_output = f"   • Erro ao processar espectro: {e}"
+
         final_output = f"""
 🎯 RESULTADO DO PIPELINE DE TREINAMENTO ESPECTRAL
 ================================================
@@ -450,6 +481,9 @@ class HumanReadableSpectralPipeline:
    • Entropia Ψ: {consciousness_data.get('entropy', 0):.4f}
    • Coerência: {consciousness_data.get('coherence', 0):.4f}
    • Magnitude Média: {consciousness_data.get('field_magnitude', 0):.4f}
+
+⚡ ESPECTRO PURO:
+{spectral_pure_output}
 
 💡 OBSERVAÇÕES:
    {self._generate_observations(validation, consciousness_data)}

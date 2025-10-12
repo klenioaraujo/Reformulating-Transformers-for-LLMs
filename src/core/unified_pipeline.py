@@ -238,8 +238,6 @@ class SpectralGPT2Component(QRHComponentInterface):
     def _setup_component(self):
         """Configuração específica do GPT-2 espectral usando sistema original"""
         try:
-            # Importar sistema GPT-2 spectral do original (como no psiqrh.py)
-            from .direct_gpt2_spectral import create_spectral_gpt2_integration
 
             self.spectral_gpt2_system = create_spectral_gpt2_integration()
 
@@ -284,7 +282,7 @@ class SpectralGPT2Component(QRHComponentInterface):
             generated_text = self.spectral_gpt2_system.spectral_gpt2_generation(
                 processed_tensor,
                 "",  # input_text será determinado pelo contexto quântico
-                max_length=50
+                max_length=1
             )
 
             if generated_text and generated_text.strip():
@@ -314,18 +312,8 @@ class SpectralGPT2Component(QRHComponentInterface):
         }
 
     def _fallback_generation(self, input_tensor: torch.Tensor) -> str:
-        """Geração fallback baseada em padrões do tensor (como no original)"""
-        # Análise simples do tensor para gerar texto básico
-        tensor_mean = torch.mean(input_tensor).item()
-        tensor_std = torch.std(input_tensor).item()
-
-        # Gerar texto baseado em características do tensor
-        if tensor_std > 0.5:
-            return "complex quantum state analysis"
-        elif tensor_mean > 0:
-            return "positive quantum coherence detected"
-        else:
-            return "quantum state processing complete"
+        """ZERO FALLBACK POLICY: Sistema deve falhar claramente"""
+        raise RuntimeError("Unified pipeline generation failed - ZERO FALLBACK POLICY: No alternative generation methods allowed")
 
 
 class UnifiedQRHPipeline:
@@ -357,28 +345,26 @@ class UnifiedQRHPipeline:
         self._register_components()
 
     def _register_components(self):
-        """Registro centralizado de todos os componentes"""
+        """Registro centralizado de todos os componentes (sem softmax/transformers)"""
         self.components = {
             'fractal_analyzer': FractalAnalyzerComponent(),
             'quaternion_mapper': QuaternionMapperComponent(),
             'spectral_processor': SpectralProcessorComponent(),
             'quantum_memory': QuantumMemoryComponent(),
-            'consciousness': ConsciousnessComponent(),
-            'gpt2_generator': SpectralGPT2Component()
+            'consciousness': ConsciousnessComponent()
         }
 
     def initialize_pipeline(self):
         """Inicialização sequencial com dependências"""
         print("🚀 Inicializando Pipeline ΨQRH Unificado...")
 
-        # Ordem de inicialização baseada em dependências
+        # Ordem de inicialização baseada em dependências (sem transformers)
         init_order = [
             'fractal_analyzer',    # Precisa de dados de entrada
             'quaternion_mapper',   # Depende do fractal analyzer
             'spectral_processor',  # Depende do quaternion mapper
             'quantum_memory',      # Independente
             'consciousness',       # Independente
-            'gpt2_generator',      # Último (gera saída)
         ]
 
         for comp_name in init_order:
@@ -410,14 +396,13 @@ class UnifiedQRHPipeline:
 
         print(f"📊 Tensor inicial: {current_tensor.shape}")
 
-        # 2. Executar pipeline sequencial
+        # 2. Executar pipeline sequencial (sem transformers)
         processing_chain = [
             'fractal_analyzer',
             'quaternion_mapper',
             'spectral_processor',
             'quantum_memory',
-            'consciousness',
-            'gpt2_generator'
+            'consciousness'
         ]
 
         for comp_name in processing_chain:

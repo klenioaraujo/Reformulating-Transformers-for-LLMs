@@ -502,6 +502,9 @@ class AdvancedMathematicalTests:
             # Número dinâmico de bins
             num_bins = min(256, max(16, len(data) // 10))
 
+            # Ensure data is real to avoid ComplexWarning
+            if np.iscomplexobj(data):
+                data = np.abs(data)
             hist, _ = np.histogram(data, bins=num_bins, density=True)
             prob = hist[hist > 0]
 

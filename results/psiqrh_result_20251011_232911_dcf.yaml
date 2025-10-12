@@ -1,0 +1,324 @@
+dcf_analysis:
+  analysis_report: 'O sistema interpretou a predição através da estrutura semântica
+    do vocabulário. Foram identificados 2 clusters conceituais durante a dinâmica
+    Kuramoto. O cluster dominante emergiu com 2 membros e parâmetro de ordem r=1.000,
+    indicando forte coerência semântica interna. Estado MEDITATIVO (FCI=0.500): Equilíbrio
+    entre exploração semântica e foco conceitual, resultando em seleção baseada em
+    harmonia entre probabilidade inicial e afinidade semântica. Análise baseada em
+    dinâmica quântica fractal: estado final Ψ emergiu da sincronização de osciladores
+    Kuramoto, representando consenso semântico através de conectividade quântica.'
+  cluster_analysis: &id002
+    clustering_method: phase_proximity
+    clusters:
+    - &id001
+      cluster_id: 0
+      leader_logit: 0.9417849183082581
+      leader_token: 3
+      mean_energy: 15.999717712402344
+      member_indices:
+      - 0
+      - 1
+      member_tokens:
+      - 3
+      - 0
+      order_parameter: 1.0
+      phase_coherence: 1.0
+      size: 2
+    - cluster_id: 1
+      leader_logit: -2.513922691345215
+      leader_token: 1
+      mean_energy: 15.999605178833008
+      member_indices:
+      - 2
+      - 3
+      member_tokens:
+      - 1
+      - 2
+      order_parameter: 1.0
+      phase_coherence: 1.0
+      size: 2
+    dominant_cluster: *id001
+    phase_distribution:
+    - 3.1415927410125732
+    - 3.1415927410125732
+    - 0.0
+    - 0.0
+    phase_threshold: 0.7853981633974483
+    total_clusters: 2
+  consciousness_state: MEDITATION
+  dcf_metadata:
+    coupling_strength: 0.5
+    diffusion_coefficient: 9.105586051940918
+    final_token_selection:
+      cluster_id: 0
+      cluster_order_parameter: 1.0
+      cluster_scores:
+      - 0.9811026453971863
+      - 0.3188888132572174
+      cluster_size: 2
+      cluster_weights:
+        w_amplitude: 0.3
+        w_centrality: 0.3
+        w_logit: 0.4
+      dominant_cluster_info: *id001
+      probability: 0.9811026453971863
+      selection_method: cluster_based
+      token: 3
+      token_id: 3
+    kuramoto_steps: 100
+    method: DCF Semantic (Dinâmica de Consciência Fractal com Conectividade Semântica)
+    n_candidates: 4
+  fci_value: 0.5
+  final_probability: 0.9811026453971863
+  final_quantum_state: !!python/object/apply:torch._utils._rebuild_tensor_v2
+  - !!python/object/apply:torch.storage._load_from_bytes
+    - !!binary |
+      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
+      Tz8aY1y/
+  - 0
+  - !!python/tuple
+    - 4
+    - 1
+    - 256
+  - !!python/tuple
+    - 256
+    - 256
+    - 1
+  - true
+  - !!python/object/apply:collections.OrderedDict
+    - []
+  processing_time: 0.3241846561431885
+  selected_token: 3
+  semantic_analysis:
+    cluster_analysis: *id002
+    connectivity_matrix_shape: !!python/object/apply:torch.Size
+    - !!python/tuple
+      - 4
+      - 4
+    natural_frequencies:
+    - 1.404965877532959
+    - 0.5448523163795471
+    - 0.5285652279853821
+    - 0.5216165781021118
+    semantic_reasoning: true
+  synchronization_order: 0.5
+spectral_analysis:
+  evolution_steps: 3
+  f1_f2_ratio: 0.3660398488430229
+  f1_frequency: 747.0227079703724
+  f2_frequency: 2040.8234522322048
+  f3_frequency: 3244.3235972948696
+  formant_spacing: 1293.8007442618323
+  fundamental_freq: 0.7918891924814827
+  harmonic_ratios: []
+  leech_lattice_embedding: true
+  magnitude:
+  - 3.5103180408477783
+  - 3.2725472450256348
+  - 2.546330451965332
+  - 2.544053554534912
+  - 1.4239646196365356
+  - 1.2932274341583252
+  - 0.9197465181350708
+  - 0.4247450530529022
+  - 0.43006712198257446
+  - 0.6310404539108276
+  - 0.694033682346344
+  - 0.5417231917381287
+  - 0.44132891297340393
+  - 0.4251701235771179
+  - 0.5583909153938293
+  - 0.6348642110824585
+  - 0.42921215295791626
+  - 0.7036980390548706
+  - 0.6251187324523926
+  - 0.5968641042709351
+  - 0.6563119888305664
+  - 0.9027209281921387
+  - 0.8232505321502686
+  - 0.8751968741416931
+  - 0.5992778539657593
+  - 0.5419801473617554
+  - 0.48475146293640137
+  - 0.7105974555015564
+  - 0.7503378987312317
+  - 0.4728172719478607
+  - 0.5216668844223022
+  - 0.6546428203582764
+  - 0.5219394564628601
+  - 0.5189854502677917
+  - 0.6574033498764038
+  - 0.3862014412879944
+  - 0.39588308334350586
+  - 0.7185958027839661
+  - 0.7567436099052429
+  - 0.5141883492469788
+  - 0.5650668144226074
+  - 0.6286317110061646
+  - 0.8799374103546143
+  - 0.7256908416748047
+  - 0.9028735160827637
+  - 0.688856303691864
+  - 0.6004918217658997
+  - 0.7281986474990845
+  - 0.6402882933616638
+  - 0.4362443685531616
+  - 0.6140445470809937
+  - 0.5566783547401428
+  - 0.3574710488319397
+  - 0.41738274693489075
+  - 0.5525380969047546
+  - 0.7061218619346619
+  - 0.6180155277252197
+  - 0.46969476342201233
+  - 0.5052180886268616
+  - 0.8034313917160034
+  - 1.4515336751937866
+  - 1.602147102355957
+  - 1.7302289009094238
+  phase:
+  - -2.3543496131896973
+  - -2.3478317260742188
+  - -0.6439711451530457
+  - 0.7837812304496765
+  - -0.4071814715862274
+  - -0.8171941041946411
+  - -2.3584508895874023
+  - -0.7461459636688232
+  - -2.3700568675994873
+  - -2.3549716472625732
+  - -2.3506627082824707
+  - -2.3427162170410156
+  - -2.3449811935424805
+  - -0.8412677049636841
+  - -2.3611505031585693
+  - -2.3592472076416016
+  - -0.784365713596344
+  - -2.3528287410736084
+  - -2.2860450744628906
+  - 0.7968468070030212
+  - -0.7554444074630737
+  - -2.3699734210968018
+  - -2.3751091957092285
+  - -2.3809289932250977
+  - -0.789456844329834
+  - 0.7795941829681396
+  - -0.759483277797699
+  - -2.3233704566955566
+  - -2.363553524017334
+  - -2.3734772205352783
+  - -0.8108726739883423
+  - -0.7896037697792053
+  - -2.3390963077545166
+  - -2.417128562927246
+  - -0.7885177135467529
+  - 1.1287248134613037
+  - -0.7648569345474243
+  - -2.362318515777588
+  - -2.3595874309539795
+  - -2.348531484603882
+  - -0.777887225151062
+  - -2.3555169105529785
+  - -2.3558645248413086
+  - -0.8812365531921387
+  - -2.337270736694336
+  - -2.3615589141845703
+  - -0.7781751751899719
+  - -2.358340263366699
+  - -2.400012254714966
+  - 0.7879034280776978
+  - -2.352236270904541
+  - -2.3556699752807617
+  - -0.2052009105682373
+  - -2.4074056148529053
+  - -2.3444881439208984
+  - -2.3561482429504395
+  - -2.366551160812378
+  - -2.3554491996765137
+  - -0.7792569398880005
+  - -2.4733364582061768
+  - -2.3525876998901367
+  - -0.6456457376480103
+  - -0.7942897081375122
+  phase_coherence: 0.1288640797138214
+  prime_resonant_filtering: true
+  spectral_centroid: 0.42139142751693726
+  spectral_spread: 0.3367299437522888
+  spectral_tilt: -5.484603047370911
+  spectrum_stability: 0.0
+  unitarity_error: 0.0

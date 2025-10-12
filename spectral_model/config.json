@@ -1,0 +1,41 @@
+{
+  "model_name": "gpt2",
+  "conversion_method": "\u03a8QRH_pure_physics",
+  "timestamp": "151408",
+  "original_spec": {
+    "type": "causal_lm",
+    "vocab_size": 50257,
+    "n_layers": 12,
+    "n_heads": 12,
+    "d_model": 768,
+    "d_ff": 3072,
+    "total_params": 117000000,
+    "architecture": "transformer_decoder"
+  },
+  "spectral_analysis": {
+    "fractal_dimension": 1.7000000000000002,
+    "spectral_centroid": 0.56,
+    "spectral_spread": 0.23750000000000002,
+    "beta_coefficient": -0.40000000000000036,
+    "complexity_measure": 8.068185861746162,
+    "architecture_score": 0.110592
+  },
+  "psiqrh_parameters": {
+    "alpha": 1.56,
+    "beta": 0.8500000000000001,
+    "I0": 1.0,
+    "omega": 1.0,
+    "k": 2.0,
+    "lambda_coupling": 0.8,
+    "alpha_0": 1.0
+  },
+  "framework": "\u03a8QRH",
+  "version": "1.0.0",
+  "physics_principles": [
+    "Padilha Wave Equation: f(\u03bb,t) = I\u2080 sin(\u03c9t + \u03b1\u03bb) e^(i(\u03c9t - k\u03bb + \u03b2\u03bb\u00b2))",
+    "Fractal Dimension Mapping: \u03b1(D) = \u03b1\u2080(1 + \u03bb(D - D_euclidean)/D_euclidean)",
+    "Hamilton Product: \u03a8' = q_left \u2297 \u03a8 \u2297 q_right\u2020",
+    "Spectral Filtering: F(k) = exp(i \u03b1 \u00b7 arctan(ln(|k| + \u03b5)))"
+  ],
+  "note": "Converted using pure \u03a8QRH physics - NO transformers dependency"
+}

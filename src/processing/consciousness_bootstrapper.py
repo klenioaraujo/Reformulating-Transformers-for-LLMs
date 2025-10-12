@@ -185,6 +185,8 @@ class ConsciousnessBootstrapper:
                 spectral_energy=spectral_energy,
                 quaternion_phase=quaternion_phase
             )
+            # Extract FCI from results dictionary
+            current_fci = new_consciousness_results.get('fci', new_consciousness_results.get('FCI', 0.0))
 
             # Use lowercase 'fci' key for consistency across the system
             current_fci = new_consciousness_results.get('fci', new_consciousness_results.get('FCI', 0.0))

@@ -180,10 +180,11 @@ class QuantumTemperatureCalculator:
         # Logits (energia livre)
         logits = torch.log(resonance_thermal + 1e-10)
 
-        # Distribuição de Boltzmann
-        # TODO: Consider physical temperature-based decoding instead of softmax in future evolution
-        # P ∝ exp(-E / k_B·T) → softmax(logits / T)
-        probs = torch.softmax(logits / (T_q + 1e-8), dim=-1)
+        # Distribuição de Boltzmann - PHYSICAL ALTERNATIVE TO SOFTMAX
+        # P ∝ exp(-E / k_B·T) → normalized exponential (physical)
+        # Remove softmax dependency - use direct exponential normalization
+        unnormalized_probs = torch.exp(-logits / (T_q + 1e-8))
+        probs = unnormalized_probs / unnormalized_probs.sum(dim=-1, keepdim=True)
 
         # Sampling multinomial (with replacement se num_samples > vocab_size)
         tokens = torch.multinomial(probs, num_samples=num_samples, replacement=True)
@@ -218,10 +219,11 @@ class QuantumTemperatureCalculator:
         best_kl = float('inf')
 
         for T_candidate in np.linspace(0.1, 5.0, 50):
-            # Distribuição teórica com T_candidate
+            # Distribuição teórica com T_candidate - PHYSICAL ALTERNATIVE TO SOFTMAX
             logits = torch.log(resonance + 1e-10)
-            # TODO: Consider physical temperature-based decoding instead of softmax in future evolution
-            theoretical_dist = torch.softmax(logits / T_candidate, dim=-1)
+            # Remove softmax dependency - use direct exponential normalization
+            unnormalized_probs = torch.exp(-logits / T_candidate)
+            theoretical_dist = unnormalized_probs / unnormalized_probs.sum(dim=-1, keepdim=True)
 
             # KL divergence
             kl = torch.sum(empirical_dist * torch.log(

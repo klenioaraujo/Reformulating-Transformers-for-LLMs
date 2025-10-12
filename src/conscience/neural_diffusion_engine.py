@@ -25,7 +25,8 @@ class NeuralDiffusionEngine(nn.Module):
     def __init__(self, config):
         super().__init__()
         self.config = config
-        self.device = config.device
+        # CORREÇÃO: Obtenha 'device' de forma segura com um fallback
+        self.device = getattr(config, 'device', 'cpu')
 
         # Limites do coeficiente de difusão
         self.d_min = config.diffusion_coefficient_range[0]
@@ -253,7 +254,13 @@ class NeuralDiffusionEngine(nn.Module):
             # Calcular variação temporal
             variations = []
             for i in range(1, len(recent_values)):
-                variation = torch.std(recent_values[i] - recent_values[i-1])
+                diff = recent_values[i] - recent_values[i-1]
+                # Check if tensor has enough elements for std calculation
+                if diff.numel() > 1:
+                    variation = torch.std(diff)
+                else:
+                    # For single element tensors, use absolute value as variation
+                    variation = torch.abs(diff)
                 variations.append(variation.item())
 
             avg_variation = np.mean(variations)
@@ -354,7 +361,11 @@ class NeuralDiffusionEngine(nn.Module):
 
         # Estatísticas básicas
         mean_d = history_tensor.mean().item()
-        std_d = history_tensor.std().item()
+        # Safe std calculation - requires at least 2 elements
+        if len(history_tensor) > 1:
+            std_d = history_tensor.std().item()
+        else:
+            std_d = 0.0  # No variation with single element
         min_d = history_tensor.min().item()
         max_d = history_tensor.max().item()
 

@@ -83,10 +83,12 @@ def apply_psiqrh_transform(psi: torch.Tensor, alpha: float = 1.0) -> torch.Tenso
     psi_fft = fft.fft(psi, dim=2)  # [batch, seq, embed_dim, 4]
 
     # Create spectral filter F(k) = exp(i α · arctan(ln(|k| + ε)))
+    # Reduced alpha for calibration (from 1.0 to 0.25)
+    alpha_calibrated = 0.25
     k = torch.arange(embed_dim, dtype=torch.float32, device=psi.device)
     k = k + 1e-10  # Avoid log(0)
     epsilon = 1e-10
-    filter_kernel = torch.exp(1j * alpha * torch.arctan(torch.log(k + epsilon)))
+    filter_kernel = torch.exp(1j * alpha_calibrated * torch.arctan(torch.log(k + epsilon)))
 
     # Apply filter to each quaternion component - proper broadcasting
     # filter_kernel shape: [embed_dim]
@@ -98,9 +100,9 @@ def apply_psiqrh_transform(psi: torch.Tensor, alpha: float = 1.0) -> torch.Tenso
     psi_filtered = fft.ifft(psi_fft, dim=2)
 
     # Step 3: Apply quaternion rotations R_left and R_right
-    # Create unit quaternions for rotation
-    theta_left, omega_left, phi_left = 0.1, 0.05, 0.02
-    theta_right, omega_right, phi_right = 0.12, 0.06, 0.025
+    # Create unit quaternions for rotation (reduced by order of magnitude for calibration)
+    theta_left, omega_left, phi_left = 0.01, 0.005, 0.002
+    theta_right, omega_right, phi_right = 0.012, 0.006, 0.0025
 
     # Left rotation quaternion
     q_left_w = math.cos(theta_left / 2)

@@ -583,18 +583,8 @@ class HybridQuantumClassicalSystem:
         return ' '.join(selected_words)
 
     def _classical_fallback(self, context: str) -> str:
-        """Fallback clássico para estados desordenados"""
-        # Geração baseada em padrões estatísticos simples
-        words = context.split()
-        if len(words) > 2:
-            # Reordenar e adicionar palavras
-            np.random.shuffle(words)
-            words.append('system')
-            words.append('process')
-        else:
-            words = ['the', 'quantum', 'system', 'works']
-
-        return ' '.join(words)
+        """ZERO FALLBACK POLICY: Sistema deve falhar claramente"""
+        raise RuntimeError("Hybrid quantum-classical system failed - ZERO FALLBACK POLICY: No classical fallback allowed")
 
     def _simulate_quantum_features(self, text: str) -> Dict:
         """Simular características quânticas para teste"""

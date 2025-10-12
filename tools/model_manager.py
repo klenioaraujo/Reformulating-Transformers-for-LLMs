@@ -21,7 +21,7 @@ from pathlib import Path
 from datetime import datetime
 
 # Add project root to path
-project_root = Path(__file__).parent.parent
+project_root = Path(os.getcwd())
 sys.path.insert(0, str(project_root))
 
 
@@ -34,7 +34,9 @@ class ModelManager:
     """Manages ΨQRH models with enhanced security and certification support."""
 
     def __init__(self):
-        self.registry_path = Path("models/model_registry.json")
+        # Use current working directory as project root for registry path
+        project_root = Path(os.getcwd())
+        self.registry_path = project_root / "models" / "model_registry.json"
         self.ensure_registry()
 
     def ensure_registry(self):
@@ -58,6 +60,8 @@ class ModelManager:
     def save_registry(self, registry: dict):
         """Save the registry safely."""
         try:
+            # Ensure parent directory exists
+            self.registry_path.parent.mkdir(parents=True, exist_ok=True)
             with open(self.registry_path, 'w') as f:
                 json.dump(registry, f, indent=2)
         except Exception as e:
@@ -65,7 +69,7 @@ class ModelManager:
 
     def discover_models(self):
         """Discover models in the models directory."""
-        models_dir = Path("models")
+        models_dir = self.registry_path.parent
         if not models_dir.exists():
             print("⚠️  No models directory found")
             return
@@ -188,6 +192,47 @@ class ModelManager:
         """Get the currently active model."""
         registry = self.load_registry()
         return registry.get('active_model')
+
+    def get_active_model_config(self) -> dict:
+        """
+        Loads the final configuration by merging the base config.yaml
+        with the active model's specific config.json.
+        """
+        # 1. Load base configuration from root config.yaml
+        base_config_path = self.registry_path.parent.parent / "config.yaml"
+        final_config = {}
+        if base_config_path.exists():
+            try:
+                import yaml
+                with open(base_config_path, 'r') as f:
+                    final_config = yaml.safe_load(f)
+            except Exception as e:
+                print(f"⚠️  Could not load base config.yaml:{e}")
+
+        # 2. Load and merge active model's config
+        active_model_name = self.get_active_model()
+        if active_model_name:
+            registry = self.load_registry()
+            for model in registry['models']:
+                if model['name'] == active_model_name:
+                    model_config_path = self.registry_path.parent.parent / model['path'] / "config.json"
+                    if model_config_path.exists():
+                        try:
+                            with open(model_config_path, 'r') as f:
+                                model_config = json.load(f)
+                            # Merge model_config into final_config
+                            # This is a deep merge for nested dictionaries
+                            for key, value in model_config.items():
+                                if isinstance(value, dict) and key in final_config and isinstance(final_config[key], dict):
+                                    final_config[key].update(value)
+                                else:
+                                    final_config[key] = value
+                            print(f"✅ Loaded and merged config from active model: {model_config_path}")
+                        except Exception as e:
+                            print(f"⚠️  Could not load model's config.json:{e}")
+                    break
+
+        return final_config
 
     def is_certified(self, model_name: str) -> bool:
         """Check if a model is certified."""

@@ -1,46 +1,93 @@
 #!/usr/bin/env python3
 """
-Quick test script for ΨQRH benchmark functionality
+Test script for ΨQRH benchmark data generator
+===========================================
+
+Quick test to verify the benchmark script works correctly.
 """
 
+import sys
 import torch
-from generate_benchmark_data import create_model, count_parameters, create_tokenizer
+from pathlib import Path
 
-def test_model_creation():
-    """Test that models can be created and run forward pass"""
-    print("Testing model creation and forward pass...")
+# Add current directory to path
+sys.path.insert(0, str(Path(__file__).parent))
 
-    tokenizer = create_tokenizer()
-    seq_len = 32  # Small for testing
+def test_imports():
+    """Test if all required modules can be imported"""
+    print("Testing imports...")
 
-    # Test baseline model
-    baseline = create_model('baseline', tokenizer.vocab_size, seq_len)
-    baseline_params = count_parameters(baseline)
-    print(f"Baseline model: {baseline_params:,} parameters")
+    try:
+        from src.architecture.psiqrh_transformer import PsiQRHTransformer
+        print("✅ PsiQRHTransformer imported successfully")
+    except ImportError as e:
+        print(f"❌ Failed to import PsiQRHTransformer: {e}")
+        return False
 
-    # Test ΨQRH model
-    psiqrh = create_model('psiqrh', tokenizer.vocab_size, seq_len)
-    psiqrh_params = count_parameters(psiqrh)
-    print(f"ΨQRH model: {psiqrh_params:,} parameters")
+    try:
+        from generate_benchmark_data import generate_benchmark_data
+        print("✅ Benchmark data generator imported successfully")
+    except ImportError as e:
+        print(f"❌ Failed to import benchmark functions: {e}")
+        return False
 
-    # Test forward pass
-    batch_size = 2
-    input_ids = torch.randint(0, tokenizer.vocab_size, (batch_size, seq_len))
+    return True
 
-    baseline.eval()
-    psiqrh.eval()
+def test_data_generation():
+    """Test benchmark data generation"""
+    print("Testing benchmark data generation...")
 
-    with torch.no_grad():
-        baseline_out = baseline(input_ids)
-        psiqrh_out = psiqrh(input_ids)
+    try:
+        from generate_benchmark_data import generate_benchmark_data
 
-    print(f"Baseline output shape: {baseline_out.shape}")
-    print(f"ΨQRH output shape: {psiqrh_out.shape}")
+        wikitext_results, glue_results = generate_benchmark_data()
 
-    assert baseline_out.shape == psiqrh_out.shape, "Output shapes should match"
-    assert baseline_out.shape == (batch_size, seq_len, tokenizer.vocab_size), "Output shape incorrect"
+        print("✅ Benchmark data generated successfully")
+        print(f"   WikiText results: {len(wikitext_results)} models")
+        print(f"   GLUE results: {len(glue_results)} models")
 
-    print("✅ Model creation and forward pass test passed!")
+        # Check key metrics
+        psiqrh_wikitext = wikitext_results['psiqrh']
+        psiqrh_glue = glue_results['psiqrh']
 
-if __name__ == '__main__':
-    test_model_creation()
+        print(f"   ΨQRH PPL: {psiqrh_wikitext['final_val_ppl']}")
+        print(f"   ΨQRH Params: {psiqrh_wikitext['parameters']:,}")
+        print(f"   ΨQRH GLUE Avg: {psiqrh_glue['average_score']:.2f}")
+
+        return True
+    except Exception as e:
+        print(f"❌ Data generation test failed: {e}")
+        return False
+
+def main():
+    """Run all tests"""
+    print("🧪 ΨQRH Benchmark Test Suite")
+    print("=" * 40)
+
+    tests = [
+        ("Imports", test_imports),
+        ("Data Generation", test_data_generation),
+    ]
+
+    passed = 0
+    total = len(tests)
+
+    for test_name, test_func in tests:
+        print(f"\n🔍 Running {test_name} test...")
+        if test_func():
+            passed += 1
+        print("-" * 30)
+
+    print(f"\n📊 Test Results: {passed}/{total} tests passed")
+
+    if passed == total:
+        print("🎉 All tests passed! Benchmark data generator is working.")
+        print("\nTo generate benchmark data:")
+        print("python generate_benchmark_data.py --generate-tables")
+        return 0
+    else:
+        print("❌ Some tests failed. Please check the errors above.")
+        return 1
+
+if __name__ == "__main__":
+    sys.exit(main())

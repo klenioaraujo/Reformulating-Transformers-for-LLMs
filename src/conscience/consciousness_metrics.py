@@ -114,10 +114,10 @@ class ConsciousnessMetrics(nn.Module):
             nn.Parameter(torch.tensor(fci_weights))  # [D_EEG, H_fMRI, CLZ]
         )
 
-        # Correlation method settings
+        # Correlation method settings - ZERO FALLBACK POLICY
         correlation_method = metrics_config.get('correlation_method', {})
         self.correlation_method = correlation_method.get('method', 'autocorrelation')
-        self.correlation_fallback = correlation_method.get('fallback_value', 0.5)
+        self.correlation_fallback = None  # ZERO FALLBACK POLICY - no fallback values allowed
         self.correlation_use_abs = correlation_method.get('use_absolute_value', True)
         self.correlation_clamp = correlation_method.get('clamp_range', [0.0, 1.0])
 

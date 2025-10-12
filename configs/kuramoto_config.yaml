@@ -20,7 +20,7 @@ kuramoto_spectral_layer:
 
   # ===== Parâmetros do Modelo de Kuramoto =====
   oscillator_dynamics:
-    coupling_strength: 1.0           # K - força de acoplamento entre osciladores
+    coupling_strength: 3.0           # K - força de acoplamento entre osciladores
     natural_frequency_mean: 1.0      # ω - frequência natural média (Hz)
     natural_frequency_std: 0.1       # σ_ω - dispersão das frequências
     phase_coupling_mode: 'symmetric' # 'symmetric' ou 'asymmetric'
@@ -29,14 +29,14 @@ kuramoto_spectral_layer:
   reaction_diffusion:
     diffusion_coefficient: 0.1  # D - coeficiente de difusão espacial
     time_step: 0.01             # dt - passo de integração temporal
-    num_integration_steps: 10   # Número de passos de integração por forward pass
+    num_integration_steps: 20   # Número de passos de integração por forward pass
     integration_method: 'euler' # 'euler', 'rk4', ou 'adaptive'
 
   # ===== Sincronização =====
   synchronization:
     threshold: 0.9                      # Threshold para considerar sincronizado (r > threshold)
     enable_adaptive_coupling: true      # Ajustar K baseado em r
-    adaptive_coupling_rate: 0.01        # Taxa de adaptação de K
+    adaptive_coupling_rate: 0.05        # Taxa de adaptação de K
     target_synchronization: 0.85        # Alvo de sincronização para controle adaptativo
 
   # ===== Integração com ΨQRH =====

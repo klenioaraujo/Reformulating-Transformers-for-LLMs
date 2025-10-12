@@ -1,0 +1,70 @@
+{
+  "session_id": "audit_20251010_232743",
+  "timestamp": "20251010_232743",
+  "input_text": "red",
+  "parameters": {
+    "stage": "emergent_generation_start"
+  },
+  "audit_trail": [
+    {
+      "step": "input",
+      "timestamp": "20251010_232743_956839",
+      "metrics": {
+        "norm_l2": 96.61780548095703,
+        "mean": 0.31174495816230774,
+        "std": 0.615715742111206,
+        "is_stable": true,
+        "shape": [
+          1,
+          70,
+          70,
+          4
+        ],
+        "dtype": "torch.float32",
+        "is_complex": false,
+        "stage": "emergent_generation_start"
+      },
+      "tensor_snapshot": "results/audit_logs/audit_20251010_232743_input_tensor.pt"
+    },
+    {
+      "step": "transformed",
+      "timestamp": "20251010_232743_957206",
+      "metrics": {
+        "norm_l2": 0.0,
+        "mean": 0.0,
+        "std": 0.0,
+        "is_stable": true,
+        "shape": [
+          1,
+          1,
+          70
+        ],
+        "dtype": "torch.float32",
+        "is_complex": false,
+        "stage": "context_funnel_output"
+      },
+      "tensor_snapshot": "results/audit_logs/audit_20251010_232743_transformed_tensor.pt"
+    },
+    {
+      "step": "optical_probe_output",
+      "timestamp": "20251010_232744_091493",
+      "metrics": {
+        "norm_l2": 10.685029029846191,
+        "mean": 0.19008377194404602,
+        "std": 0.6414446830749512,
+        "is_stable": true,
+        "shape": [
+          1,
+          1,
+          64,
+          4
+        ],
+        "dtype": "torch.float32",
+        "is_complex": false,
+        "stage": "optical_probe_output"
+      },
+      "tensor_snapshot": "results/audit_logs/audit_20251010_232743_optical_probe_output_tensor.pt"
+    }
+  ],
+  "final_output": "avisbppqqtp"
+}

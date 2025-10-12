@@ -1,0 +1,74 @@
+{
+  "levels": [
+    {
+      "level": 1,
+      "name": "Single Character Convergence",
+      "description": "Learn to generate single characters consistently",
+      "progression_threshold": 0.1,
+      "training_pairs": [
+        {"context": "say a", "target": "a"},
+        {"context": "say b", "target": "b"},
+        {"context": "say c", "target": "c"},
+        {"context": "say d", "target": "d"},
+        {"context": "say e", "target": "e"},
+        {"context": "say f", "target": "f"},
+        {"context": "say g", "target": "g"},
+        {"context": "say h", "target": "h"},
+        {"context": "say i", "target": "i"},
+        {"context": "say j", "target": "j"}
+      ],
+      "feedback_mode": "intense_focus",
+      "perturbation_scale": 0.05,
+      "stability_requirement": 0.8
+    },
+    {
+      "level": 2,
+      "name": "Simple Word Convergence",
+      "description": "Learn to generate simple words",
+      "progression_threshold": 0.15,
+      "training_pairs": [
+        {"context": "the color is", "target": "blue"},
+        {"context": "the color is", "target": "red"},
+        {"context": "the color is", "target": "green"},
+        {"context": "the color is", "target": "yellow"},
+        {"context": "the color is", "target": "black"},
+        {"context": "the color is", "target": "white"},
+        {"context": "the sky is", "target": "blue"},
+        {"context": "grass is", "target": "green"},
+        {"context": "snow is", "target": "white"},
+        {"context": "coal is", "target": "black"}
+      ],
+      "feedback_mode": "balanced",
+      "perturbation_scale": 0.1,
+      "stability_requirement": 0.7
+    },
+    {
+      "level": 3,
+      "name": "Semantic Pairs",
+      "description": "Full semantic completion tasks",
+      "progression_threshold": 0.2,
+      "training_pairs": [
+        {"context": "The sky is", "target": "blue"},
+        {"context": "Grass is", "target": "green"},
+        {"context": "Hot and", "target": "cold"},
+        {"context": "The capital of France is", "target": "Paris"},
+        {"context": "Water is", "target": "wet"},
+        {"context": "Fire is", "target": "hot"},
+        {"context": "Ice is", "target": "cold"},
+        {"context": "The sun is", "target": "bright"},
+        {"context": "Night is", "target": "dark"},
+        {"context": "Happy and", "target": "sad"}
+      ],
+      "feedback_mode": "exploratory",
+      "perturbation_scale": 0.2,
+      "stability_requirement": 0.6
+    }
+  ],
+  "curriculum_settings": {
+    "max_epochs_per_level": 100,
+    "success_window_size": 100,
+    "knowledge_transfer_enabled": true,
+    "parameter_inheritance": ["physical_params", "architecture_params"],
+    "stability_decay": 0.95
+  }
+}

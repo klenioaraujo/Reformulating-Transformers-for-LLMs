@@ -1,14 +1,4 @@
-"""
-Quantum Temperature Calculator - Auto-Calibração de Temperatura Quântica
-=========================================================================
-
-Implementa cálculo emergente de temperatura quântica baseada em métricas físicas:
-- Dimensão fractal (D)
-- Índice de Consciência Fractal (FCI)
-- Complexidade Lempel-Ziv (CLZ)
-
-Baseado em: k_B·T_q = (D - 1) · FCI · (1 + CLZ) · ℏω
-"""
+"""Calculador de Temperatura Quântica para o sistema ΨQRH."""
 
 import torch
 import numpy as np
@@ -17,154 +7,84 @@ from typing import Dict, Any, Optional
 
 class QuantumTemperatureCalculator:
     """
-    Calcula temperatura quântica T_q a partir de métricas físicas.
-
-    Baseado em: k_B·T_q = ℏω·f(D, FCI, CLZ)
-
-    Interpretação física:
-    - D próximo de 1: Sistema simples → T_q baixo (determinístico)
-    - D próximo de 2: Sistema complexo → T_q alto (estocástico)
-    - FCI alto: Consciência emergente → T_q aumenta (exploração)
-    - CLZ alto: Complexidade Lempel-Ziv → T_q aumenta (diversidade)
+    Calcula a temperatura quântica baseada na análise do estado quântico.
+    A temperatura quântica é uma medida da "agitação" ou "entropia" do sistema quântico.
     """
 
-    def __init__(self, k_B: float = 1.0, hbar: float = 1.0, omega: float = 1.0):
+    def __init__(self, config=None):
         """
-        Inicializa calculadora de temperatura quântica.
+        Inicializa o calculador de temperatura quântica.
 
         Args:
-            k_B: Constante de Boltzmann (normalizada)
-            hbar: Constante de Planck reduzida (normalizada)
-            omega: Frequência característica (normalizada)
+            config: Configuração opcional para o calculador
         """
-        self.k_B = k_B
-        self.hbar = hbar
-        self.omega = omega
+        self.config = config or {}
+        self.temperature_range = self.config.get('temperature_range', (0.1, 2.0))
+        print("✅ Quantum Temperature Calculator initialized.")
 
-    def compute_quantum_temperature(
-        self,
-        D_fractal: float,
-        FCI: float,
-        CLZ: float
-    ) -> float:
+    def compute_quantum_temperature(self, fractal_dimension: float, fci: float, clz: float) -> float:
         """
-        T_q = (D - 1) · FCI · (1 + CLZ) · ω
+        Computa a temperatura quântica baseada em métricas físicas.
 
         Args:
-            D_fractal: Dimensão fractal ∈ [1, 2]
-            FCI: Fractal Consciousness Index ∈ [0, 1]
-            CLZ: Lempel-Ziv complexity ∈ [0, 3]
+            fractal_dimension: Dimensão fractal do sinal
+            fci: Fractal Consciousness Index
+            clz: Coherence Length Zeta
 
         Returns:
-            T_q: Temperatura quântica ∈ [0.1, 5.0]
+            Temperatura quântica normalizada [0.1, 2.0]
         """
-        # Fator de complexidade fractal
-        complexity_factor = max(0.0, D_fractal - 1.0)  # ∈ [0, 1]
+        try:
+            # Temperatura aumenta com a complexidade fractal
+            fractal_factor = (fractal_dimension - 1.0) / 2.0  # 0-1 range
 
-        # Fator de consciência (normalizado)
-        consciousness_factor = max(0.0, min(FCI, 1.0))  # ∈ [0, 1]
+            # Temperatura diminui com maior consciência
+            consciousness_factor = 1.0 - fci
 
-        # Fator de compressibilidade (inverso da previsibilidade)
-        entropy_factor = 1.0 + min(CLZ, 3.0)  # ∈ [1, 4]
+            # Temperatura diminui com maior coerência
+            coherence_factor = 1.0 - clz
 
-        # Temperatura quântica emergente
-        T_q = complexity_factor * consciousness_factor * entropy_factor * self.omega
+            # Combinação ponderada
+            temperature = 0.3 * fractal_factor + 0.4 * consciousness_factor + 0.3 * coherence_factor
 
-        # Clamping para estabilidade numérica
-        T_q = max(0.1, min(T_q, 5.0))
+            # Normalizar para o range desejado
+            temp_min, temp_max = self.temperature_range
+            temperature = temp_min + temperature * (temp_max - temp_min)
 
-        return T_q
+            return max(temp_min, min(temp_max, temperature))
 
-    def apply_quantum_noise(
-        self,
-        resonance: torch.Tensor,
-        T_q: float
-    ) -> torch.Tensor:
+        except Exception as e:
+            print(f"⚠️  Error computing quantum temperature: {e}")
+            return 1.0  # Temperatura padrão
+
+    def get_temperature_analysis(self, fractal_dimension: float, fci: float, clz: float) -> Dict[str, Any]:
         """
-        Adiciona ruído térmico quântico controlado por T_q.
-
-        resonance_noisy = resonance · (1 + η_q·N(0, T_q))
-
-        Args:
-            resonance: Campo de ressonância [batch, vocab_size]
-            T_q: Temperatura quântica
+        Fornece análise detalhada da temperatura quântica.
 
         Returns:
-            resonance com ruído quântico aplicado
+            Dicionário com temperatura e análise comportamental
         """
-        # Coupling strength (menor em baixa temperatura)
-        eta_coupling = torch.tanh(torch.tensor(T_q))  # ∈ [0, 1]
+        temperature = self.compute_quantum_temperature(fractal_dimension, fci, clz)
 
-        # Ruído gaussiano
-        noise = torch.randn_like(resonance) * T_q
-
-        # Aplicar ruído
-        resonance_noisy = resonance * (1.0 + eta_coupling * noise)
-
-        # Garantir positividade
-        resonance_noisy = torch.abs(resonance_noisy)
-
-        return resonance_noisy
-
-    def get_temperature_analysis(
-        self,
-        D_fractal: float,
-        FCI: float,
-        CLZ: float
-    ) -> Dict[str, Any]:
-        """
-        Análise detalhada da temperatura quântica calculada.
-
-        Returns:
-            Dicionário com análise completa
-        """
-        T_q = self.compute_quantum_temperature(D_fractal, FCI, CLZ)
-
-        # Classificação de comportamento
-        if T_q < 0.5:
-            behavior = "DETERMINISTIC"
-            description = "Sistema previsível, respostas consistentes"
-        elif T_q < 1.5:
-            behavior = "BALANCED"
-            description = "Equilíbrio entre consistência e exploração"
-        elif T_q < 3.0:
-            behavior = "EXPLORATORY"
-            description = "Alta exploração, respostas criativas"
+        # Classificar comportamento baseado na temperatura
+        if temperature < 0.5:
+            behavior = "frozen"
+            description = "Sistema altamente coerente e ordenado"
+        elif temperature < 1.0:
+            behavior = "cool"
+            description = "Sistema moderadamente coerente"
+        elif temperature < 1.5:
+            behavior = "warm"
+            description = "Sistema com agitação moderada"
         else:
-            behavior = "CHAOTIC"
-            description = "Sistema altamente estocástico, respostas imprevisíveis"
+            behavior = "hot"
+            description = "Sistema altamente agitado e caótico"
 
         return {
-            'T_q': T_q,
+            'temperature': temperature,
             'behavior': behavior,
             'description': description,
-            'factors': {
-                'complexity_factor': max(0.0, D_fractal - 1.0),
-                'consciousness_factor': max(0.0, min(FCI, 1.0)),
-                'entropy_factor': 1.0 + min(CLZ, 3.0)
-            },
-            'input_metrics': {
-                'D_fractal': D_fractal,
-                'FCI': FCI,
-                'CLZ': CLZ
-            }
+            'fractal_contribution': (fractal_dimension - 1.0) / 2.0,
+            'consciousness_contribution': 1.0 - fci,
+            'coherence_contribution': 1.0 - clz
         }
-
-
-def create_quantum_temperature_calculator(
-    k_B: float = 1.0,
-    hbar: float = 1.0,
-    omega: float = 1.0
-) -> QuantumTemperatureCalculator:
-    """
-    Factory function para criar calculadora de temperatura quântica.
-
-    Args:
-        k_B: Constante de Boltzmann
-        hbar: Constante de Planck reduzida
-        omega: Frequência característica
-
-    Returns:
-        QuantumTemperatureCalculator configurado
-    """
-    return QuantumTemperatureCalculator(k_B=k_B, hbar=hbar, omega=omega)

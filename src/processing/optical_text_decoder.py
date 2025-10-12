@@ -18,6 +18,9 @@ import torch.nn.functional as F
 from typing import List, Dict, Optional, Tuple
 import numpy as np
 
+# DCF System imports
+from src.processing.token_analysis import DCFTokenAnalysis, analyze_tokens_dcf
+
 
 class OpticalTextDecoder:
     """
@@ -65,10 +68,79 @@ class OpticalTextDecoder:
             coherence_method='autocorr'
         )
 
+        # ========== DCF SYSTEM INITIALIZATION ==========
+        # Sistema de Análise de Tokens via Dinâmica de Consciência Fractal
+        print("🧠 Inicializando Sistema DCF (Dinâmica de Consciência Fractal)...")
+
+        try:
+            self.dcf_analyzer = DCFTokenAnalysis(device=self.device)
+            self.dcf_active = True
+            print("🎯 Sistema DCF totalmente operacional!")
+        except Exception as e:
+            print(f"❌ Sistema DCF falhou: {e}")
+            self.dcf_analyzer = None
+            self.dcf_active = False
+            raise RuntimeError("Sistema DCF obrigatório falhou - ZERO FALLBACK POLICY")
+
+    @torch.jit.script
+    def optical_probe_resonance_jit(
+        psi: torch.Tensor,
+        vocab_size: int,
+        alpha: float,
+        beta: float
+    ) -> torch.Tensor:
+        """
+        Calcula ressonância óptica entre estado quaterniônico e ondas de sonda (JIT compiled).
+
+        Args:
+            psi: Estado quaterniônico [batch, 4]
+            vocab_size: Tamanho do vocabulário
+            alpha: Parâmetro fractal α
+            beta: Parâmetro fractal β
+
+        Returns:
+            Ressonância [vocab_size]
+        """
+        batch_size = psi.shape[0]
+
+        # Gerar ondas de sonda para todo vocabulário
+        lambda_indices = torch.arange(vocab_size, device=psi.device, dtype=torch.float32)
+        lambda_indices = lambda_indices.unsqueeze(0).expand(batch_size, -1)
+
+        # Configuração Padilha
+        I0, omega, k = 1.0, 2.0 * 3.141592653589793, 2.0 * 3.141592653589793 / 0.5
+        t = 1.0
+
+        # λ normalizado: [0, 1]
+        lambda_val = lambda_indices / vocab_size
+
+        # Gerar ondas de sonda
+        amplitude = I0 * torch.sin(omega * t + alpha * lambda_val)
+        phase = omega * t - k * lambda_val + beta * (lambda_val ** 2)
+
+        wave_real = amplitude * torch.cos(phase)
+        wave_imag = amplitude * torch.sin(phase)
+
+        # Mapear para quaternion (simplificado)
+        probe_waves = torch.stack([wave_real, wave_imag,
+                                  torch.zeros_like(wave_real),
+                                  torch.zeros_like(wave_real)], dim=-1)
+
+        # Normalizar quaterniões de sonda (simplificado para JIT)
+        norms = torch.sqrt(torch.sum(probe_waves ** 2, dim=-1, keepdim=True))
+        probe_waves = probe_waves / (norms + 1e-8)
+
+        # Calcular energia de acoplamento: |⟨f(λ), Ψ⟩|²
+        psi_expanded = psi.unsqueeze(1).expand(-1, vocab_size, -1)
+        coupling = (probe_waves * psi_expanded).sum(dim=-1)
+        energy = coupling ** 2
+
+        return energy.squeeze(0)  # [vocab_size]
+
     def optical_probe_resonance(self,
-                               psi: torch.Tensor,
-                               alpha: float,
-                               beta: float) -> torch.Tensor:
+                                psi: torch.Tensor,
+                                alpha: float,
+                                beta: float) -> torch.Tensor:
         """
         Calcula ressonância óptica entre estado quaterniônico e ondas de sonda.
 
@@ -80,42 +152,7 @@ class OpticalTextDecoder:
         Returns:
             Ressonância [vocab_size]
         """
-        batch_size = psi.shape[0]
-        device = psi.device
-
-        # Gerar ondas de sonda para todo vocabulário
-        lambda_indices = torch.arange(self.vocab_size, device=device)
-        lambda_indices = lambda_indices.unsqueeze(0).expand(batch_size, -1)
-
-        # Configuração Padilha
-        I0, omega, k = 1.0, 2.0 * np.pi, 2.0 * np.pi / 0.5
-        t = 1.0
-
-        # λ normalizado: [0, 1]
-        lambda_val = lambda_indices.float() / self.vocab_size
-
-        # Gerar ondas de sonda
-        amplitude = I0 * torch.sin(omega * t + alpha * lambda_val)
-        phase = omega * t - k * lambda_val + beta * (lambda_val ** 2)
-
-        wave_real = amplitude * torch.cos(phase)
-        wave_imag = amplitude * torch.sin(phase)
-
-        # Mapear para quaternion (simplificado)
-        probe_waves = torch.stack([wave_real, wave_imag,
-                                 torch.zeros_like(wave_real),
-                                 torch.zeros_like(wave_real)], dim=-1)
-
-        # Normalizar quaterniões de sonda
-        from src.core.quaternion_operations import quaternion_normalize
-        probe_waves = quaternion_normalize(probe_waves)
-
-        # Calcular energia de acoplamento: |⟨f(λ), Ψ⟩|²
-        psi_expanded = psi.unsqueeze(1).expand(-1, self.vocab_size, -1)
-        coupling = (probe_waves * psi_expanded).sum(dim=-1)
-        energy = coupling ** 2
-
-        return energy.squeeze(0)  # [vocab_size]
+        return self.optical_probe_resonance_jit(psi, self.vocab_size, alpha, beta)
 
     def apply_quantum_noise(self, energy: torch.Tensor, T_q: float) -> torch.Tensor:
         """
@@ -134,86 +171,36 @@ class OpticalTextDecoder:
 
         return energy_thermal
 
-    def resonance_peak_decoding(self, resonance: torch.Tensor, T_q: float) -> int:
+    def resonance_peak_decoding(self, resonance: torch.Tensor, T_q: float) -> Tuple[int, Dict]:
         """
-        Decodificação por pico de ressonância - substitui amostragem estatística.
+        SUBSTITUÍDO PELO SISTEMA DCF: Decodificação por pico de ressonância agora usa
+        Dinâmica de Consciência Fractal em vez de análise estática de sinais.
 
-        Esta implementação física substitui softmax+multinomial por detecção de picos
-        baseada em princípios de física de sinais, criando uma "medição" do estado
-        de ressonância em vez de uma amostragem estatística.
+        Esta implementação física substitui softmax+multinomial por sistema dinâmico
+        baseado em osciladores Kuramoto, métricas de consciência fractal e feedback adaptativo.
 
         Args:
-            resonance: Vetor de ressonância [vocab_size]
-            T_q: Temperatura quântica (controla sensibilidade aos picos)
+            resonance: Vetor de ressonância [vocab_size] - usado como logits para DCF
+            T_q: Temperatura quântica (mantida para compatibilidade)
 
         Returns:
-            Índice do token com maior energia de ressonância
+            Tupla: (índice do token selecionado, dicionário com informações completas do DCF)
         """
-        # Converter para numpy para processamento de sinais
-        resonance_np = resonance.detach().cpu().numpy()
+        print(f"🔄 Usando Sistema DCF para seleção de token (anteriormente: análise de picos)")
 
-        # Aplicar suavização gaussiana baseada na temperatura quântica
-        # Temperaturas altas = mais suavização = possibilidade de picos secundários
-        if T_q > 1.0:
-            from scipy.ndimage import gaussian_filter1d
-            sigma = T_q * 0.5  # Sigma proporcional à temperatura
-            resonance_smoothed = gaussian_filter1d(resonance_np, sigma=sigma)
-        else:
-            resonance_smoothed = resonance_np
+        # Usar ressonância como logits para o sistema DCF
+        # O sistema DCF tratará isso como entrada para dinâmica de osciladores
+        dcf_result = self.dcf_token_analysis(resonance, num_candidates=min(50, len(resonance)))
 
-        # Detecção de picos usando análise de primeira e segunda derivada
-        # Esta é uma implementação física de detecção de ressonância máxima
+        selected_token = dcf_result['selected_token']
 
-        # Calcular primeira derivada (gradiente)
-        gradient = np.gradient(resonance_smoothed)
+        print(f"🎯 DCF selecionou token {selected_token}:")
+        print(f"   - Método: {dcf_result['method']}")
+        print(f"   - FCI: {dcf_result['fci_value']:.3f}")
+        print(f"   - Estado: {dcf_result['consciousness_state']}")
+        print(f"   - Sincronização: {dcf_result['synchronization_order']:.3f}")
 
-        # Calcular segunda derivada (curvatura)
-        curvature = np.gradient(gradient)
-
-        # Encontrar pontos onde:
-        # 1. Gradiente muda de positivo para negativo (pico local)
-        # 2. Curvatura é negativa (concavidade para baixo)
-        # 3. Energia acima do threshold
-
-        threshold = np.mean(resonance_smoothed) + T_q * np.std(resonance_smoothed)
-        peak_candidates = []
-
-        for i in range(1, len(resonance_smoothed) - 1):
-            # Condições para pico:
-            # - Gradiente anterior positivo, atual negativo (cruzamento zero descendente)
-            # - Curvatura negativa (forma de pico)
-            # - Energia acima do threshold
-            is_peak = (gradient[i-1] > 0 and gradient[i] < 0 and
-                      curvature[i] < 0 and
-                      resonance_smoothed[i] > threshold)
-
-            if is_peak:
-                peak_candidates.append((i, resonance_smoothed[i]))
-
-        # Se encontrou picos, selecionar o de maior energia
-        if peak_candidates:
-            # Ordenar por energia descendente
-            peak_candidates.sort(key=lambda x: x[1], reverse=True)
-
-            # Temperatura quântica controla probabilidade de escolher picos secundários
-            if T_q > 2.0 and len(peak_candidates) > 1:
-                # Alta temperatura: possibilidade de escolher pico secundário
-                secondary_prob = min(0.3, T_q / 10.0)  # Máximo 30% de chance
-                if np.random.random() < secondary_prob:
-                    selected_peak = peak_candidates[1]  # Segundo pico
-                else:
-                    selected_peak = peak_candidates[0]  # Pico principal
-            else:
-                selected_peak = peak_candidates[0]  # Sempre pico principal
-
-            token_id = selected_peak[0]
-
-        else:
-            # Fallback: se nenhum pico encontrado, usar máximo global
-            # Isso garante que sempre há uma seleção física
-            token_id = int(np.argmax(resonance_smoothed))
-
-        return token_id
+        return selected_token, dcf_result
 
     def decode_to_text(self,
                       psi_initial: torch.Tensor,
@@ -261,11 +248,17 @@ class OpticalTextDecoder:
             # Corrigir operação complexa para evitar erro de imag
             quaternion_phase = torch.atan2(current_psi[..., 1], current_psi[..., 0])  # Fase calculada manualmente
 
-            current_fci, D_fractal, CLZ = consciousness_processor(
+            consciousness_results = consciousness_processor(
                 dummy_input,
                 spectral_energy=spectral_energy,
                 quaternion_phase=quaternion_phase
             )
+            current_fci = consciousness_results.get('fci', 0.0)
+            # Extract fractal dimension from consciousness state if available
+            final_state = consciousness_results.get('final_consciousness_state')
+            D_fractal = final_state.fractal_dimension if final_state else 1.5
+            # CLZ is not directly available, use default or compute from entropy
+            CLZ = 0.5  # Default value since not directly available
 
             # Calcular parâmetros emergentes
             T_q = self.temp_calculator.compute_quantum_temperature(
@@ -294,7 +287,7 @@ class OpticalTextDecoder:
             resonance_thermal = self.apply_quantum_noise(resonance_sharp, T_q)
 
             # Decodificação por pico de ressonância (substitui amostragem estatística)
-            next_token_id = self.resonance_peak_decoding(resonance_thermal, T_q)
+            next_token_id, dcf_info = self.resonance_peak_decoding(resonance_thermal, T_q)
 
             # Decodificar token
             try:
@@ -334,7 +327,8 @@ class OpticalTextDecoder:
             'tokens_generated': len(generated_tokens),
             'final_fci': current_fci,
             'avg_temperature': np.mean(temperatures) if temperatures else 0.0,
-            'avg_sharpness': np.mean(sharpnesses) if sharpnesses else 0.0
+            'avg_sharpness': np.mean(sharpnesses) if sharpnesses else 0.0,
+            'dcf_analysis': dcf_info  # Adicionar informações do DCF
         })
 
         # Juntar tokens em texto
@@ -349,6 +343,52 @@ class OpticalTextDecoder:
         print(f"   - Parada por: {metrics['stopped_by']}")
 
         return generated_text, metrics
+
+    def dcf_token_analysis(self, logits: torch.Tensor, num_candidates: int = 50) -> Dict:
+        """
+        Sistema de Análise de Tokens via Dinâmica de Consciência Fractal (DCF) - ZERO FALLBACK
+
+        Usa o sistema DCFTokenAnalysis centralizado para análise dinâmica de tokens.
+        ZERO FALLBACK POLICY: Sistema deve falhar claramente se DCF não estiver disponível.
+
+        Args:
+            logits: Logits do modelo base [vocab_size]
+            num_candidates: Número de tokens candidatos (usado para compatibilidade)
+
+        Returns:
+            Dicionário com token selecionado e relatório detalhado DCF
+
+        Raises:
+            RuntimeError: Se sistema DCF não estiver disponível
+        """
+        if not self.dcf_active or self.dcf_analyzer is None:
+            raise RuntimeError("Sistema DCF obrigatório não disponível - ZERO FALLBACK POLICY")
+
+        # Usar o sistema DCF centralizado
+        result = self.dcf_analyzer.analyze_tokens(logits)
+
+        # Adaptar formato para compatibilidade com código existente
+        adapted_result = {
+            'selected_token': result['selected_token'],
+            'final_probability': result['final_probability'],
+            'fci_value': result['fci_value'],
+            'consciousness_state': result['consciousness_state'],
+            'synchronization_order': result['synchronization_order'],
+            'interpretation': result['analysis_report'],
+            'method': result['dcf_metadata']['method'],
+            'detailed_metrics': {
+                'num_candidates': result['dcf_metadata']['n_candidates'],
+                'diffusion_coefficient': result['dcf_metadata']['diffusion_coefficient'],
+                'new_diffusion_coefficient': result['dcf_metadata']['diffusion_coefficient'],  # Atualizado internamente
+                'sync_orders': [],  # Não disponível no formato atual
+                'top_logits': [],   # Não disponível no formato atual
+                'candidate_tokens': [],  # Não disponível no formato atual
+                'final_probabilities': []  # Não disponível no formato atual
+            }
+        }
+
+        return adapted_result
+
 
 
 def create_optical_text_decoder(

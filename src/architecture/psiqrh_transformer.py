@@ -373,8 +373,10 @@ class PsiQRHAttention(nn.Module):
         scores = torch.einsum('bqhd,bkhd->bhqk', Q_prime, R_prime.conj())  # [batch_size, n_heads, seq_len, seq_len]
         scores = torch.real(scores)  # Tomar parte real
 
-        # Aplicar softmax sobre a dimensão target (última dimensão)
-        attention_weights = torch.softmax(scores / (self.head_dim ** 0.5), dim=-1)  # [batch_size, n_heads, seq_len, seq_len]
+        # Remover softmax - usar normalização física ou identidade
+        # attention_weights = torch.softmax(scores / (self.head_dim ** 0.5), dim=-1)  # REMOVIDO
+        # Usar normalização L2 ou identidade para manter funcionamento básico
+        attention_weights = torch.nn.functional.normalize(scores, p=2, dim=-1)  # Normalização L2
 
         # Aplicar atenção: attention_weights @ H
         attention_output = torch.einsum('bhqk,bkhd->bqhd', attention_weights, H)  # [batch_size, seq_len, n_heads, head_dim]

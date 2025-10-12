@@ -269,15 +269,8 @@ class EfficientQuantumDecoder:
         return text, True
 
     def _generate_quantum_fallback(self, quantum_state: torch.Tensor) -> str:
-        """
-        Gera fallback baseado em propriedades quânticas reais.
-        """
-        # Extrair métricas físicas do estado quântico
-        energy = torch.mean(torch.abs(quantum_state) ** 2).item()
-        coherence = self._calculate_quantum_coherence(quantum_state)
-
-        # Gerar resposta baseada nas propriedades físicas
-        return f"Quantum analysis shows energy level {energy:.1f} with coherence {coherence:.3f}"
+        """ZERO FALLBACK POLICY: Sistema deve falhar claramente"""
+        raise RuntimeError("Efficient quantum decoder failed - ZERO FALLBACK POLICY: No quantum fallback allowed")
 
     def _calculate_quantum_coherence(self, psi: torch.Tensor) -> float:
         """

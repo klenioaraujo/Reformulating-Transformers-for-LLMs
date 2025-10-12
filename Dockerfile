@@ -1,4 +1,4 @@
-FROM pytorch/pytorch:2.3-cuda12.1-cudnn8-runtime
+FROM pytorch/pytorch:2.1.2-cuda11.8-cudnn8-runtime
 
 # Set working directory
 WORKDIR /app
@@ -17,5 +17,5 @@ RUN useradd --create-home --shell /bin/bash app \
     && chown -R app:app /app
 USER app
 
-# Default command runs the benchmark
-CMD ["python", "benchmark.py", "--model_type", "psiqrh", "--dataset", "wikitext-103", "--seq_len", "512", "--batch_size", "4", "--epochs", "3"]
+# Default command runs the psiqrh script
+CMD ["python", "psiqrh.py", "what color is the sky"]

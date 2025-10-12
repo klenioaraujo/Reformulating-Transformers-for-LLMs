@@ -1,11 +1,4 @@
-"""
-Adaptive Spectral Parameters - Auto-Calibração de α e β
-======================================================
-
-Implementa cálculo emergente de parâmetros espectrais α e β a partir da análise espectral do sinal.
-
-SEM valores fixos - tudo emerge da física do sinal via RANSAC robusto.
-"""
+"""Parâmetros Espectrais Adaptativos para o sistema ΨQRH."""
 
 import torch
 import numpy as np
@@ -14,205 +7,178 @@ from typing import Dict, Any, Optional, Tuple
 
 class AdaptiveSpectralParameters:
     """
-    Calcula α e β a partir do espectro do sinal, SEM valores padrão.
-
-    Pipeline:
-    1. Análise espectral do sinal
-    2. Lei de potência: P(k) ~ k^(-β)
-    3. Dimensão fractal: D = (3 - β) / 2
-    4. Alpha adaptativo: α(D) = α₀(1 + λ·ΔD/D_e)
-    5. Beta chirp: β_chirp = D/2 · (1 + 0.2·FCI)
+    Gerencia parâmetros espectrais adaptativos baseados no estado do sistema quântico.
+    Ajusta dinamicamente α (filtragem espectral) e β (não-linearidade) com base em
+    temperatura quântica, coerência óptica e dimensão fractal.
     """
 
-    def __init__(self, alpha_base: float = 1.0, lambda_coupling: float = 0.8, D_euclidean: float = 1.0):
+    def __init__(self, config=None):
         """
-        Inicializa calculador de parâmetros espectrais adaptativos.
+        Inicializa os parâmetros espectrais adaptativos.
 
         Args:
-            alpha_base: Alpha base (α₀)
-            lambda_coupling: Fator de acoplamento λ
-            D_euclidean: Dimensão euclidiana de referência
+            config: Configuração opcional para os parâmetros
         """
-        self.alpha_base = alpha_base
-        self.lambda_coupling = lambda_coupling
-        self.D_euclidean = D_euclidean
+        self.config = config or {}
 
-    def compute_alpha_beta_from_spectrum(
-        self,
-        signal: torch.Tensor,  # [batch, seq_len, dim]
-        consciousness_results: Optional[Dict] = None
-    ) -> Tuple[float, float]:
-        """
-        α e β derivados UNICAMENTE da física do sinal.
+        # Ranges padrão para os parâmetros
+        self.alpha_range = self.config.get('alpha_range', (0.1, 3.0))
+        self.beta_range = self.config.get('beta_range', (0.1, 2.0))
 
-        Args:
-            signal: Sinal de entrada
-            consciousness_results: Resultados de consciência (opcional)
-
-        Returns:
-            (alpha, beta_chirp): Parâmetros espectrais adaptativos
-        """
-        # 1. Análise espectral
-        spectrum = torch.fft.fft(signal, dim=-1, norm='ortho')
-        power_spectrum = torch.abs(spectrum) ** 2
-
-        # 2. Lei de potência: P(k) ~ k^(-β)
-        beta, r_squared = self._robust_power_law_fit(power_spectrum)
-
-        # 3. Dimensão fractal
-        D = (3.0 - beta) / 2.0
-        D = torch.clamp(torch.tensor(D), 1.0, 2.0).item()
-
-        # 4. Alpha acoplado a D
-        alpha = self.alpha_base * (1.0 + self.lambda_coupling * (D - self.D_euclidean) / self.D_euclidean)
-
-        # 5. Beta (chirp) acoplado a D e consciência
-        beta_chirp = D / 2.0  # ∈ [0.5, 1.0]
-
-        # 6. Ajuste fino com consciência (se disponível)
-        if consciousness_results:
-            FCI = consciousness_results.get('FCI', consciousness_results.get('fci', 0))
-            if FCI > 0:
-                # FCI alto → α aumenta (filtro mais seletivo)
-                alpha = alpha * (1.0 + 0.3 * FCI)
-                # FCI alto → β aumenta (maior dispersão)
-                beta_chirp = beta_chirp * (1.0 + 0.2 * FCI)
-
-        return alpha, beta_chirp
-
-    def _robust_power_law_fit(
-        self,
-        power_spectrum: torch.Tensor,
-        ransac_iterations: int = 50
-    ) -> Tuple[float, float]:
-        """
-        Regressão robusta para estimar β mesmo com outliers.
-
-        Usa RANSAC-like approach para lei de potência P(k) ~ k^(-β)
-
-        Args:
-            power_spectrum: Espectro de potência [batch, seq_len, freq_bins]
-            ransac_iterations: Número de iterações RANSAC
-
-        Returns:
-            (beta, r_squared): Exponente da lei de potência e qualidade do fit
-        """
-        # Média sobre batch e seq_len
-        power_avg = power_spectrum.mean(dim=(0, 1))  # [freq_bins]
-
-        # Converter para numpy para manipulação
-        power_np = power_avg.detach().cpu().numpy()
-        freq_bins = len(power_np)
-
-        # k = frequência (1, 2, 3, ..., freq_bins)
-        k = np.arange(1, freq_bins + 1, dtype=np.float32)
-
-        # Evitar log(0)
-        power_safe = np.maximum(power_np, 1e-10)
-
-        # log-log space
-        log_k = np.log(k)
-        log_P = np.log(power_safe)
-
-        # RANSAC para lei de potência
-        best_beta = 0.0
-        best_r2 = -float('inf')
-
-        n_points = len(log_k)
-        min_samples = max(int(0.5 * n_points), 10)
-
-        for _ in range(ransac_iterations):
-            # Amostragem aleatória
-            indices = np.random.choice(n_points, min_samples, replace=False)
-
-            x_sample = log_k[indices]
-            y_sample = log_P[indices]
-
-            # Regressão linear: y = -β·x + c
-            # Usando numpy polyfit
-            try:
-                coeffs = np.polyfit(x_sample, y_sample, 1)
-                beta_candidate = -coeffs[0]  # Negativo porque P ~ k^(-β)
-
-                # R²
-                y_pred = coeffs[0] * log_k + coeffs[1]
-                ss_res = np.sum((log_P - y_pred) ** 2)
-                ss_tot = np.sum((log_P - np.mean(log_P)) ** 2)
-                r2 = 1.0 - ss_res / (ss_tot + 1e-10)
-
-                if r2 > best_r2:
-                    best_beta = beta_candidate
-                    best_r2 = r2
-            except:
-                continue
-
-        # Clamping para valores físicos
-        best_beta = max(0.1, min(best_beta, 3.0))
-
-        return best_beta, best_r2
-
-    def get_spectral_analysis(
-        self,
-        signal: torch.Tensor,
-        consciousness_results: Optional[Dict] = None
-    ) -> Dict[str, Any]:
-        """
-        Análise completa dos parâmetros espectrais calculados.
-
-        Returns:
-            Dicionário com análise detalhada
-        """
-        alpha, beta_chirp = self.compute_alpha_beta_from_spectrum(signal, consciousness_results)
-
-        # Análise adicional do espectro
-        spectrum = torch.fft.fft(signal, dim=-1, norm='ortho')
-        power_spectrum = torch.abs(spectrum) ** 2
-
-        # Estatísticas básicas
-        power_mean = power_spectrum.mean().item()
-        power_std = power_spectrum.std().item()
-        power_max = power_spectrum.max().item()
-
-        # Análise de frequência dominante
-        freq_bins = power_spectrum.shape[-1]
-        dominant_freq = torch.argmax(power_spectrum.mean(dim=(0, 1))).item()
-
-        return {
-            'alpha': alpha,
-            'beta_chirp': beta_chirp,
-            'D_fractal': (3.0 - (3.0 - 2.0 * (3.0 - beta_chirp) / 2.0)) / 2.0,  # Derivar D de volta
-            'spectral_stats': {
-                'power_mean': power_mean,
-                'power_std': power_std,
-                'power_max': power_max,
-                'dominant_frequency': dominant_freq,
-                'frequency_bins': freq_bins
-            },
-            'fit_quality': {
-                'r_squared': self._robust_power_law_fit(power_spectrum)[1]
-            },
-            'consciousness_influence': consciousness_results is not None
+        # Pesos para combinação dos fatores
+        self.weights = {
+            'fractal': 0.4,
+            'temperature': 0.3,
+            'coherence': 0.3
         }
 
+        print("✅ Adaptive Spectral Parameters initialized.")
 
-def create_adaptive_spectral_parameters(
-    alpha_base: float = 1.0,
-    lambda_coupling: float = 0.8,
-    D_euclidean: float = 1.0
-) -> AdaptiveSpectralParameters:
-    """
-    Factory function para criar calculador de parâmetros espectrais adaptativos.
+    def update_parameters(self, fractal_dimension: float,
+                         quantum_temperature: float,
+                         optical_coherence: float) -> Dict[str, float]:
+        """
+        Atualiza os parâmetros espectrais baseados no estado atual do sistema.
 
-    Args:
-        alpha_base: Alpha base
-        lambda_coupling: Fator de acoplamento
-        D_euclidean: Dimensão euclidiana de referência
+        Args:
+            fractal_dimension: Dimensão fractal atual
+            quantum_temperature: Temperatura quântica atual
+            optical_coherence: Coerência óptica atual
 
-    Returns:
-        AdaptiveSpectralParameters configurado
-    """
-    return AdaptiveSpectralParameters(
-        alpha_base=alpha_base,
-        lambda_coupling=lambda_coupling,
-        D_euclidean=D_euclidean
-    )
+        Returns:
+            Dicionário com parâmetros α e β atualizados
+        """
+        try:
+            # Normalizar entradas para o range [0, 1]
+            fractal_norm = self._normalize_fractal_dimension(fractal_dimension)
+            temp_norm = self._normalize_temperature(quantum_temperature)
+            coherence_norm = optical_coherence  # Já está em [0, 1]
+
+            # Calcular α (filtragem espectral)
+            alpha = self._compute_alpha(fractal_norm, temp_norm, coherence_norm)
+
+            # Calcular β (não-linearidade)
+            beta = self._compute_beta(fractal_norm, temp_norm, coherence_norm)
+
+            return {
+                'alpha': alpha,
+                'beta': beta,
+                'alpha_range': self.alpha_range,
+                'beta_range': self.beta_range
+            }
+
+        except Exception as e:
+            print(f"⚠️  Error updating spectral parameters: {e}")
+            return self._get_default_parameters()
+
+    def _normalize_fractal_dimension(self, fractal_dimension: float) -> float:
+        """Normaliza a dimensão fractal para [0, 1]."""
+        # Dimensões fractais típicas: 1.0 (linha) a 2.0+ (superfície)
+        # Normalizar para [0, 1] onde 1.5 = 0.5
+        normalized = (fractal_dimension - 1.0) / 2.0
+        return max(0.0, min(1.0, normalized))
+
+    def _normalize_temperature(self, quantum_temperature: float) -> float:
+        """Normaliza a temperatura quântica para [0, 1]."""
+        # Temperaturas típicas: 0.1 (congelada) a 2.0 (quente)
+        # Normalizar para [0, 1]
+        normalized = (quantum_temperature - 0.1) / 1.9
+        return max(0.0, min(1.0, normalized))
+
+    def _compute_alpha(self, fractal_norm: float, temp_norm: float, coherence_norm: float) -> float:
+        """
+        Computa o parâmetro α (filtragem espectral).
+
+        α controla a força da filtragem F(k) = exp(i α · arctan(ln(|k| + ε)))
+        - Maior α = filtragem mais forte
+        - α aumenta com complexidade fractal
+        - α diminui com alta temperatura (mais ruído)
+        - α aumenta com alta coerência (melhor sinal)
+        """
+        # Base alpha
+        base_alpha = 1.0
+
+        # Contribuições dos fatores
+        fractal_contrib = fractal_norm * 1.0      # +1.0 para alta complexidade
+        temp_contrib = (1.0 - temp_norm) * 0.5    # -0.5 para alta temperatura
+        coherence_contrib = coherence_norm * 0.5  # +0.5 para alta coerência
+
+        # Combinação ponderada
+        alpha = base_alpha + self.weights['fractal'] * fractal_contrib + \
+                self.weights['temperature'] * temp_contrib + \
+                self.weights['coherence'] * coherence_contrib
+
+        # Aplicar range
+        alpha_min, alpha_max = self.alpha_range
+        return max(alpha_min, min(alpha_max, alpha))
+
+    def _compute_beta(self, fractal_norm: float, temp_norm: float, coherence_norm: float) -> float:
+        """
+        Computa o parâmetro β (não-linearidade).
+
+        β controla a não-linearidade na equação de Padilha
+        - Maior β = não-linearidade mais forte
+        - β aumenta com complexidade fractal
+        - β aumenta com temperatura (mais caos)
+        - β diminui com alta coerência (mais ordem)
+        """
+        # Base beta
+        base_beta = 0.5
+
+        # Contribuições dos fatores
+        fractal_contrib = fractal_norm * 0.8      # +0.8 para alta complexidade
+        temp_contrib = temp_norm * 0.6            # +0.6 para alta temperatura
+        coherence_contrib = (1.0 - coherence_norm) * 0.4  # -0.4 para alta coerência
+
+        # Combinação ponderada
+        beta = base_beta + self.weights['fractal'] * fractal_contrib + \
+               self.weights['temperature'] * temp_contrib + \
+               self.weights['coherence'] * coherence_contrib
+
+        # Aplicar range
+        beta_min, beta_max = self.beta_range
+        return max(beta_min, min(beta_max, beta))
+
+    def _get_default_parameters(self) -> Dict[str, float]:
+        """Retorna parâmetros padrão em caso de erro."""
+        return {
+            'alpha': 1.0,
+            'beta': 0.5,
+            'alpha_range': self.alpha_range,
+            'beta_range': self.beta_range
+        }
+
+    def get_parameter_analysis(self, fractal_dimension: float,
+                              quantum_temperature: float,
+                              optical_coherence: float) -> Dict[str, Any]:
+        """
+        Fornece análise detalhada dos parâmetros espectrais.
+
+        Returns:
+            Dicionário com parâmetros e análise de contribuições
+        """
+        params = self.update_parameters(fractal_dimension, quantum_temperature, optical_coherence)
+
+        return {
+            'parameters': params,
+            'contributions': {
+                'fractal_dimension': self._normalize_fractal_dimension(fractal_dimension),
+                'quantum_temperature': self._normalize_temperature(quantum_temperature),
+                'optical_coherence': optical_coherence
+            },
+            'weights': self.weights,
+            'description': self._get_parameter_description(params['alpha'], params['beta'])
+        }
+
+    def _get_parameter_description(self, alpha: float, beta: float) -> str:
+        """Gera descrição dos parâmetros atuais."""
+        if alpha > 2.0 and beta > 1.5:
+            return "Sistema altamente complexo e não-linear"
+        elif alpha > 2.0:
+            return "Sistema com forte filtragem espectral"
+        elif beta > 1.5:
+            return "Sistema altamente não-linear"
+        elif alpha < 0.5 and beta < 0.5:
+            return "Sistema simples e linear"
+        else:
+            return "Sistema com parâmetros moderados"

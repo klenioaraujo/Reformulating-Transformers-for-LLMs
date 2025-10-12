@@ -297,6 +297,9 @@ class ConsciousnessIntegrationTests:
 
             # Calcular entropia como medida de informação
             flattened = data.flatten()
+            # Ensure data is real to avoid ComplexWarning
+            if np.iscomplexobj(flattened):
+                flattened = np.abs(flattened)
             hist, _ = np.histogram(flattened, bins=min(256, len(flattened)//10), density=True)
             prob = hist[hist > 0]
 
@@ -493,6 +496,9 @@ class ConsciousnessIntegrationTests:
             return 0.0
         # Maior entropia = maior blurring
         flattened = data.flatten()
+        # Ensure data is real to avoid ComplexWarning
+        if np.iscomplexobj(flattened):
+            flattened = np.abs(flattened)
         hist, _ = np.histogram(flattened, bins=min(64, len(flattened)//5), density=True)
         prob = hist[hist > 0]
         if len(prob) < 2:

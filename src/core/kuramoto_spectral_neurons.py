@@ -207,18 +207,18 @@ class KuramotoReactionDiffusion(nn.Module):
         self.adaptive_coupling = config['synchronization']['enable_adaptive_coupling']
         self.sync_threshold = config['synchronization']['threshold']
 
-    def compute_laplacian(self, phases: torch.Tensor) -> torch.Tensor:
-        """Computa Laplaciano espacial Δθ usando diferenças finitas"""
+    @torch.jit.script
+    def compute_laplacian_jit(phases: torch.Tensor, H: int, W: int, D: int, periodic_boundary: bool) -> torch.Tensor:
+        """Computa Laplaciano espacial Δθ usando diferenças finitas (JIT compiled)"""
         batch_size = phases.shape[0]
-        H, W, D = self.neuron_grid.H, self.neuron_grid.W, self.neuron_grid.D
 
         # Reshape para grid espacial
         if D == 1:  # 2D
             phases_grid = phases.view(batch_size, H, W)
 
             # Padding
-            pad_mode = 'circular' if self.config['spatial_grid']['periodic_boundary'] else 'replicate'
-            phases_padded = F.pad(phases_grid, (1, 1, 1, 1), mode=pad_mode)
+            pad_mode = 'circular' if periodic_boundary else 'replicate'
+            phases_padded = torch.nn.functional.pad(phases_grid, (1, 1, 1, 1), mode=pad_mode)
 
             # Diferenças finitas de 2ª ordem
             laplacian = (
@@ -233,8 +233,8 @@ class KuramotoReactionDiffusion(nn.Module):
 
         else:  # 3D
             phases_grid = phases.view(batch_size, H, W, D)
-            pad_mode = 'circular' if self.config['spatial_grid']['periodic_boundary'] else 'replicate'
-            phases_padded = F.pad(phases_grid, (1, 1, 1, 1, 1, 1), mode=pad_mode)
+            pad_mode = 'circular' if periodic_boundary else 'replicate'
+            phases_padded = torch.nn.functional.pad(phases_grid, (1, 1, 1, 1, 1, 1), mode=pad_mode)
 
             laplacian = (
                 phases_padded[:, 1:-1, 1:-1, 2:] +
@@ -250,12 +250,21 @@ class KuramotoReactionDiffusion(nn.Module):
 
         return laplacian
 
-    def compute_kuramoto_coupling(
-        self,
+    def compute_laplacian(self, phases: torch.Tensor) -> torch.Tensor:
+        """Computa Laplaciano espacial Δθ usando diferenças finitas"""
+        H, W, D = self.neuron_grid.H, self.neuron_grid.W, self.neuron_grid.D
+        periodic_boundary = self.config['spatial_grid']['periodic_boundary']
+
+        return self.compute_laplacian_jit(phases, H, W, D, periodic_boundary)
+
+    @torch.jit.script
+    def compute_kuramoto_coupling_jit(
         theta: torch.Tensor,
-        phi: torch.Tensor
+        phi: torch.Tensor,
+        connectivity: torch.Tensor,
+        K: float
     ) -> Tuple[torch.Tensor, torch.Tensor]:
-        """Computa termo de acoplamento de Kuramoto"""
+        """Computa termo de acoplamento de Kuramoto (JIT compiled)"""
         # Expandir para computação matricial
         theta_i = theta.unsqueeze(2)  # [B, N, 1]
         phi_j = phi.unsqueeze(1)      # [B, 1, N]
@@ -265,14 +274,22 @@ class KuramotoReactionDiffusion(nn.Module):
         sin_diff = torch.sin(phase_diff)  # [B, N, N]
 
         # Aplicar matriz de conectividade espacial
-        connectivity = self.neuron_grid.connectivity_matrix.unsqueeze(0)
         weighted_sin = sin_diff * connectivity
 
         # Somar contribuições
-        g_theta = self.K * weighted_sin.sum(dim=2)  # [B, N]
+        g_theta = K * weighted_sin.sum(dim=2)  # [B, N]
         g_phi = -g_theta
 
         return g_theta, g_phi
+
+    def compute_kuramoto_coupling(
+        self,
+        theta: torch.Tensor,
+        phi: torch.Tensor
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """Computa termo de acoplamento de Kuramoto"""
+        connectivity = self.neuron_grid.connectivity_matrix.unsqueeze(0)
+        return self.compute_kuramoto_coupling_jit(theta, phi, connectivity, self.K)
 
     def forward(
         self,
@@ -384,7 +401,7 @@ class KuramotoSpectralLayer(nn.Module):
         return_metrics: bool = False
     ) -> Tuple[torch.Tensor, Optional[Dict]]:
         """
-        Processa input através de dinâmica de Kuramoto.
+        Processa input através de dinâmica de Kuramoto usando processamento em batch.
 
         Args:
             x: Input tensor [batch, seq_len, embed_dim * 4]
@@ -397,46 +414,63 @@ class KuramotoSpectralLayer(nn.Module):
         batch_size, seq_len, embed_dim = x.shape
         n_neurons = self.kuramoto_system.neuron_grid.n_neurons
 
-        # Processar cada posição da sequência
-        outputs = []
+        # ========== PROCESSAMENTO EM BATCH ==========
+        # Reformatar para processar toda a sequência simultaneamente
+        x_flat = x.view(batch_size * seq_len, embed_dim)  # [batch*seq_len, embed_dim]
+
+        # Projetar para fases iniciais (batch processing)
+        phases_initial = self.input_projection(x_flat)  # [batch*seq_len, 2*n_neurons]
+
+        theta_init = phases_initial[:, :n_neurons]  # [batch*seq_len, n_neurons]
+        phi_init = phases_initial[:, n_neurons:]    # [batch*seq_len, n_neurons]
+
+        # Normalizar para [-π, π]
+        theta_init = torch.tanh(theta_init) * np.pi
+        phi_init = torch.tanh(phi_init) * np.pi
+
+        # ========== DINÂMICA DE KURAMOTO EM BATCH ==========
+        # Expandir para incluir dimensão de sequência no batch
+        theta_init_expanded = theta_init.view(batch_size, seq_len, n_neurons)  # [batch, seq_len, n_neurons]
+        phi_init_expanded = phi_init.view(batch_size, seq_len, n_neurons)    # [batch, seq_len, n_neurons]
+
+        # Processar cada timestep da sequência (ainda sequencial devido à natureza temporal)
+        # Mas agora processamos todos os batches simultaneamente
         all_sync_orders = []
 
+        theta_current = theta_init_expanded
+        phi_current = phi_init_expanded
+
         for t in range(seq_len):
-            x_t = x[:, t, :]  # [batch, embed_dim * 4]
+            theta_t = theta_current[:, t, :]  # [batch, n_neurons]
+            phi_t = phi_current[:, t, :]      # [batch, n_neurons]
 
-            # Projetar para fases iniciais
-            phases_initial = self.input_projection(x_t)  # [batch, 2*n_neurons]
+            # Executar dinâmica de Kuramoto para este timestep (batch processing)
+            kuramoto_results = self.kuramoto_system(theta_t, phi_t)
 
-            theta_init = phases_initial[:, :n_neurons]
-            phi_init = phases_initial[:, n_neurons:]
+            # Atualizar estados para próximo timestep
+            theta_current[:, t, :] = kuramoto_results['theta_final']
+            phi_current[:, t, :] = kuramoto_results['phi_final']
 
-            # Normalizar para [-π, π]
-            theta_init = torch.tanh(theta_init) * np.pi
-            phi_init = torch.tanh(phi_init) * np.pi
-
-            # Executar dinâmica de Kuramoto
-            kuramoto_results = self.kuramoto_system(theta_init, phi_init)
-
-            # Concatenar fases finais
-            theta_final = kuramoto_results['theta_final']
-            phi_final = kuramoto_results['phi_final']
-            phases_final = torch.cat([theta_final, phi_final], dim=1)
-
-            # Projetar de volta para espaço quaterniônico
-            output_t = self.output_projection(phases_final)
-
-            # Conexão residual
-            if self.config['qrh_integration']['use_residual_connection']:
-                output_t = output_t + self.residual_weight * x_t
-
-            # Normalização
-            output_t = self.layer_norm(output_t)
-
-            outputs.append(output_t)
             all_sync_orders.append(kuramoto_results['final_sync_order'])
 
-        # Reconstruir sequência
-        output = torch.stack(outputs, dim=1)  # [batch, seq_len, embed_dim * 4]
+        # ========== PROJEÇÃO DE SAÍDA EM BATCH ==========
+        # Concatenar fases finais
+        theta_final = theta_current.view(batch_size * seq_len, n_neurons)  # [batch*seq_len, n_neurons]
+        phi_final = phi_current.view(batch_size * seq_len, n_neurons)      # [batch*seq_len, n_neurons]
+        phases_final = torch.cat([theta_final, phi_final], dim=1)          # [batch*seq_len, 2*n_neurons]
+
+        # Projetar de volta para espaço quaterniônico
+        output_flat = self.output_projection(phases_final)  # [batch*seq_len, embed_dim]
+
+        # Reconstruir formato original
+        output = output_flat.view(batch_size, seq_len, embed_dim)  # [batch, seq_len, embed_dim]
+
+        # Conexão residual
+        if self.config['qrh_integration']['use_residual_connection']:
+            output = output + self.residual_weight * x
+
+        # Normalização
+        output = self.layer_norm(output)
 
         # Métricas agregadas
         if return_metrics:

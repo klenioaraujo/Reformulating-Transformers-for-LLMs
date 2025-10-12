@@ -72,7 +72,7 @@ class SpectralQRHLayer:
     Ψ_QRH = R_left · F⁻¹{F(k) · F{Ψ}} · R_right
     """
 
-    def __init__(self, embed_dim: int = 64, alpha: float = 1.0):
+    def __init__(self, embed_dim: int = 64, alpha: float = 0.1):
         self.embed_dim = embed_dim
         self.alpha = alpha
 
@@ -282,11 +282,76 @@ def probe_similarity_vectorized(psi: torch.Tensor, ascii_codes: torch.Tensor, i:
     
     return total_similarity
 
+def quantum_wave_to_text_contextual(psi_sequence: torch.Tensor, context_window: int = 1) -> str:
+    """
+    Convert quantum wave sequence back to text using contextual probe similarity.
+    Considers neighboring positions to mitigate interference effects.
+
+    Args:
+        psi_sequence: Quantum states [batch, seq_len, embed_dim, 4]
+        context_window: Number of positions to consider on each side (default: 1 for [-1, 0, +1])
+
+    Returns:
+        Reconstructed text string
+    """
+    print(f"🔍 Converting quantum waves to text using Contextual Optical Probe: {psi_sequence.shape[1]} characters")
+    print(f"   📏 Context window: ±{context_window} positions")
+
+    ascii_codes = torch.tensor(list(range(32, 127)), dtype=torch.float32)
+    characters = []
+    seq_len = psi_sequence.shape[1]
+    embed_dim = psi_sequence.shape[2]
+
+    for i in range(seq_len):
+        if (i + 1) % 100 == 0:
+            print(f"   ⏳ Processing character {i + 1}/{seq_len}...")
+
+        # Define context window: [max(0, i-context_window), min(seq_len-1, i+context_window)]
+        start_idx = max(0, i - context_window)
+        end_idx = min(seq_len - 1, i + context_window)
+
+        # Collect quantum states in the context window
+        context_states = []
+        context_weights = []
+
+        for j in range(start_idx, end_idx + 1):
+            # Calculate distance from center position
+            distance = abs(j - i)
+
+            # Weight: center position gets weight 1.0, neighbors get 0.5
+            weight = 1.0 if distance == 0 else 0.5
+
+            context_states.append(psi_sequence[0, j])  # [embed_dim, 4]
+            context_weights.append(weight)
+
+        # Convert to tensors
+        context_states = torch.stack(context_states)  # [window_size, embed_dim, 4]
+        context_weights = torch.tensor(context_weights, dtype=torch.float32)  # [window_size]
+
+        # Compute weighted average of quantum states in context
+        weights_normalized = context_weights / context_weights.sum()
+        psi_contextual = torch.sum(context_states * weights_normalized.view(-1, 1, 1), dim=0)  # [embed_dim, 4]
+
+        # Use contextual state for similarity calculation
+        similarities = probe_similarity_vectorized(psi_contextual, ascii_codes, i, embed_dim)
+
+        # The character that caused the highest similarity is the measurement result
+        best_char_index = torch.argmax(similarities)
+        reconstructed_char = chr(ascii_codes[best_char_index].int().item())
+        characters.append(reconstructed_char)
+
+    result = ''.join(characters)
+    print(f"   ✅ Contextual text reconstruction complete: {len(result)} characters")
+    return result
+
+
 def quantum_wave_to_text_vectorized(psi_sequence: torch.Tensor) -> str:
     """
     Convert quantum wave sequence back to text using probe similarity.
+    LEGACY VERSION: Use quantum_wave_to_text_contextual for better results.
     """
     print(f"🔍 Converting quantum waves to text using Optical Probe: {psi_sequence.shape[1]} characters")
+    print("   ⚠️  Using legacy non-contextual method. Consider quantum_wave_to_text_contextual()")
 
     ascii_codes = torch.tensor(list(range(32, 127)), dtype=torch.float32)
     characters = []
@@ -298,7 +363,7 @@ def quantum_wave_to_text_vectorized(psi_sequence: torch.Tensor) -> str:
             print(f"   ⏳ Processing character {i + 1}/{seq_len}...")
 
         psi = psi_sequence[0, i]  # Current quantum state for this position [embed_dim, 4]
-        
+
         similarities = probe_similarity_vectorized(psi, ascii_codes, i, embed_dim)
 
         # The character that caused the highest similarity is the measurement result
@@ -311,9 +376,12 @@ def quantum_wave_to_text_vectorized(psi_sequence: torch.Tensor) -> str:
     return result
 
 
-def run_complete_pipeline():
+def run_complete_pipeline(embed_dim: int = 256):
     """
     Run complete spectral pipeline with 300-word English text
+
+    Args:
+        embed_dim: Embedding dimension for quantum states (default: 256, optimized for character discriminability)
     """
     print("=" * 80)
     print("🧪 COMPLETE SPECTRAL PIPELINE - ΨQRH FRAMEWORK")
@@ -375,13 +443,13 @@ The future of AI lies in such interdisciplinary innovations.
     print("\n" + "=" * 60)
     print("STEP 1: TEXT → QUATERNION EMBEDDING")
     print("=" * 60)
-    psi_input = text_to_quaternion_embedding(sample_text)
+    psi_input = text_to_quaternion_embedding(sample_text, embed_dim)
 
     # Step 2: Apply ΨQRH Transform
     print("\n" + "=" * 60)
     print("STEP 2: ΨQRH TRANSFORM")
     print("=" * 60)
-    qrh_layer = SpectralQRHLayer(embed_dim=64, alpha=1.0)
+    qrh_layer = SpectralQRHLayer(embed_dim=embed_dim)
     psi_qrh = qrh_layer.forward(psi_input)
     print(f"✅ ΨQRH transform applied: input shape {psi_input.shape}, output shape {psi_qrh.shape}")
 
@@ -390,7 +458,7 @@ The future of AI lies in such interdisciplinary innovations.
     print("STEP 3: QUANTUM WAVE → TEXT")
     print("=" * 60)
     psi_inverted = invert_spectral_qrh(psi_qrh, qrh_layer)
-    reconstructed_text = quantum_wave_to_text_vectorized(psi_inverted)
+    reconstructed_text = quantum_wave_to_text_contextual(psi_inverted)
 
     # Step 5: Analysis
     print("\n" + "=" * 60)
