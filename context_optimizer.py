@@ -16,7 +16,7 @@ Features:
 import os
 import sys
 import json
-import tiktoken
+import re
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional
 
@@ -31,19 +31,17 @@ class ContextOptimizer:
         Args:
             model_name: Model name for tokenizer
         """
-        try:
-            self.encoding = tiktoken.encoding_for_model(model_name)
-        except KeyError:
-            # Fallback to cl100k_base encoding
-            self.encoding = tiktoken.get_encoding("cl100k_base")
+        # Simple token counting approximation (4 chars per token)
+        self.chars_per_token = 4
 
         self.max_context_length = 131072  # DeepSeek limit
         self.safety_margin = 4096  # Reserve tokens for system messages
         self.actual_max = self.max_context_length - self.safety_margin
 
     def count_tokens(self, text: str) -> int:
-        """Count tokens in text"""
-        return len(self.encoding.encode(text))
+        """Count tokens in text using approximation"""
+        # Simple approximation: 4 characters per token
+        return max(1, len(text) // self.chars_per_token)
 
     def analyze_file(self, file_path: Path) -> Dict:
         """Analyze token usage in a file"""
