@@ -1493,3 +1493,47 @@ ls images/chaos_perspective_gen_*.png
 ```
 
 This emergent spider cognition system represents a paradigm shift from programmed AI to **evolved intelligence**, where consciousness-like behaviors emerge naturally from the mathematical foundations of the ΨQRH framework.
+
+
+
+
+
+
+
+
+
+
+
+ Comandos Principais Implementados:
+
+  1. make download-model SOURCE_MODEL=gpt2 - Baixa modelos do Hugging Face usando apenas bibliotecas padrão
+  2. make list-downloaded-models - Lista todos os modelos baixados localmente
+  3. make distill-knowledge SOURCE_MODEL=gpt2 - Destila conhecimento para formato ΨQRH
+  4. make semantic-alignment SOURCE_MODEL=gpt2 - Workflow completo de alinhamento/destilação
+
+  🔧 Scripts Criados:
+
+  - scripts/download_model_ultra_simple.py - Download sem dependências externas
+  - model_converter_spectral_simplified.py - Destilação simplificada e funcional
+  - model_converter_spectral_ultra_simple.py - Versão avançada (em desenvolvimento)
+
+  📊 Resultados Obtidos:
+
+  - ✅ Modelos baixados: GPT-2 e DeepSeek Coder 6.7B
+  - ✅ Modelo destilado: psiqrh_distilled_gpt2.pt (2.2GB)
+  - ✅ Sistema funcional: Download + Destilação sem transformers
+
+  🚀 Como Usar:
+
+  # Baixar um modelo
+  make download-model SOURCE_MODEL=gpt2
+
+  # Listar modelos baixados
+  make list-downloaded-models
+
+  # Destilar para ΨQRH
+  make distill-knowledge SOURCE_MODEL=gpt2
+
+  # Workflow completo
+  make semantic-alignment SOURCE_MODEL=gpt2
+

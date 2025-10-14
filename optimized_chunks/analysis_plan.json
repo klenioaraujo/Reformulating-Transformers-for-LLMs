@@ -1,0 +1,958 @@
+{
+  "file_info": {
+    "path": "psiqrh.py",
+    "classes_count": 1,
+    "functions_count": 93,
+    "imports_count": 76
+  },
+  "recommended_approach": [
+    "1. Start with class and function definitions to understand architecture",
+    "2. Analyze core transformation logic in small chunks",
+    "3. Focus on main entry points and public methods",
+    "4. Review import dependencies and module structure",
+    "5. Examine configuration and initialization sections"
+  ],
+  "chunking_strategy": "STRUCTURE_BASED",
+  "key_sections": [
+    {
+      "type": "class",
+      "name": "ΨQRHPipeline",
+      "line": 188,
+      "analysis_focus": [
+        "Analyze ΨQRHPipeline class structure",
+        "Examine methods: __init__, _text_to_fractal_signal, _calculate_fractal_dimension, _signal_to_quaternions_base, _signal_to_quaternions, _apply_spectral_filtering, _apply_so4_rotation, _safe_optical_probe_extraction, _process_consciousness, _apply_consciousness_bootstrap, _emergent_language_generation, create_semantic_spectral_map, semantic_wave_to_text, _map_quantum_to_linguistic_elements, _enhanced_formant_analysis, _compute_lpc_formants, _levinson_durbin, _compute_spectral_tilt, _analyze_spectral_patterns, _formant_based_mapping, _characteristic_to_char, _apply_contextual_processing, _validate_mathematical_consistency, _initialize_physical_components, _harmonize_inverse_projector, _get_harmonically_derived_rotation_angles, _check_system_harmonization, _detect_device, _initialize_auto_calibration_components, _initialize_complete_auto_calibration, _adapt_pretrained_weights_to_dimensions, _reinitialize_components_with_calibrated_params, _initialize_noncommutative, _initialize_hybrid_system, _initialize_quantum_memory, _initialize_audit_logger, _save_audit_logs, _initialize_quantum_vocabulary_with_genesis, _initialize_quantum_vocabulary, _extract_quantum_features_from_psi, _estimate_text_quality, _validate_quantum_quality, _save_audit_logs, _force_quantum_recalibration, _check_coherence_alignment, _check_fractal_consistency, _check_spectral_preservation, _check_semantic_coherence, encode_single_char_to_quantum_state, _apply_inverse_so4_rotation, _apply_inverse_spectral_filtering, _quaternion_conjugate, _safe_optical_probe_extraction, run_inverse_pipeline, train_end_to_end, _update_conversation_history, find_closest_char_projection_contextual, find_closest_char_projection, _get_model_character_vocabulary, _validate_generated_text, _get_model_info, _get_vocabulary_info, _initialize_auto_learning_models, _detect_task_type, _initialize_model, _load_task_config, _validate_tensor_output, _validate_dimensions_compatibility, _ensure_tensor_compatibility, _ensure_tensor_compatibility, __call__, _setup_and_calibrate, _generate_text_physical, _activate_cognitive_generation, _enhance_with_auto_learning, _analyze_text, _process_signal, _process_with_physical_corrections",
+        "Review class dependencies and inheritance"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "set_quiet_mode",
+      "line": 155,
+      "analysis_focus": [
+        "Analyze set_quiet_mode function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "get_active_model_path",
+      "line": 163,
+      "analysis_focus": [
+        "Analyze get_active_model_path function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "check_model_certification",
+      "line": 4456,
+      "analysis_focus": [
+        "Analyze check_model_certification function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "get_model_info",
+      "line": 4494,
+      "analysis_focus": [
+        "Analyze get_model_info function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "check_api_health",
+      "line": 4525,
+      "analysis_focus": [
+        "Analyze check_api_health function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "main",
+      "line": 4530,
+      "analysis_focus": [
+        "Analyze main function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "display_model_header",
+      "line": 4732,
+      "analysis_focus": [
+        "Analyze display_model_header function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "run_quick_test",
+      "line": 4771,
+      "analysis_focus": [
+        "Analyze run_quick_test function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "run_test_echo",
+      "line": 4809,
+      "analysis_focus": [
+        "Analyze run_test_echo function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "run_physics_tests",
+      "line": 4838,
+      "analysis_focus": [
+        "Analyze run_physics_tests function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "run_interactive_mode",
+      "line": 4862,
+      "analysis_focus": [
+        "Analyze run_interactive_mode function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "process_single_text",
+      "line": 5007,
+      "analysis_focus": [
+        "Analyze process_single_text function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "__init__",
+      "line": 198,
+      "analysis_focus": [
+        "Analyze __init__ function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_text_to_fractal_signal",
+      "line": 513,
+      "analysis_focus": [
+        "Analyze _text_to_fractal_signal function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_calculate_fractal_dimension",
+      "line": 564,
+      "analysis_focus": [
+        "Analyze _calculate_fractal_dimension function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_signal_to_quaternions_base",
+      "line": 600,
+      "analysis_focus": [
+        "Analyze _signal_to_quaternions_base function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_signal_to_quaternions",
+      "line": 677,
+      "analysis_focus": [
+        "Analyze _signal_to_quaternions function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_apply_spectral_filtering",
+      "line": 708,
+      "analysis_focus": [
+        "Analyze _apply_spectral_filtering function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_apply_so4_rotation",
+      "line": 802,
+      "analysis_focus": [
+        "Analyze _apply_so4_rotation function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_safe_optical_probe_extraction",
+      "line": 864,
+      "analysis_focus": [
+        "Analyze _safe_optical_probe_extraction function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_process_consciousness",
+      "line": 897,
+      "analysis_focus": [
+        "Analyze _process_consciousness function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_apply_consciousness_bootstrap",
+      "line": 913,
+      "analysis_focus": [
+        "Analyze _apply_consciousness_bootstrap function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_emergent_language_generation",
+      "line": 934,
+      "analysis_focus": [
+        "Analyze _emergent_language_generation function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "create_semantic_spectral_map",
+      "line": 1194,
+      "analysis_focus": [
+        "Analyze create_semantic_spectral_map function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "semantic_wave_to_text",
+      "line": 1200,
+      "analysis_focus": [
+        "Analyze semantic_wave_to_text function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_map_quantum_to_linguistic_elements",
+      "line": 1251,
+      "analysis_focus": [
+        "Analyze _map_quantum_to_linguistic_elements function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_enhanced_formant_analysis",
+      "line": 1262,
+      "analysis_focus": [
+        "Analyze _enhanced_formant_analysis function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_compute_lpc_formants",
+      "line": 1298,
+      "analysis_focus": [
+        "Analyze _compute_lpc_formants function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_levinson_durbin",
+      "line": 1357,
+      "analysis_focus": [
+        "Analyze _levinson_durbin function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_compute_spectral_tilt",
+      "line": 1396,
+      "analysis_focus": [
+        "Analyze _compute_spectral_tilt function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_analyze_spectral_patterns",
+      "line": 1419,
+      "analysis_focus": [
+        "Analyze _analyze_spectral_patterns function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_formant_based_mapping",
+      "line": 1498,
+      "analysis_focus": [
+        "Analyze _formant_based_mapping function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_characteristic_to_char",
+      "line": 1507,
+      "analysis_focus": [
+        "Analyze _characteristic_to_char function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_apply_contextual_processing",
+      "line": 1513,
+      "analysis_focus": [
+        "Analyze _apply_contextual_processing function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_validate_mathematical_consistency",
+      "line": 1535,
+      "analysis_focus": [
+        "Analyze _validate_mathematical_consistency function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_initialize_physical_components",
+      "line": 1580,
+      "analysis_focus": [
+        "Analyze _initialize_physical_components function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_harmonize_inverse_projector",
+      "line": 1630,
+      "analysis_focus": [
+        "Analyze _harmonize_inverse_projector function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_get_harmonically_derived_rotation_angles",
+      "line": 1690,
+      "analysis_focus": [
+        "Analyze _get_harmonically_derived_rotation_angles function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_check_system_harmonization",
+      "line": 1700,
+      "analysis_focus": [
+        "Analyze _check_system_harmonization function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_detect_device",
+      "line": 1782,
+      "analysis_focus": [
+        "Analyze _detect_device function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_initialize_auto_calibration_components",
+      "line": 1794,
+      "analysis_focus": [
+        "Analyze _initialize_auto_calibration_components function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_initialize_complete_auto_calibration",
+      "line": 1826,
+      "analysis_focus": [
+        "Analyze _initialize_complete_auto_calibration function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_adapt_pretrained_weights_to_dimensions",
+      "line": 1851,
+      "analysis_focus": [
+        "Analyze _adapt_pretrained_weights_to_dimensions function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_reinitialize_components_with_calibrated_params",
+      "line": 1958,
+      "analysis_focus": [
+        "Analyze _reinitialize_components_with_calibrated_params function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_initialize_noncommutative",
+      "line": 2054,
+      "analysis_focus": [
+        "Analyze _initialize_noncommutative function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_initialize_hybrid_system",
+      "line": 2081,
+      "analysis_focus": [
+        "Analyze _initialize_hybrid_system function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_initialize_quantum_memory",
+      "line": 2104,
+      "analysis_focus": [
+        "Analyze _initialize_quantum_memory function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_initialize_audit_logger",
+      "line": 2130,
+      "analysis_focus": [
+        "Analyze _initialize_audit_logger function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_save_audit_logs",
+      "line": 2153,
+      "analysis_focus": [
+        "Analyze _save_audit_logs function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_initialize_quantum_vocabulary_with_genesis",
+      "line": 2183,
+      "analysis_focus": [
+        "Analyze _initialize_quantum_vocabulary_with_genesis function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_initialize_quantum_vocabulary",
+      "line": 2226,
+      "analysis_focus": [
+        "Analyze _initialize_quantum_vocabulary function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_extract_quantum_features_from_psi",
+      "line": 2322,
+      "analysis_focus": [
+        "Analyze _extract_quantum_features_from_psi function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_estimate_text_quality",
+      "line": 2352,
+      "analysis_focus": [
+        "Analyze _estimate_text_quality function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_validate_quantum_quality",
+      "line": 2389,
+      "analysis_focus": [
+        "Analyze _validate_quantum_quality function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_save_audit_logs",
+      "line": 2428,
+      "analysis_focus": [
+        "Analyze _save_audit_logs function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_force_quantum_recalibration",
+      "line": 2455,
+      "analysis_focus": [
+        "Analyze _force_quantum_recalibration function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_check_coherence_alignment",
+      "line": 2473,
+      "analysis_focus": [
+        "Analyze _check_coherence_alignment function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_check_fractal_consistency",
+      "line": 2488,
+      "analysis_focus": [
+        "Analyze _check_fractal_consistency function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_check_spectral_preservation",
+      "line": 2500,
+      "analysis_focus": [
+        "Analyze _check_spectral_preservation function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_check_semantic_coherence",
+      "line": 2512,
+      "analysis_focus": [
+        "Analyze _check_semantic_coherence function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "encode_single_char_to_quantum_state",
+      "line": 2529,
+      "analysis_focus": [
+        "Analyze encode_single_char_to_quantum_state function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_apply_inverse_so4_rotation",
+      "line": 2572,
+      "analysis_focus": [
+        "Analyze _apply_inverse_so4_rotation function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_apply_inverse_spectral_filtering",
+      "line": 2606,
+      "analysis_focus": [
+        "Analyze _apply_inverse_spectral_filtering function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_quaternion_conjugate",
+      "line": 2651,
+      "analysis_focus": [
+        "Analyze _quaternion_conjugate function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_safe_optical_probe_extraction",
+      "line": 2664,
+      "analysis_focus": [
+        "Analyze _safe_optical_probe_extraction function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "run_inverse_pipeline",
+      "line": 2697,
+      "analysis_focus": [
+        "Analyze run_inverse_pipeline function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "train_end_to_end",
+      "line": 2732,
+      "analysis_focus": [
+        "Analyze train_end_to_end function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_update_conversation_history",
+      "line": 2903,
+      "analysis_focus": [
+        "Analyze _update_conversation_history function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "find_closest_char_projection_contextual",
+      "line": 2937,
+      "analysis_focus": [
+        "Analyze find_closest_char_projection_contextual function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "find_closest_char_projection",
+      "line": 3024,
+      "analysis_focus": [
+        "Analyze find_closest_char_projection function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_get_model_character_vocabulary",
+      "line": 3087,
+      "analysis_focus": [
+        "Analyze _get_model_character_vocabulary function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_validate_generated_text",
+      "line": 3137,
+      "analysis_focus": [
+        "Analyze _validate_generated_text function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_get_model_info",
+      "line": 3247,
+      "analysis_focus": [
+        "Analyze _get_model_info function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_get_vocabulary_info",
+      "line": 3306,
+      "analysis_focus": [
+        "Analyze _get_vocabulary_info function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_initialize_auto_learning_models",
+      "line": 3357,
+      "analysis_focus": [
+        "Analyze _initialize_auto_learning_models function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_detect_task_type",
+      "line": 3386,
+      "analysis_focus": [
+        "Analyze _detect_task_type function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_initialize_model",
+      "line": 3431,
+      "analysis_focus": [
+        "Analyze _initialize_model function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_load_task_config",
+      "line": 3504,
+      "analysis_focus": [
+        "Analyze _load_task_config function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_validate_tensor_output",
+      "line": 3562,
+      "analysis_focus": [
+        "Analyze _validate_tensor_output function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_validate_dimensions_compatibility",
+      "line": 3570,
+      "analysis_focus": [
+        "Analyze _validate_dimensions_compatibility function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_ensure_tensor_compatibility",
+      "line": 3613,
+      "analysis_focus": [
+        "Analyze _ensure_tensor_compatibility function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_ensure_tensor_compatibility",
+      "line": 3628,
+      "analysis_focus": [
+        "Analyze _ensure_tensor_compatibility function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "__call__",
+      "line": 3643,
+      "analysis_focus": [
+        "Analyze __call__ function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_setup_and_calibrate",
+      "line": 3679,
+      "analysis_focus": [
+        "Analyze _setup_and_calibrate function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_generate_text_physical",
+      "line": 3789,
+      "analysis_focus": [
+        "Analyze _generate_text_physical function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_activate_cognitive_generation",
+      "line": 4190,
+      "analysis_focus": [
+        "Analyze _activate_cognitive_generation function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_enhance_with_auto_learning",
+      "line": 4339,
+      "analysis_focus": [
+        "Analyze _enhance_with_auto_learning function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_analyze_text",
+      "line": 4393,
+      "analysis_focus": [
+        "Analyze _analyze_text function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_process_signal",
+      "line": 4419,
+      "analysis_focus": [
+        "Analyze _process_signal function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "_process_with_physical_corrections",
+      "line": 4443,
+      "analysis_focus": [
+        "Analyze _process_with_physical_corrections function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "tensor_to_serializable",
+      "line": 5039,
+      "analysis_focus": [
+        "Analyze tensor_to_serializable function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "base_spectral_filter",
+      "line": 726,
+      "analysis_focus": [
+        "Analyze base_spectral_filter function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    },
+    {
+      "type": "function",
+      "name": "base_so4_rotation",
+      "line": 823,
+      "analysis_focus": [
+        "Analyze base_so4_rotation function purpose",
+        "Review parameters and return values",
+        "Check for dependencies and side effects"
+      ]
+    }
+  ]
+}

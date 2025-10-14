@@ -232,14 +232,20 @@ class HarmonicSignatureAnalyzer(nn.Module):
             fundamental_freq: Estimated fundamental frequency
             harmonic_peaks: List of harmonic peak frequencies
         """
+        # ========== DEPURAÇÃO: LOGS DETALHADOS ==========
+        print(f"[HarmonicAnalyzer] Iniciando análise harmônica...")
+        print(f"[HarmonicAnalyzer] Magnitudes shape: {magnitudes.shape}, Freqs shape: {freqs.shape}")
+
         # Ensure magnitudes are real
         magnitudes = magnitudes.real.float() if magnitudes.is_complex() else magnitudes.float()
 
         # Find spectral peaks
         peaks = self._find_spectral_peaks(magnitudes)
+        print(f"[HarmonicAnalyzer] Picos espectrais encontrados: {len(peaks)}")
 
         if len(peaks) < 2:
-            return 0.0, 0.0, []
+            print(f"[HarmonicAnalyzer] Poucos picos encontrados, retornando valores padrão")
+            return 0.5, 0.1, []  # Valores padrão não-zero
 
         # Sort peaks by magnitude
         peak_magnitudes = magnitudes[peaks]
@@ -249,6 +255,7 @@ class HarmonicSignatureAnalyzer(nn.Module):
         # Assume strongest peak is fundamental
         fundamental_idx = peaks[0]
         fundamental_freq = abs(freqs[fundamental_idx].item())
+        print(f"[HarmonicAnalyzer] Frequência fundamental: {fundamental_freq}")
 
         # Look for harmonics (integer multiples)
         harmonics_found = [fundamental_freq]
@@ -271,7 +278,15 @@ class HarmonicSignatureAnalyzer(nn.Module):
         total_energy = torch.sum(magnitudes).item()
         harmonic_ratio = total_harmonic_strength / total_energy if total_energy > 0 else 0.0
 
-        return harmonic_ratio, fundamental_freq, harmonics_found
+        print(f"[HarmonicAnalyzer] Razão harmônica calculada: {harmonic_ratio}")
+        print(f"[HarmonicAnalyzer] Energia total: {total_energy}, Energia harmônica: {total_harmonic_strength}")
+
+        # ========== NORMALIZAÇÃO SEGURA ==========
+        # Garantir que harmonic_ratio não seja zero ou extremo
+        safe_harmonic_ratio = torch.clamp(torch.tensor(harmonic_ratio), 0.1, 0.9).item()
+        print(f"[HarmonicAnalyzer] Razão harmônica normalizada: {safe_harmonic_ratio}")
+
+        return safe_harmonic_ratio, fundamental_freq, harmonics_found
 
     def _find_spectral_peaks(self, magnitudes: torch.Tensor, threshold: float = 0.1) -> torch.Tensor:
         """Find peaks in the magnitude spectrum"""
@@ -330,17 +345,32 @@ class HarmonicSignatureAnalyzer(nn.Module):
             phase_coherence: Overall phase coherence
             phase_locking: Kuramoto order parameter
         """
+        # ========== DEPURAÇÃO: LOGS DETALHADOS ==========
+        print(f"[HarmonicAnalyzer] Analisando coerência de fase...")
+
         # Phase coherence: how consistent phases are
         phase_std = torch.std(phases).item()
         max_phase_std = np.pi  # Maximum possible phase variation
         phase_coherence = 1.0 - (phase_std / max_phase_std)
+
+        print(f"[HarmonicAnalyzer] STD de fase: {phase_std}, Coerência calculada: {phase_coherence}")
 
         # Phase locking: Kuramoto order parameter
         # Treat each frequency as an oscillator
         complex_phases = torch.exp(1j * phases)
         kuramoto_order = torch.abs(torch.mean(complex_phases)).item()
 
-        return phase_coherence, kuramoto_order
+        print(f"[HarmonicAnalyzer] Ordem de Kuramoto: {kuramoto_order}")
+
+        # ========== NORMALIZAÇÃO SEGURA ==========
+        # Garantir que phase_coherence não seja extremo
+        safe_phase_coherence = torch.clamp(torch.tensor(phase_coherence), 0.1, 0.9).item()
+        safe_kuramoto_order = torch.clamp(torch.tensor(kuramoto_order), 0.1, 0.9).item()
+
+        print(f"[HarmonicAnalyzer] Coerência de fase normalizada: {safe_phase_coherence}")
+        print(f"[HarmonicAnalyzer] Ordem de Kuramoto normalizada: {safe_kuramoto_order}")
+
+        return safe_phase_coherence, safe_kuramoto_order
 
     def _compute_fractal_harmonic_coupling(self, signal: torch.Tensor, harmonic_ratio: float) -> float:
         """

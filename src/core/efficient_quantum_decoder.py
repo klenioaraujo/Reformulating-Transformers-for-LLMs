@@ -23,18 +23,22 @@ class EfficientQuantumDecoder:
     eliminando métricas de similaridade complexas que causam gibberish.
     """
 
-    def __init__(self, vocab_size=195, seq_length=64, device='cpu'):
+    def __init__(self, vocab_size=195, seq_length=64, embed_dim=64, device='cpu', verbose=True):
         """
         Inicializa decoder com parâmetros do ΨQRH.
 
         Args:
             vocab_size: Tamanho do vocabulário (195 tokens do GPT-2 spectral)
             seq_length: Comprimento da sequência (64)
+            embed_dim: Dimensão do embedding (64)
             device: Dispositivo para processamento
+            verbose: Se deve imprimir logs detalhados
         """
         self.vocab_size = vocab_size
         self.seq_length = seq_length
+        self.embed_dim = embed_dim
         self.device = device
+        self.verbose = verbose
 
         # Carregar vocabulário específico do ΨQRH
         self.vocab = self._load_psiqrh_vocab()
@@ -44,7 +48,35 @@ class EfficientQuantumDecoder:
         self.omega = 2.0 * math.pi  # Frequência angular
         self.k = 2.0 * math.pi      # Número de onda
 
-        print(f"🔧 EfficientQuantumDecoder initialized: vocab_size={vocab_size}, seq_length={seq_length}")
+        # Camada de projeção para mapear estado quântico para vocabulário
+        self.projection = nn.Linear(embed_dim * 4, vocab_size, bias=False).to(device)
+
+        # Conjunto pré-computado de tokens significativos para validação eficiente
+        self.significant_tokens = set(range(3, 95))  # tokens 3-94 são significativos
+
+        self._log(f"🔧 EfficientQuantumDecoder initialized: vocab_size={vocab_size}, seq_length={seq_length}, embed_dim={embed_dim}")
+
+        # Para produção: inicializar pesos com matriz quântica
+        # decoder.set_projection_weights(quantum_matrix.quantum_matrix.reshape(195, -1))
+
+    def _log(self, message: str):
+        """Logging configurável para produção"""
+        if self.verbose:
+            print(message)
+
+    def initialize_with_quantum_matrix(self, quantum_matrix_instance):
+        """Inicializa decoder com pesos da matriz quântica real"""
+        embedding_matrix = quantum_matrix_instance.quantum_matrix.reshape(self.vocab_size, -1)
+        self.set_projection_weights(embedding_matrix)
+        self._log("🔗 Decoder weights initialized from quantum matrix")
+
+    def set_projection_weights(self, embedding_matrix: torch.Tensor):
+        """
+        Alinha decoder com encoder usando pesos compartilhados (weight tying).
+        embedding_matrix: [vocab_size, embed_dim*4]
+        """
+        with torch.no_grad():
+            self.projection.weight.copy_(embedding_matrix.T)
 
     def _load_psiqrh_vocab(self) -> dict:
         """Carrega vocabulário específico do ΨQRH (195 tokens do GPT-2 spectral)"""
@@ -91,7 +123,12 @@ class EfficientQuantumDecoder:
         Returns:
             tokens: torch.Tensor - índices de tokens do vocabulário
         """
-        print(f"🔄 [EfficientQuantumDecoder] Starting inverse decode: shape={quantum_state.shape}")
+        # Validação rigorosa de shape para produção
+        expected_shape = (1, self.seq_length, self.embed_dim, 4)
+        assert quantum_state.shape == expected_shape, \
+            f"Expected shape {expected_shape}, got {quantum_state.shape}"
+
+        self._log(f"🔄 [EfficientQuantumDecoder] Starting inverse decode: shape={quantum_state.shape}")
 
         # 1. INVERSA DA SONDA ÓPTICA (Padilha Wave Equation)
         optical_inverse = self._inverse_optical_probe(quantum_state)
@@ -105,7 +142,7 @@ class EfficientQuantumDecoder:
         # 4. DECODIFICAÇÃO DIRETA PARA VOCABULÁRIO GPT-2 (195 tokens)
         tokens = self._quantum_to_token_mapping(spectral_inverse)
 
-        print(f"✅ [EfficientQuantumDecoder] Inverse decode complete: {len(tokens)} tokens")
+        self._log(f"✅ [EfficientQuantumDecoder] Inverse decode complete: {len(tokens)} tokens")
         return tokens
 
     def _inverse_optical_probe(self, quantum_state: torch.Tensor) -> torch.Tensor:
@@ -115,7 +152,7 @@ class EfficientQuantumDecoder:
         Original: f(λ,t) = I₀ sin(ωt + αλ) e^(i(ωt - kλ + βλ²))
         Inversa: f⁻¹(ψ) = ψ · exp(-i(ωt - kλ + βλ²)) / I₀ sin(ωt + αλ)
         """
-        print("🌊 [EfficientQuantumDecoder] Applying inverse optical probe...")
+        self._log("🌊 [EfficientQuantumDecoder] Applying inverse optical probe...")
 
         batch, seq, embed, quat = quantum_state.shape
 
@@ -136,14 +173,16 @@ class EfficientQuantumDecoder:
         inverse_time = torch.exp(-1j * time_component * beta)
 
         # Aplicar inversa da modulação espacial: 1 / (I₀ sin(ωt + αλ))
-        # Simplificação: normalizar pela magnitude
+        # Usar suavização estável para evitar instabilidade numérica
         spatial_modulation = torch.sin(time_component + alpha * torch.arange(seq, device=self.device).unsqueeze(0).unsqueeze(-1).unsqueeze(-1))
-        inverse_spatial = 1.0 / (self.I0 * spatial_modulation + 1e-8)
+        epsilon = 1e-3
+        denominator = self.I0 * spatial_modulation
+        inverse_spatial = denominator / (denominator**2 + epsilon**2)  # Versão estável
 
         # Aplicar inversão completa
         inverted_state = quantum_state * inverse_time * inverse_spatial
 
-        print(f"   ✅ Inverse optical probe applied: shape={inverted_state.shape}")
+        self._log(f"   ✅ Inverse optical probe applied: shape={inverted_state.shape}")
         return inverted_state
 
     def _inverse_so4_rotation(self, optical_inverse: torch.Tensor) -> torch.Tensor:
@@ -152,75 +191,67 @@ class EfficientQuantumDecoder:
 
         Como as rotações SO(4) são unitárias, a inversa é a transposta/conjugada.
         """
-        print("🔄 [EfficientQuantumDecoder] Applying inverse SO(4) rotation...")
+        self._log("🔄 [EfficientQuantumDecoder] Applying inverse SO(4) rotation...")
 
         # Para rotações unitárias, a inversa é a transposta do conjugado
         # Simplificação: como estamos trabalhando com quaternions, aplicamos conjugado
         rotation_inverse = torch.conj(optical_inverse)
 
-        print(f"   ✅ Inverse SO(4) rotation applied: shape={rotation_inverse.shape}")
+        self._log(f"   ✅ Inverse SO(4) rotation applied: shape={rotation_inverse.shape}")
         return rotation_inverse
 
     def _inverse_spectral_filter(self, rotation_inverse: torch.Tensor) -> torch.Tensor:
         """
         Inversa da filtragem espectral F(k) = exp(i α · arctan(ln(|k| + ε)))
+        Garante que a FFT foi aplicada na mesma dimensão e sinal está centrado.
         """
-        print("🎼 [EfficientQuantumDecoder] Applying inverse spectral filter...")
+        self._log("🎼 [EfficientQuantumDecoder] Applying inverse spectral filter...")
 
-        # Aplicar transformada de Fourier inversa
+        # Aplicar transformada de Fourier inversa na dimensão correta (embed_dim)
+        # Assumindo que a FFT original foi aplicada em dim=-2 (embed_dim)
         spectral_inverse = torch.fft.ifft(rotation_inverse, dim=-2)
+
+        # Garantir centering correto (FFT assume periodicidade)
+        # Shift para centralizar frequências zero
+        spectral_inverse = torch.fft.ifftshift(spectral_inverse, dim=-2)
 
         # Normalizar resultado
         spectral_inverse = spectral_inverse / (torch.abs(spectral_inverse).max() + 1e-8)
 
-        print(f"   ✅ Inverse spectral filter applied: shape={spectral_inverse.shape}")
+        self._log(f"   ✅ Inverse spectral filter applied: shape={spectral_inverse.shape}")
         return spectral_inverse
 
     def _quantum_to_token_mapping(self, spectral_inverse: torch.Tensor) -> torch.Tensor:
         """
-        Mapeamento direto estado quântico -> tokens GPT-2 usando máximo de probabilidade.
+        Mapeamento direto estado quântico -> tokens GPT-2 usando projeção linear.
+        spectral_inverse: [batch, seq_len, embed_dim, 4] (possivelmente complexo)
         """
-        print("🎯 [EfficientQuantumDecoder] Mapping quantum state to tokens...")
+        self._log("🎯 [EfficientQuantumDecoder] Mapping quantum state to tokens...")
 
-        # Colapsar estado quântico para distribuição de probabilidade
-        quantum_probabilities = self._collapse_quantum_state(spectral_inverse)
+        batch, seq_len, embed_dim, quat = spectral_inverse.shape
 
-        # Mapear para tokens usando máximo de probabilidade (determinístico)
-        tokens = self._quantum_maximum_likelihood(quantum_probabilities)
+        # Tratar números complexos: converter para real antes da projeção
+        if torch.is_complex(spectral_inverse):
+            # Usar magnitude para representação real
+            real_input = torch.abs(spectral_inverse)
+        else:
+            real_input = spectral_inverse
 
-        # Aplicar constraints do vocabulário
-        valid_tokens = self._apply_vocabulary_constraints(tokens)
+        # Achatar quaterniões
+        flattened = real_input.reshape(batch, seq_len, embed_dim * quat)  # [1, 64, 256]
 
-        print(f"   ✅ Token mapping complete: {len(valid_tokens)} tokens generated")
-        return valid_tokens
+        # Projetar para vocabulário
+        logits = self.projection(flattened)  # [1, 64, 195]
 
-    def _collapse_quantum_state(self, state: torch.Tensor) -> torch.Tensor:
-        """
-        Colapsa estado quântico para distribuição clássica usando regra de Born.
-        """
-        # Regra de Born: |ψ|² dá a probabilidade
-        probabilities = torch.abs(state) ** 2
+        # Aplicar softmax para probabilidades
+        probabilities = torch.softmax(logits, dim=-1)
 
-        # Normalizar para distribuição de probabilidade
-        normalized = probabilities / (probabilities.sum(dim=-1, keepdim=True) + 1e-8)
+        # Selecionar tokens
+        tokens = torch.argmax(probabilities, dim=-1)  # [1, 64]
 
-        # Média sobre dimensões de embedding e sequência para obter distribuição final
-        final_probabilities = normalized.mean(dim=[1, 2])  # [batch, seq_len]
+        self._log(f"   ✅ Token mapping complete: {tokens.numel()} tokens generated")
+        return tokens.squeeze(0)  # [64]
 
-        return final_probabilities
-
-    def _quantum_maximum_likelihood(self, probabilities: torch.Tensor) -> torch.Tensor:
-        """
-        Seleciona tokens mais prováveis usando máximo de verossimilhança quântica.
-        """
-        # Para cada posição na sequência, selecionar token mais provável
-        # Usar argmax para seleção determinística
-        token_indices = torch.argmax(probabilities, dim=-1)
-
-        # Limitar ao tamanho do vocabulário
-        token_indices = torch.clamp(token_indices, 0, self.vocab_size - 1)
-
-        return token_indices[:self.seq_length]
 
     def _apply_vocabulary_constraints(self, tokens: torch.Tensor) -> torch.Tensor:
         """
@@ -259,9 +290,9 @@ class EfficientQuantumDecoder:
         text = self.tokens_to_text(tokens)
 
         # Verificar se há tokens significativos (não apenas especiais)
-        meaningful_tokens = [t for t in tokens.tolist() if t not in [0, 1, 2] and not str(self.vocab.get(t, '')).startswith('<special_')]
+        meaningful_count = sum(1 for t in tokens.tolist() if t in self.significant_tokens)
 
-        if len(meaningful_tokens) < min_meaningful_tokens:
+        if meaningful_count < min_meaningful_tokens:
             # Ativar fallback inteligente baseado no estado quântico
             fallback_text = self._generate_quantum_fallback(quantum_state)
             return fallback_text, False
@@ -280,3 +311,50 @@ class EfficientQuantumDecoder:
         imag_part = psi[..., 1::2] if psi.shape[-1] == 4 else psi.imag
         coherence = torch.mean(torch.abs(imag_part)).item()
         return coherence
+
+    def run_regression_tests(self) -> dict:
+        """
+        Testes de regressão para validar funcionamento correto em produção.
+        """
+        import torch
+
+        self._log("🧪 [EfficientQuantumDecoder] Running regression tests...")
+
+        results = {
+            'determinism_test': False,
+            'token_quality_test': False,
+            'shape_validation_test': False
+        }
+
+        try:
+            # Teste 1: Determinismo - mesma entrada deve gerar mesma saída
+            test_state = torch.randn(1, self.seq_length, self.embed_dim, 4, dtype=torch.complex64)
+
+            tokens1 = self.inverse_decode(test_state.clone())
+            tokens2 = self.inverse_decode(test_state.clone())
+
+            results['determinism_test'] = torch.equal(tokens1, tokens2)
+            self._log(f"   Determinism test: {'✅ PASS' if results['determinism_test'] else '❌ FAIL'}")
+
+            # Teste 2: Qualidade dos tokens - presença mínima de tokens significativos
+            text, is_valid = self.validate_quantum_output(tokens1, test_state, min_meaningful_tokens=3)
+            results['token_quality_test'] = is_valid
+            self._log(f"   Token quality test: {'✅ PASS' if results['token_quality_test'] else '❌ FAIL'}")
+
+            # Teste 3: Validação de shape - deve falhar com shape incorreta
+            try:
+                wrong_shape = torch.randn(2, 32, 32, 4)  # Shape incorreta
+                self.inverse_decode(wrong_shape)
+                results['shape_validation_test'] = False  # Deve ter falhado
+                self._log("   Shape validation test: ❌ FAIL (should have raised AssertionError)")
+            except AssertionError:
+                results['shape_validation_test'] = True
+                self._log("   Shape validation test: ✅ PASS")
+
+        except Exception as e:
+            self._log(f"   Regression tests failed with error: {e}")
+
+        all_passed = all(results.values())
+        self._log(f"🧪 Regression tests: {'✅ ALL PASSED' if all_passed else '❌ SOME FAILED'}")
+
+        return results

@@ -231,6 +231,9 @@ class ContextualPrimingModulator:
         effective_connectivity = semantic_connectivity + self.priming_strength * priming_matrix
 
         # Garantir que permanece positiva e normalizada
+        # Handle complex tensors by taking real part before clamping
+        if effective_connectivity.is_complex():
+            effective_connectivity = effective_connectivity.real
         effective_connectivity = torch.clamp(effective_connectivity, 0.0, 1.0)
 
         print(f"   🔄 Conectividade modulada com priming: α={self.priming_strength}")
@@ -514,6 +517,9 @@ class DCFTokenAnalysis:
             raise RuntimeError("Dicionário quântico não disponível - sistema DCF requer representações quânticas para conectividade semântica")
 
         # Normalizar para range [0, 1] e adicionar epsilon para evitar zeros
+        # Handle complex tensors by taking real part before clamping
+        if semantic_connectivity.is_complex():
+            semantic_connectivity = semantic_connectivity.real
         semantic_connectivity = torch.clamp(semantic_connectivity, 0.0, 1.0)
         semantic_connectivity = semantic_connectivity + 1e-6  # Evitar zeros que podem causar problemas
 

@@ -269,34 +269,114 @@ class OptimizedQuaternionOperations:
         Apply SO(4) rotation to quaternion using optimized computation.
 
         SO(4) rotations preserve quaternion norm and represent unitary transformations.
+        Generates unitary quaternions q_left and q_right, then applies:
+        q' = q_left ⊗ q ⊗ q_right^{-1} = q_left ⊗ q ⊗ q_right^*
 
         Args:
             q: Input quaternion [..., 4]
-            rotation_angles: Rotation parameters [..., 3] (theta, omega, phi)
+            rotation_angles: Rotation parameters [..., 6] (theta1, omega1, phi1, theta2, omega2, phi2)
+                           for left and right rotation quaternions
 
         Returns:
             Rotated quaternion [..., 4]
         """
-        theta, omega, phi = torch.unbind(rotation_angles, dim=-1)
+        # Split angles for left and right rotations
+        theta1, omega1, phi1, theta2, omega2, phi2 = torch.unbind(rotation_angles, dim=-1)
 
-        # Create rotation quaternion (unit quaternion)
-        w_rot = torch.cos(theta/2) * torch.cos(omega/2) * torch.cos(phi/2)
-        x_rot = torch.sin(theta/2) * torch.cos(omega/2) * torch.cos(phi/2)
-        y_rot = torch.cos(theta/2) * torch.sin(omega/2) * torch.cos(phi/2)
-        z_rot = torch.cos(theta/2) * torch.cos(omega/2) * torch.sin(phi/2)
+        # Create left rotation quaternion (unit quaternion)
+        w_left = torch.cos(theta1/2) * torch.cos(omega1/2) * torch.cos(phi1/2)
+        x_left = torch.sin(theta1/2) * torch.cos(omega1/2) * torch.cos(phi1/2)
+        y_left = torch.cos(theta1/2) * torch.sin(omega1/2) * torch.cos(phi1/2)
+        z_left = torch.cos(theta1/2) * torch.cos(omega1/2) * torch.sin(phi1/2)
 
-        q_rot = torch.stack([w_rot, x_rot, y_rot, z_rot], dim=-1)
+        q_left = torch.stack([w_left, x_left, y_left, z_left], dim=-1)
+        # Ensure unitarity
+        q_left = quaternion_normalize(q_left)
 
-        # Apply rotation: q' = q_rot ⊗ q ⊗ q_rot†
-        q_rot_conj = self.conjugate(q_rot)
+        # Create right rotation quaternion (unit quaternion)
+        w_right = torch.cos(theta2/2) * torch.cos(omega2/2) * torch.cos(phi2/2)
+        x_right = torch.sin(theta2/2) * torch.cos(omega2/2) * torch.cos(phi2/2)
+        y_right = torch.cos(theta2/2) * torch.sin(omega2/2) * torch.cos(phi2/2)
+        z_right = torch.cos(theta2/2) * torch.cos(omega2/2) * torch.sin(phi2/2)
 
-        # First product: q_rot ⊗ q
-        temp, _ = self.hamilton_product(q_rot, q)
+        q_right = torch.stack([w_right, x_right, y_right, z_right], dim=-1)
+        # Ensure unitarity
+        q_right = quaternion_normalize(q_right)
 
-        # Second product: temp ⊗ q_rot†
-        result, _ = self.hamilton_product(temp, q_rot_conj)
+        # Apply rotation: q' = q_left ⊗ q ⊗ q_right^{-1} = q_left ⊗ q ⊗ q_right^*
+        q_right_conj = self.conjugate(q_right)
+
+        # First product: q_left ⊗ q
+        temp, _ = self.hamilton_product(q_left, q)
+
+        # Second product: temp ⊗ q_right^*
+        result, _ = self.hamilton_product(temp, q_right_conj)
 
         return result
+
+    def validate_so4_rotation_norm_preservation(self, num_samples: int = 10000) -> Dict[str, float]:
+        """
+        Numerically validate that SO(4) rotations preserve quaternion norms.
+
+        Tests on thousands of random samples to ensure ||q'|| = ||q||.
+
+        Args:
+            num_samples: Number of random samples to test
+
+        Returns:
+            Validation metrics dictionary
+        """
+        device = getattr(self, 'device', 'cpu')
+
+        # Generate random quaternions and rotation angles
+        q_original = torch.randn(num_samples, 4, device=device)
+        # Normalize to ensure unit quaternions for testing
+        q_original = quaternion_normalize(q_original)
+
+        rotation_angles = torch.randn(num_samples, 6, device=device) * 2 * torch.pi
+
+        # Apply SO(4) rotation
+        q_rotated = self.so4_rotation(q_original, rotation_angles)
+
+        # Compute norms
+        norm_original = quaternion_norm(q_original)
+        norm_rotated = quaternion_norm(q_rotated)
+
+        # Compute preservation metrics
+        norm_preservation_errors = torch.abs(norm_rotated - norm_original)
+        max_error = torch.max(norm_preservation_errors).item()
+        mean_error = torch.mean(norm_preservation_errors).item()
+        std_error = torch.std(norm_preservation_errors).item()
+
+        # Check if all norms are preserved within tolerance
+        tolerance = 1e-5
+        all_preserved = torch.all(norm_preservation_errors < tolerance).item()
+
+        # Additional validation: check unitarity of rotation quaternions
+        theta1, omega1, phi1, theta2, omega2, phi2 = torch.unbind(rotation_angles, dim=-1)
+
+        w_left = torch.cos(theta1/2) * torch.cos(omega1/2) * torch.cos(phi1/2)
+        x_left = torch.sin(theta1/2) * torch.cos(omega1/2) * torch.cos(phi1/2)
+        y_left = torch.cos(theta1/2) * torch.sin(omega1/2) * torch.cos(phi1/2)
+        z_left = torch.cos(theta1/2) * torch.cos(omega1/2) * torch.sin(phi1/2)
+        q_left_test = torch.stack([w_left, x_left, y_left, z_left], dim=-1)
+        q_left_norm = torch.mean(quaternion_norm(q_left_test)).item()
+
+        w_right = torch.cos(theta2/2) * torch.cos(omega2/2) * torch.cos(phi2/2)
+        x_right = torch.sin(theta2/2) * torch.cos(omega2/2) * torch.cos(phi2/2)
+        y_right = torch.cos(theta2/2) * torch.sin(omega2/2) * torch.cos(phi2/2)
+        z_right = torch.cos(theta2/2) * torch.cos(omega2/2) * torch.sin(phi2/2)
+        q_right_test = torch.stack([w_right, x_right, y_right, z_right], dim=-1)
+        q_right_norm = torch.mean(quaternion_norm(q_right_test)).item()
+
+        return {
+            'max_norm_preservation_error': max_error,
+            'mean_norm_preservation_error': mean_error,
+            'std_norm_preservation_error': std_error,
+            'all_norms_preserved': all_preserved,
+            'rotation_quaternions_unitary': q_left_norm > 0.999 and q_right_norm > 0.999,
+            'num_samples_tested': num_samples
+        }
 
     def conjugate(self, q: torch.Tensor) -> torch.Tensor:
         """Compute quaternion conjugate."""

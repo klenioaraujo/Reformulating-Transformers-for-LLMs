@@ -275,6 +275,12 @@ class ProcessingParameterCalibrator:
                 is_compatible = False
                 issues.append(f"Dimension {i}: expected {expected}, got {actual}")
 
+        # Special case: handle 1D vs 2D tensors in quantum_mapping
+        if component_name == "quantum_mapping" and len(actual_shape) == 1 and len(expected_shape) == 2:
+            # This is the specific case causing the error: 1D tensor where 2D is expected
+            is_compatible = False
+            issues.append(f"Quantum mapping requires 2D tensor but got 1D: {actual_shape}")
+
         return {
             'is_compatible': is_compatible,
             'actual_shape': actual_shape,
@@ -302,60 +308,41 @@ class ProcessingParameterCalibrator:
         print(f"🔧 Auto-calibrating dimensions for {component_name}:")
         print(f"   📐 Current shape: {current_shape}")
 
-        # Handle sequence length calibration
-        if 'seq_len' in target_dims:
-            target_seq_len = target_dims['seq_len']
-            if len(current_shape) > 0 and current_shape[0] != target_seq_len:
-                if current_shape[0] < target_seq_len:
-                    # Pad sequence dimension
-                    padding_size = target_seq_len - current_shape[0]
-                    padding_shape = list(current_shape)
-                    padding_shape[0] = padding_size
-                    padding = torch.zeros(padding_shape, dtype=tensor.dtype, device=tensor.device)
-                    calibrated_tensor = torch.cat([calibrated_tensor, padding], dim=0)
-                    print(f"   ➕ Padded sequence dimension: {current_shape[0]} → {target_seq_len}")
-                else:
-                    # Truncate sequence dimension
-                    calibrated_tensor = calibrated_tensor[:target_seq_len]
-                    print(f"   ➖ Truncated sequence dimension: {current_shape[0]} → {target_seq_len}")
+        # Special case: handle quantum_mapping 1D → 2D conversion
+        if component_name == "quantum_mapping" and len(current_shape) == 1:
+            # Convert 1D tensor to 2D: [seq_len] → [seq_len, embed_dim]
+            seq_len = current_shape[0]
+            embed_dim = target_dims.get('embed_dim', 64)
 
-        # Handle embedding dimension calibration
-        if 'embed_dim' in target_dims and len(current_shape) > 1:
-            target_embed_dim = target_dims['embed_dim']
-            if current_shape[1] != target_embed_dim:
-                if current_shape[1] < target_embed_dim:
-                    # Pad embedding dimension
-                    padding_size = target_embed_dim - current_shape[1]
-                    padding_shape = list(current_shape)
-                    padding_shape[1] = padding_size
-                    padding = torch.zeros(padding_shape, dtype=tensor.dtype, device=tensor.device)
-                    calibrated_tensor = torch.cat([calibrated_tensor, padding], dim=1)
-                    print(f"   ➕ Padded embedding dimension: {current_shape[1]} → {target_embed_dim}")
-                else:
-                    # Truncate embedding dimension
-                    calibrated_tensor = calibrated_tensor[:, :target_embed_dim]
-                    print(f"   ➖ Truncated embedding dimension: {current_shape[1]} → {target_embed_dim}")
+            # Expand 1D tensor to 2D by repeating values across embedding dimension
+            calibrated_tensor = calibrated_tensor.unsqueeze(-1).expand(-1, embed_dim)
+            print(f"   🔄 Quantum mapping 1D→2D conversion: {current_shape} → {calibrated_tensor.shape}")
+            current_shape = calibrated_tensor.shape
 
-        # Handle quaternion dimension calibration (4D)
-        if 'quaternion_dim' in target_dims and len(current_shape) > 2:
-            target_quat_dim = target_dims['quaternion_dim']
-            if current_shape[2] != target_quat_dim:
-                if current_shape[2] < target_quat_dim:
-                    # Pad quaternion dimension
-                    padding_size = target_quat_dim - current_shape[2]
-                    padding_shape = list(current_shape)
-                    padding_shape[2] = padding_size
-                    padding = torch.zeros(padding_shape, dtype=tensor.dtype, device=tensor.device)
-                    calibrated_tensor = torch.cat([calibrated_tensor, padding], dim=2)
-                    print(f"   ➕ Padded quaternion dimension: {current_shape[2]} → {target_quat_dim}")
-                else:
-                    # Truncate quaternion dimension
-                    calibrated_tensor = calibrated_tensor[:, :, :target_quat_dim]
-                    print(f"   ➖ Truncated quaternion dimension: {current_shape[2]} → {target_quat_dim}")
+        # Standardize tensor dimensions to common format
+        # Expected format: [batch_size, seq_len, embed_dim, quaternion_dim]
+
+        # Ensure tensor has at least 4 dimensions
+        while len(current_shape) < 4:
+            calibrated_tensor = calibrated_tensor.unsqueeze(-1)
+            current_shape = calibrated_tensor.shape
+            print(f"   🔄 Added dimension: {current_shape}")
+
+        # Set default target dimensions if not specified
+        default_targets = {
+            'batch_size': 1,
+            'seq_len': 64,  # Standard sequence length
+            'embed_dim': 64,  # Standard embedding dimension
+            'quaternion_dim': 4  # Standard quaternion dimension
+        }
+
+        # Merge user targets with defaults
+        merged_targets = default_targets.copy()
+        merged_targets.update(target_dims)
 
         # Handle batch dimension calibration
-        if 'batch_size' in target_dims and len(current_shape) > 0:
-            target_batch_size = target_dims['batch_size']
+        if 'batch_size' in merged_targets:
+            target_batch_size = merged_targets['batch_size']
             if current_shape[0] != target_batch_size:
                 if current_shape[0] < target_batch_size:
                     # Repeat tensor to match batch size
@@ -365,6 +352,72 @@ class ProcessingParameterCalibrator:
                     # Take first batch_size elements
                     calibrated_tensor = calibrated_tensor[:target_batch_size]
                     print(f"   ➖ Reduced batch dimension: {current_shape[0]} → {target_batch_size}")
+
+        # Handle sequence length calibration
+        if 'seq_len' in merged_targets:
+            target_seq_len = merged_targets['seq_len']
+            if len(current_shape) > 1 and current_shape[1] != target_seq_len:
+                if current_shape[1] < target_seq_len:
+                    # Pad sequence dimension
+                    padding_size = target_seq_len - current_shape[1]
+                    padding_shape = list(current_shape)
+                    padding_shape[1] = padding_size
+                    # Ensure padding shape matches calibrated_tensor shape except for dimension 1
+                    padding_shape[0] = calibrated_tensor.shape[0]  # Match batch dimension
+                    if len(padding_shape) > 2:
+                        padding_shape[2] = calibrated_tensor.shape[2]  # Match embed dimension
+                    if len(padding_shape) > 3:
+                        padding_shape[3] = calibrated_tensor.shape[3]  # Match quaternion dimension
+                    padding = torch.zeros(padding_shape, dtype=tensor.dtype, device=tensor.device)
+                    calibrated_tensor = torch.cat([calibrated_tensor, padding], dim=1)
+                    print(f"   ➕ Padded sequence dimension: {current_shape[1]} → {target_seq_len}")
+                else:
+                    # Truncate sequence dimension
+                    calibrated_tensor = calibrated_tensor[:, :target_seq_len]
+                    print(f"   ➖ Truncated sequence dimension: {current_shape[1]} → {target_seq_len}")
+
+        # Handle embedding dimension calibration
+        if 'embed_dim' in merged_targets and len(current_shape) > 2:
+            target_embed_dim = merged_targets['embed_dim']
+            if current_shape[2] != target_embed_dim:
+                if current_shape[2] < target_embed_dim:
+                    # Pad embedding dimension
+                    padding_size = target_embed_dim - current_shape[2]
+                    padding_shape = list(current_shape)
+                    padding_shape[2] = padding_size
+                    # Ensure padding shape matches calibrated_tensor shape except for dimension 2
+                    padding_shape[0] = calibrated_tensor.shape[0]  # Match batch dimension
+                    padding_shape[1] = calibrated_tensor.shape[1]  # Match sequence dimension
+                    if len(padding_shape) > 3:
+                        padding_shape[3] = calibrated_tensor.shape[3]  # Match quaternion dimension
+                    padding = torch.zeros(padding_shape, dtype=tensor.dtype, device=tensor.device)
+                    calibrated_tensor = torch.cat([calibrated_tensor, padding], dim=2)
+                    print(f"   ➕ Padded embedding dimension: {current_shape[2]} → {target_embed_dim}")
+                else:
+                    # Truncate embedding dimension
+                    calibrated_tensor = calibrated_tensor[:, :, :target_embed_dim]
+                    print(f"   ➖ Truncated embedding dimension: {current_shape[2]} → {target_embed_dim}")
+
+        # Handle quaternion dimension calibration (4D)
+        if 'quaternion_dim' in merged_targets and len(current_shape) > 3:
+            target_quat_dim = merged_targets['quaternion_dim']
+            if current_shape[3] != target_quat_dim:
+                if current_shape[3] < target_quat_dim:
+                    # Pad quaternion dimension
+                    padding_size = target_quat_dim - current_shape[3]
+                    padding_shape = list(current_shape)
+                    padding_shape[3] = padding_size
+                    # Ensure padding shape matches calibrated_tensor shape except for dimension 3
+                    padding_shape[0] = calibrated_tensor.shape[0]  # Match batch dimension
+                    padding_shape[1] = calibrated_tensor.shape[1]  # Match sequence dimension
+                    padding_shape[2] = calibrated_tensor.shape[2]  # Match embed dimension
+                    padding = torch.zeros(padding_shape, dtype=tensor.dtype, device=tensor.device)
+                    calibrated_tensor = torch.cat([calibrated_tensor, padding], dim=3)
+                    print(f"   ➕ Padded quaternion dimension: {current_shape[3]} → {target_quat_dim}")
+                else:
+                    # Truncate quaternion dimension
+                    calibrated_tensor = calibrated_tensor[:, :, :, :target_quat_dim]
+                    print(f"   ➖ Truncated quaternion dimension: {current_shape[3]} → {target_quat_dim}")
 
         final_shape = calibrated_tensor.shape
         print(f"   ✅ Calibrated shape: {final_shape}")
@@ -391,9 +444,12 @@ class ProcessingParameterCalibrator:
         print(f"   📐 Tensor A shape: {shape_a}")
         print(f"   📐 Tensor B shape: {shape_b}")
 
-        # Find compatible dimensions
-        calibrated_a = tensor_a
-        calibrated_b = tensor_b
+        # First, ensure both tensors have standard 4D format: [batch_size, seq_len, embed_dim, quaternion_dim]
+        calibrated_a = self.auto_calibrate_dimensions(tensor_a, {}, f"{operation_name}_tensor_a")
+        calibrated_b = self.auto_calibrate_dimensions(tensor_b, {}, f"{operation_name}_tensor_b")
+
+        shape_a = calibrated_a.shape
+        shape_b = calibrated_b.shape
 
         # Handle broadcasting for common operations
         if operation_name in ['addition', 'subtraction', 'elementwise']:
@@ -442,6 +498,22 @@ class ProcessingParameterCalibrator:
                         calibrated_b = calibrated_b[..., :target_dim, :]
 
                     print(f"   ✅ Calibrated matrix multiplication dimensions: {shape_a[-1]} → {target_dim}")
+
+        # Final validation - ensure both tensors have exactly the same shape
+        if calibrated_a.shape != calibrated_b.shape:
+            print(f"   ⚠️  Shapes still incompatible after calibration: {calibrated_a.shape} vs {calibrated_b.shape}")
+            print(f"   🔧 Forcing shape compatibility by broadcasting...")
+
+            # Force compatibility by expanding to maximum dimensions
+            target_shape = []
+            for dim_a, dim_b in zip(calibrated_a.shape, calibrated_b.shape):
+                target_shape.append(max(dim_a, dim_b))
+
+            # Expand both tensors to target shape
+            calibrated_a = calibrated_a.expand(*target_shape)
+            calibrated_b = calibrated_b.expand(*target_shape)
+
+            print(f"   ✅ Final shapes: A {calibrated_a.shape}, B {calibrated_b.shape}")
 
         return calibrated_a, calibrated_b
 
@@ -520,7 +592,7 @@ class ProcessingParameterCalibrator:
         range_checks = {
             'dropout_range': 0.05 <= dropout <= 0.3,
             'max_history_range': 5 <= max_history <= 20,
-            'vocab_size_range': vocab_size in [256, 512, 1024, 2048, 50257],
+            'vocab_size_range': vocab_size in [41, 256, 512, 1024, 2048, 50257],  # Added 41 for native vocab
             'epsilon_range': 1e-12 <= epsilon <= 1e-6,
             'input_window_range': input_window in ['boxcar', 'hann', 'hamming'],
             'quaternion_complexity_range': 0.5 <= quaternion_complexity <= 2.0,

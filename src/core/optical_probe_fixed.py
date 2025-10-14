@@ -238,7 +238,91 @@ class OpticalProbeFixed(nn.Module):
                 is_valid = True
                 print(f"   🔄 Using fallback token: {fallback_token_id}")
 
+        # Return tuple with 3 elements as expected by caller
         return best_token_id, confidence, is_valid
+
+    def safe_extract_text(self, optical_output: Any, max_length: int = 100) -> str:
+        """
+        Extrai texto de forma segura de qualquer formato de saída do optical probe
+        """
+        try:
+            # Caso 1: Já é string
+            if isinstance(optical_output, str):
+                return optical_output[:max_length]
+
+            # Caso 2: Tuple (token_id, confidence, flag)
+            elif isinstance(optical_output, tuple) and len(optical_output) >= 1:
+                token_id = optical_output[0]
+                return self._token_to_char(token_id)
+
+            # Caso 3: Lista de tuples
+            elif isinstance(optical_output, list) and optical_output:
+                if isinstance(optical_output[0], tuple):
+                    # Lista de tuples: [(id, conf, flag), ...]
+                    return ''.join([self._token_to_char(item[0])
+                                  for item in optical_output[:max_length]])
+                else:
+                    # Lista de tokens/strings
+                    return ''.join([str(item) for item in optical_output[:max_length]])
+
+            # Caso 4: Tensor PyTorch
+            elif isinstance(optical_output, torch.Tensor):
+                return self._tensor_to_text(optical_output, max_length)
+
+            # Caso 5: Single token ID
+            elif isinstance(optical_output, (int, float)):
+                return self._token_to_char(int(optical_output))
+
+            # Caso 6: Formato desconhecido - fallback para string
+            else:
+                text_repr = str(optical_output)
+                # Tentar extrair padrões de tuple
+                import re
+                tuple_pattern = r'\((\d+),\s*[\d.]+\s*,\s*(True|False)\)'
+                matches = re.findall(tuple_pattern, text_repr)
+                if matches:
+                    return ''.join([self._token_to_char(int(match[0]))
+                                  for match in matches[:max_length]])
+                return text_repr[:max_length]
+
+        except Exception as e:
+            print(f"⚠️  Erro no optical probe fallback: {e}")
+            return f"optical_output_error_{hash(str(optical_output))[:8]}"
+
+    def _token_to_char(self, token_id: int) -> str:
+        """Converte token ID para caractere de forma segura"""
+        try:
+            if 0 <= token_id < len(self.fallback_vocab):
+                return self.fallback_vocab[token_id]
+            else:
+                # Fallback: módulo do tamanho do vocabulário
+                return self.fallback_vocab[token_id % len(self.fallback_vocab)]
+        except:
+            return '?'  # Fallback final
+
+    def _tensor_to_text(self, tensor: torch.Tensor, max_length: int) -> str:
+        """Converte tensor para texto de forma segura"""
+        try:
+            # Flatten e pegar primeiros elementos
+            flat_tensor = tensor.flatten()[:max_length]
+            # Converter para inteiros e depois para caracteres
+            tokens = [int(x.item()) for x in flat_tensor if torch.isfinite(x)]
+            return ''.join([self._token_to_char(tok) for tok in tokens])
+        except:
+            return f"tensor_{tensor.shape}"
+
+    @property
+    def fallback_vocab(self):
+        """Cria vocabulário fallback ASCII para decodificação robusta"""
+        if not hasattr(self, '_fallback_vocab'):
+            vocab = []
+            # Caracteres ASCII imprimíveis (32-126)
+            for i in range(32, 127):
+                vocab.append(chr(i))
+            # Caracteres especiais comuns
+            vocab.extend(['\n', '\t', ' '])
+            self._fallback_vocab = vocab
+        return self._fallback_vocab
 
     def decode_with_context(self, psi_final: torch.Tensor, context_tokens: List[int] = None) -> Tuple[int, float, bool]:
         """

@@ -21,12 +21,17 @@ from typing import Dict, List, Tuple, Optional, Any
 from datetime import datetime
 import argparse
 import logging
+from transformers import AutoTokenizer, AutoModelForCausalLM
 
 # Anomaly detection disabled after fixing gradient issues
 # torch.autograd.set_detect_anomaly(True)
 
 # Import ΨQRH components
 from psiqrh import ΨQRHPipeline
+from src.architecture.psiqrh_transformer import PsiQRHTransformer
+from src.core.complete_auto_calibration_system import CompleteAutoCalibrationSystem
+from src.core.harmonic_signature_analyzer import HarmonicSignatureAnalyzer
+from src.core.physical_fundamental_corrections import PhysicalHarmonicOrchestrator
 
 
 class SymmetricAlignmentDataset(Dataset):
@@ -342,8 +347,14 @@ def main():
                         help='Path to the trained model checkpoint')
     parser.add_argument('--validate-every', type=int, default=10,
                         help='Validate alignment every N epochs')
+    parser.add_argument('--distill-from-model', type=str, default=None,
+                        help='Enable distillation mode: specify source model name (e.g., gpt2)')
 
     args = parser.parse_args()
+
+    # Check if distillation mode is enabled
+    if args.distill_from_model:
+        return distillation_main(args)
 
     print("🔄 Starting ΨQRH Symmetric Alignment Training")
     print("=" * 60)
@@ -466,6 +477,242 @@ def main():
     print(f"   🎯 Final Average Confidence: {final_metrics['average_confidence']:.4f}")
     print(f"   ✅ Convergence Achieved: {final_metrics['convergence_achieved']}")
     print(f"   ✅ High Confidence: {final_metrics['high_confidence']}")
+
+
+def distillation_main(args):
+    """
+    Main function for knowledge distillation mode.
+
+    This function implements the distillation workflow:
+    1. Load source model and tokenizer
+    2. Project and harmonize vocabulary
+    3. Generate dynamic dataset through imitation learning
+    4. Train PsiQRHTransformer via behavioral distillation
+    """
+    print("🧠 Starting ΨQRH Knowledge Distillation Training")
+    print("=" * 60)
+    print(f"🎯 Goal: Train PsiQRHTransformer to imitate '{args.distill_from_model}'")
+    print("🔄 Approach: Vocabulary projection + Dynamic dataset generation + Imitation learning")
+    print()
+
+    # Load source model and tokenizer
+    print(f"📥 Loading source model '{args.distill_from_model}'...")
+    try:
+        tokenizer = AutoTokenizer.from_pretrained(args.distill_from_model)
+        source_model = AutoModelForCausalLM.from_pretrained(args.distill_from_model)
+        print("✅ Source model loaded successfully")
+    except Exception as e:
+        print(f"❌ Error loading source model: {e}")
+        return
+
+    # Create PsiQRH target model
+    vocab_size = len(tokenizer) if hasattr(tokenizer, '__len__') else tokenizer.vocab_size
+    psiqrh_model = PsiQRHTransformer(
+        vocab_size=vocab_size,
+        d_model=source_model.config.hidden_size,
+        n_layers=source_model.config.num_hidden_layers,
+        n_heads=source_model.config.num_attention_heads,
+        dim_feedforward=source_model.config.intermediate_size,
+        max_seq_length=512,
+        quaternion_multiplier=4
+    ).to(args.device)
+
+    print(f"✅ PsiQRHTransformer created with matching architecture")
+    print(f"   Vocab: {vocab_size}, d_model: {source_model.config.hidden_size}")
+
+    # Vocabulary Projection and Harmonization
+    print("🔬 Executing vocabulary projection and harmonization...")
+    harmonized_embeddings = project_and_harmonize_vocabulary_distillation(
+        tokenizer, source_model, psiqrh_model, args.device
+    )
+    psiqrh_model.token_embedding.embedding.weight.data = harmonized_embeddings
+    print("✅ Vocabulary harmonized and loaded")
+
+    # Create distillation trainer
+    trainer = DistillationTrainer(
+        psiqrh_model, source_model, tokenizer,
+        device=args.device,
+        learning_rate=args.learning_rate
+    )
+
+    # Training loop with dynamic dataset generation
+    print(f"🎯 Starting distillation training for {args.epochs} epochs...")
+
+    for epoch in range(1, args.epochs + 1):
+        print(f"🔄 Epoch {epoch}/{args.epochs} - Knowledge Distillation")
+        print("-" * 80)
+
+        # Train epoch with dynamic dataset
+        epoch_loss = trainer.train_epoch(epoch, args.epochs, batch_size=args.batch_size)
+
+        print(".8f")
+
+        # Save checkpoint
+        checkpoint_dir = Path(args.checkpoint_dir)
+        checkpoint_path = checkpoint_dir / f"distillation_epoch_{epoch}.pt"
+        trainer.save_checkpoint(checkpoint_path, epoch, epoch_loss)
+
+    # Save final distilled model
+    output_dir = Path("models/distilled")
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    final_model_path = output_dir / f"psiqrh_distilled_{args.distill_from_model}.pt"
+    torch.save({
+        'model_state_dict': psiqrh_model.state_dict(),
+        'config': {
+            'vocab_size': vocab_size,
+            'd_model': source_model.config.hidden_size,
+            'n_layers': source_model.config.num_hidden_layers,
+            'n_heads': source_model.config.num_attention_heads,
+            'framework': 'ΨQRH',
+            'conversion_method': 'dynamic_knowledge_distillation'
+        },
+        'distillation_info': {
+            'source_model': args.distill_from_model,
+            'training_epochs': args.epochs,
+            'dynamic_dataset_generation': True,
+            'vocabulary_harmonization': True,
+            'behavioral_distillation': True
+        }
+    }, final_model_path)
+
+    print("✅ Knowledge distillation completed!")
+    print(f"💾 Final distilled model saved: {final_model_path}")
+
+
+class DistillationTrainer:
+    """Trainer for knowledge distillation from external models to PsiQRH."""
+
+    def __init__(self, psiqrh_model, source_model, tokenizer, device='cpu', learning_rate=1e-4):
+        self.psiqrh_model = psiqrh_model
+        self.source_model = source_model
+        self.tokenizer = tokenizer
+        self.device = device
+
+        # Setup optimizer for PsiQRH model
+        self.optimizer = optim.AdamW(psiqrh_model.parameters(), lr=learning_rate)
+        self.criterion = nn.CrossEntropyLoss()
+
+        # Probe sentences for dynamic training
+        self.probe_sentences = [
+            "The quick brown fox jumps over the lazy dog.",
+            "In the beginning was the Word, and the Word was with God.",
+            "To be or not to be, that is the question.",
+            "The only thing we have to fear is fear itself.",
+            "I think, therefore I am.",
+            "The unexamined life is not worth living.",
+            "Knowledge is power.",
+            "The truth will set you free.",
+            "Beauty is in the eye of the beholder.",
+            "Actions speak louder than words."
+        ]
+
+    def train_epoch(self, epoch, num_epochs, batch_size=4):
+        """Train one epoch using dynamic dataset generation."""
+        self.psiqrh_model.train()
+        self.source_model.eval()
+
+        total_loss = 0.0
+        num_batches = 0
+
+        for sentence in self.probe_sentences:
+            # Generate training data dynamically
+            inputs = self.tokenizer(sentence, return_tensors="pt", padding=True, truncation=True)
+            input_ids = inputs['input_ids'].to(self.device)
+
+            # Get source model outputs
+            with torch.no_grad():
+                source_outputs = self.source_model(**inputs)
+                source_logits = source_outputs.logits
+
+            # Get PsiQRH outputs
+            psiqrh_logits = self.psiqrh_model(input_ids)
+
+            # Compute distillation loss
+            # Use KL divergence for soft targets, but here we use MSE for simplicity
+            loss = nn.functional.mse_loss(psiqrh_logits, source_logits.to(self.device))
+
+            # Backpropagation
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
+
+            total_loss += loss.item()
+            num_batches += 1
+
+            print(f"   📝 '{sentence[:30]}...' → Loss: {loss.item():.6f}")
+
+        avg_loss = total_loss / num_batches
+        return avg_loss
+
+    def save_checkpoint(self, checkpoint_path, epoch, loss):
+        """Save training checkpoint."""
+        checkpoint = {
+            'epoch': epoch,
+            'loss': loss,
+            'psiqrh_model_state_dict': self.psiqrh_model.state_dict(),
+        }
+
+        checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
+        torch.save(checkpoint, checkpoint_path)
+        print(f"💾 Distillation checkpoint saved: {checkpoint_path}")
+
+
+def project_and_harmonize_vocabulary_distillation(tokenizer, source_model, psiqrh_model, device):
+    """
+    Project and harmonize vocabulary for distillation training.
+
+    Similar to the function in model_converter_spectral.py but adapted for training context.
+    """
+    print("🔬 Analyzing harmonic signature of source vocabulary...")
+
+    # Get source embeddings
+    source_embeddings = source_model.get_input_embeddings().weight.detach()
+
+    # Analyze harmonic signature
+    signature_analyzer = HarmonicSignatureAnalyzer()
+    vocab_signal = source_embeddings.mean(dim=0).unsqueeze(0)
+    harmonic_signature = signature_analyzer(vocab_signal)
+
+    print(f"   📊 Harmonic analysis: periodicity={harmonic_signature.periodicity_score:.3f}")
+
+    # Project each embedding to quaternion space
+    print("🔄 Projecting embeddings to quaternion space...")
+    quaternion_embeddings = []
+
+    for i in range(len(source_embeddings)):
+        embedding = source_embeddings[i].unsqueeze(0)
+        complex_proj = psiqrh_model.token_embedding.quaternion_mlp(embedding)
+        psi_0 = complex_proj.real
+        psi_1 = complex_proj.imag
+
+        # Generate ψ₂, ψ₃
+        rotation_scales = psiqrh_model.token_embedding.rotation_scales
+        rotation_angles = psiqrh_model.token_embedding.rotation_angles
+
+        psi_2 = psi_0 * rotation_scales[:, 0] + psi_1 * rotation_scales[:, 1]
+        psi_3 = psi_1 * rotation_scales[:, 0] - psi_0 * rotation_scales[:, 1]
+
+        psi_2 = psi_2 * torch.cos(rotation_angles[:, 0])
+        psi_3 = psi_3 * torch.sin(rotation_angles[:, 1])
+
+        quaternion_embed = torch.stack([psi_0.squeeze(0), psi_1.squeeze(0), psi_2.squeeze(0), psi_3.squeeze(0)])
+        quaternion_embeddings.append(quaternion_embed)
+
+    # Harmonize the complete system
+    print("🎼 Applying physical harmonization...")
+    orchestrator = PhysicalHarmonicOrchestrator()
+
+    vocab_tensor = torch.stack(quaternion_embeddings, dim=0)
+    vocab_signal = vocab_tensor.flatten(start_dim=1)
+
+    physical_result = orchestrator.orchestrate_physical_pipeline(vocab_signal.mean(dim=0))
+    harmonized_quaternions = physical_result['final_state'].view(-1, 4, vocab_tensor.size(-1))
+    harmonized_real = harmonized_quaternions[:, 0, :]
+
+    print("✅ Vocabulary projection and harmonization complete")
+
+    return harmonized_real
 
 
 if __name__ == "__main__":

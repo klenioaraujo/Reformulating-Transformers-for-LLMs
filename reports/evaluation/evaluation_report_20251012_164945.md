@@ -1,0 +1,58 @@
+# ΨQRH Model Semantic Evaluation Report
+============================================================
+
+## Model Information
+- **Model**: models/checkpoints/best_model.pt
+- **Device**: cpu
+- **Semantic Decoder Beam Width**: 5
+
+## Summary Metrics
+- **Test Cases Evaluated**: 5/5
+.3f
+.3f
+.3f
+.3f
+.1f
+.1f
+
+## Detailed Test Case Results
+
+### Test Case 1
+**Input**: quantum mechanics
+**Reference**: Quantum mechanics provides the foundation for understanding physical phenomena at atomic scales.
+**Generated**: (53, 0.5313897132873535, True)(53, 0.5376157164573669, True)(53, 0.5376157164573669, True)(53, 0.6058533787727356, True)(53, 0.6058533787727356, True)(53, 0.5701979398727417, True)(53, 0.5701979398727417, True)(53, 0.5370941162109375, True)(53, 0.5370941162109375, True)(53, 0.5377383232116699, True)(53, 0.5377383232116699, True)(53, 0.5910232067108154, True)(53, 0.5910232067108154, True)(53, 0.5483092069625854, True)(53, 0.5483092069625854, True)(53, 0.5936341285705566, True)(53, 0.5936341285705566, True)(53, 0.5350497961044312, True)(53, 0.5350497961044312, True)(53, 0.6005245447158813, True)(53, 0.6005245447158813, True)
+.3f
+.3f
+.1f
+
+### Test Case 2
+**Input**: uncertainty principle
+**Reference**: The uncertainty principle states that it is impossible to simultaneously know both position and momentum with arbitrary precision.
+**Generated**: (53, 0.5673618912696838, True)(53, 0.5984990000724792, True)(53, 0.5984990000724792, True)(53, 0.6275534629821777, True)(53, 0.6275534629821777, True)(53, 0.6019129157066345, True)(53, 0.6019129157066345, True)(53, 0.5019082427024841, True)(53, 0.5019082427024841, True)(53, 0.5864410400390625, True)(53, 0.5864410400390625, True)(53, 0.5742697715759277, True)(53, 0.5742697715759277, True)(53, 0.5867955684661865, True)(53, 0.5867955684661865, True)(53, 0.6276068687438965, True)(53, 0.6276068687438965, True)(53, 0.6247814893722534, True)(53, 0.6247814893722534, True)(53, 0.5366103649139404, True)(53, 0.5366103649139404, True)
+.3f
+.3f
+.1f
+
+### Test Case 3
+**Input**: wave function
+**Reference**: Wave functions describe the quantum state of systems, evolving according to the Schrödinger equation.
+**Generated**: (53, 0.5618594884872437, True)(53, 0.5402608513832092, True)(53, 0.5402608513832092, True)(53, 0.6063567399978638, True)(53, 0.6063567399978638, True)(53, 0.5381481647491455, True)(53, 0.5381481647491455, True)(53, 0.53727126121521, True)(53, 0.53727126121521, True)(53, 0.6072655916213989, True)(53, 0.6072655916213989, True)(53, 0.5848015546798706, True)(53, 0.5848015546798706, True)(53, 0.5500057935714722, True)(53, 0.5500057935714722, True)(53, 0.5435401201248169, True)(53, 0.5435401201248169, True)(53, 0.5239392518997192, True)(53, 0.5239392518997192, True)(53, 0.5674180388450623, True)(53, 0.5674180388450623, True)
+.3f
+.3f
+.1f
+
+### Test Case 4
+**Input**: superposition
+**Reference**: Superposition allows particles to exist in multiple states simultaneously until measured.
+**Generated**: (53, 0.5024061799049377, True)(53, 0.5652012825012207, True)(53, 0.5652012825012207, True)(53, 0.6113028526306152, True)(53, 0.6113028526306152, True)(53, 0.568611741065979, True)(53, 0.568611741065979, True)(53, 0.547604501247406, True)(53, 0.547604501247406, True)(53, 0.5585516095161438, True)(53, 0.5585516095161438, True)(53, 0.5389555096626282, True)(53, 0.5389555096626282, True)(53, 0.5243812203407288, True)(53, 0.5243812203407288, True)(53, 0.4845556616783142, True)(53, 0.4845556616783142, True)(53, 0.5510818362236023, True)(53, 0.5510818362236023, True)(53, 0.6032445430755615, True)(53, 0.6032445430755615, True)
+.3f
+.3f
+.1f
+
+### Test Case 5
+**Input**: entanglement
+**Reference**: Entanglement creates correlations between particles that persist regardless of distance.
+**Generated**: (53, 0.5500246286392212, True)(53, 0.589201807975769, True)(53, 0.589201807975769, True)(53, 0.534875750541687, True)(53, 0.534875750541687, True)(53, 0.5732221007347107, True)(53, 0.5732221007347107, True)(53, 0.6120210886001587, True)(53, 0.6120210886001587, True)(53, 0.5588550567626953, True)(53, 0.5588550567626953, True)(53, 0.5530744791030884, True)(53, 0.5530744791030884, True)(53, 0.6231562495231628, True)(53, 0.6231562495231628, True)(53, 0.6080363988876343, True)(53, 0.6080363988876343, True)(53, 0.5395287275314331, True)(53, 0.5395287275314331, True)(53, 0.5625590085983276, True)(53, 0.5625590085983276, True)
+.3f
+.3f
+.1f

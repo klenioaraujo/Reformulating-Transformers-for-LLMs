@@ -13,11 +13,14 @@ LATEST_MODEL = $(MODEL_DIR)/best_model.pt
 EPOCHS = 10
 BATCH_SIZE = 8
 DEVICE = cpu
+SOURCE_MODEL ?=
+LOCAL_SOURCE_PATH = models/source/$(SOURCE_MODEL)
+TEST_DISTILL_MODEL ?= gpt2
 
 # Default target
 .PHONY: help
 help: ## Mostra esta mensagem de ajuda.
-	@awk 'BEGIN {FS = ":.*?## "; printf "Uso:\n  make \033[36m<alvo>\033[0m\n\nAlvos disponíveis:\n"} /^[a-zA-Z_-]+:.*?## / { printf "  \033[36m%-25s\033[0m %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*?## "; printf "Uso:\n  make \033[36m<alvo>\033[0m\n\nAlvos disponíveis:\n"} /^# [A-Z]/ { category = substr($$0, 3); printf "\n\033[1m%s\033[0m\n", category } /^[a-zA-Z_-]+:.*?## / { printf "  \033[36m%-25s\033[0m %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
 
 # Installation and Setup
 .PHONY: install
@@ -186,12 +189,31 @@ benchmark: evaluate-baseline train evaluate ## Benchmark: baseline vs treinado.
 	@echo "   Compare os resultados em reports/evaluation/"
 
 .PHONY: semantic-alignment
-semantic-alignment: data hyperparameter-sweep train-extended evaluate plot-learning-curves visualize-semantic-space ## Workflow completo de alinhamento semântico.
-	@echo "🎯 Workflow completo de alinhamento semântico finalizado!"
-	@echo "   📊 Resultados salvos em results/hyperparameter_sweep/"
-	@echo "   📈 Curvas de aprendizado em results/plots/"
-	@echo "   🎨 Visualização semântica em results/semantic_analysis/"
-	@echo "   📋 Relatórios em reports/evaluation/"
+semantic-alignment: ## Workflow completo de alinhamento semântico ou destilação. Use: make semantic-alignment SOURCE_MODEL=gpt2
+	@echo "🔬 Executando workflow de alinhamento semântico..."
+	@if [ -z "$(SOURCE_MODEL)" ]; then \
+		echo "   📋 Modo: Alinhamento semântico padrão"; \
+		make data && make hyperparameter-sweep && make train-extended && make evaluate && make plot-learning-curves && make visualize-semantic-space; \
+		echo "🎯 Workflow completo de alinhamento semântico finalizado!"; \
+		echo "   📊 Resultados salvos em results/hyperparameter_sweep/"; \
+		echo "   📈 Curvas de aprendizado em results/plots/"; \
+		echo "   🎨 Visualização semântica em results/semantic_analysis/"; \
+		echo "   📋 Relatórios em reports/evaluation/"; \
+	else \
+		echo "   🧠 Modo: Destilação de conhecimento de '$(SOURCE_MODEL)'"; \
+		echo "   📥 Passo 1: Verificando se modelo já está baixado..."; \
+		if [ ! -d "models/source/$(SOURCE_MODEL)" ]; then \
+			echo "   📥 Modelo não encontrado localmente - baixando..."; \
+			$(PYTHON) scripts/download_model_ultra_simple.py --model_name $(SOURCE_MODEL); \
+		else \
+			echo "   ✅ Modelo já baixado - usando cache local"; \
+		fi; \
+		echo "   🎯 Passo 2: Executando destilação harmônica..."; \
+		$(PYTHON) model_converter_spectral_ultra_simple.py --mode distill --source_model $(SOURCE_MODEL) --output_model_name "psiqrh_distilled_$(SOURCE_MODEL)"; \
+		echo "   🔍 Passo 3: Avaliando modelo destilado..."; \
+		make evaluate MODEL_PATH=models/distilled/psiqrh_distilled_$(SOURCE_MODEL).pt; \
+		echo "   ✅ Workflow de destilação concluído!"; \
+	fi
 
 # Cleanup
 .PHONY: clean
@@ -272,6 +294,16 @@ lint: ## Executa verificação de estilo no código Python.
 test-all: test-semantic-decoder test-pipeline test-pipeline-tracer audit-test test-physics-emergent ## Executa todos os testes disponíveis.
 	@echo "✅ Todos os testes passaram!"
 
+.PHONY: test-distillation
+test-distillation: ## Executa o teste E2E do fluxo de destilação com um modelo de teste.
+	@echo "🧪 Iniciando teste de ponta a ponta do fluxo de destilação com '$(TEST_DISTILL_MODEL)'..."
+	# Passo 1: Executar o fluxo de destilação completo
+	make semantic-alignment SOURCE_MODEL=$(TEST_DISTILL_MODEL)
+	# Passo 2: Executar o script de validação com pytest
+	@echo "📊 Validando os artefatos e a funcionalidade do modelo destilado..."
+	$(PYTHON) -m pytest tests/test_distillation_workflow.py --model-name "$(TEST_DISTILL_MODEL)" -v
+	@echo "✅ Teste de destilação concluído com sucesso!"
+
 .PHONY: test-physics-emergent
 test-physics-emergent: ## Testa o sistema de treinamento emergente físico.
 	@echo "🧠 Testando sistema de treinamento emergente físico..."
@@ -295,6 +327,122 @@ test: ## Executa a suíte de testes completa com pytest.
 	@echo "🧪 Executando suíte de testes completa..."
 	$(PYTHON) -m pytest tests/test_suite.py -v --tb=short --override-ini="addopts="
 	@echo "✅ Suíte de testes concluída!"
+
+# Model Download and Management
+.PHONY: download-model
+download-model: ## Baixa e cacheia um modelo do Hugging Face. Use: make download-model SOURCE_MODEL=gpt2
+	@if [ -z "$(SOURCE_MODEL)" ]; then \
+		echo "❌ SOURCE_MODEL não especificado. Use: make download-model SOURCE_MODEL=gpt2"; \
+		exit 1; \
+	fi
+	@echo "📥 Baixando modelo '$(SOURCE_MODEL)' do Hugging Face (método ultra simples)..."
+	$(PYTHON) scripts/download_model_ultra_simple.py --model_name $(SOURCE_MODEL)
+	@echo "✅ Modelo '$(SOURCE_MODEL)' baixado e cacheado em models/source/"
+
+.PHONY: list-downloaded-models
+list-downloaded-models: ## Lista todos os modelos baixados localmente.
+	@echo "📚 Modelos baixados localmente:"
+	@if [ -d "models/source" ]; then \
+		find models/source -name "metadata.json" -exec dirname {} \; | xargs -I {} basename {} | while read model; do \
+			if [ -f "models/source/$$model/metadata.json" ]; then \
+				vocab_size=$$(grep -o '"vocab_size": [0-9]*' "models/source/$$model/metadata.json" | cut -d' ' -f2); \
+				hidden_size=$$(grep -o '"hidden_size": [0-9]*' "models/source/$$model/metadata.json" | cut -d' ' -f2); \
+				model_type=$$(grep -o '"model_type": "[^"]*"' "models/source/$$model/metadata.json" | cut -d'"' -f4); \
+				echo "   📁 $$model ($$model_type)"; \
+				echo "      📊 Vocab: $$vocab_size, Hidden: $$hidden_size"; \
+			fi; \
+		done; \
+	else \
+		echo "   📁 Nenhum modelo baixado encontrado"; \
+	fi
+
+.PHONY: clean-downloaded-models
+clean-downloaded-models: ## Remove todos os modelos baixados localmente.
+	@echo "🗑️  Removendo modelos baixados..."
+	rm -rf models/source/
+	@echo "✅ Modelos baixados removidos!"
+
+# Semantic Model Management
+.PHONY: convert-to-semantic
+convert-to-semantic: ## Converte um modelo destilado para formato semântico. Use: make convert-to-semantic SOURCE_MODEL=gpt2
+	@if [ -z "$(SOURCE_MODEL)" ]; then \
+		echo "❌ SOURCE_MODEL não especificado. Use: make convert-to-semantic SOURCE_MODEL=gpt2"; \
+		exit 1; \
+	fi
+	@echo "🔮 Convertendo modelo destilado '$(SOURCE_MODEL)' para formato semântico..."
+	@if [ ! -f "models/distilled/psiqrh_distilled_$(SOURCE_MODEL).pt" ]; then \
+		echo "❌ Modelo destilado 'psiqrh_distilled_$(SOURCE_MODEL).pt' não encontrado."; \
+		echo "   Execute 'make distill-knowledge SOURCE_MODEL=$(SOURCE_MODEL)' primeiro."; \
+		exit 1; \
+	fi
+	@mkdir -p models/semantic/
+	$(PYTHON) model_converter_spectral_ultra_simple.py --mode semantic --source_model $(SOURCE_MODEL) --output_model_name "psiqrh_semantic_$(SOURCE_MODEL)"
+	@echo "✅ Conversão semântica concluída. Modelo salvo em 'models/semantic/'"
+
+.PHONY: list-semantic-models
+list-semantic-models: ## Lista todos os modelos convertidos para formato semântico.
+	@echo "🧠 Modelos em formato semântico:"
+	@if [ -d "models/semantic" ]; then \
+		find models/semantic -name "*.pt" -type f | while read model; do \
+			model_name=$$(basename "$$model" .pt); \
+			model_size=$$(stat -c%s "$$model" 2>/dev/null || echo "unknown"); \
+			if [ "$$model_size" != "unknown" ]; then \
+				model_size_mb=$$(echo "scale=2; $$model_size / (1024*1024)" | bc); \
+				echo "   📁 $$model_name ($$model_size_mb MB)"; \
+			else \
+				echo "   📁 $$model_name (tamanho desconhecido)"; \
+			fi; \
+		done; \
+		if [ $$? -ne 0 ]; then \
+			echo "   📁 Nenhum modelo semântico encontrado"; \
+		fi; \
+	else \
+		echo "   📁 Diretório models/semantic/ não existe"; \
+		echo "   📁 Nenhum modelo semântico encontrado"; \
+	fi
+
+.PHONY: remove-semantic-model
+remove-semantic-model: ## Remove um modelo específico do formato semântico. Use: make remove-semantic-model SOURCE_MODEL=gpt2
+	@if [ -z "$(SOURCE_MODEL)" ]; then \
+		echo "❌ SOURCE_MODEL não especificado. Use: make remove-semantic-model SOURCE_MODEL=gpt2"; \
+		exit 1; \
+	fi
+	@echo "🗑️  Removendo modelo semântico '$(SOURCE_MODEL)'..."
+	@if [ -f "models/semantic/psiqrh_semantic_$(SOURCE_MODEL).pt" ]; then \
+		rm -f "models/semantic/psiqrh_semantic_$(SOURCE_MODEL).pt"; \
+		echo "✅ Modelo semântico 'psiqrh_semantic_$(SOURCE_MODEL).pt' removido"; \
+	else \
+		echo "⚠️  Modelo semântico 'psiqrh_semantic_$(SOURCE_MODEL).pt' não encontrado"; \
+	fi
+
+.PHONY: clean-semantic-models
+clean-semantic-models: ## Remove todos os modelos em formato semântico.
+	@echo "🗑️  Removendo todos os modelos semânticos..."
+	rm -rf models/semantic/
+	@echo "✅ Todos os modelos semânticos removidos!"
+
+.PHONY: semantic-workflow
+semantic-workflow: ## Workflow completo: baixar, destilar e converter para semântico. Use: make semantic-workflow SOURCE_MODEL=gpt2
+	@if [ -z "$(SOURCE_MODEL)" ]; then \
+		echo "❌ SOURCE_MODEL não especificado. Use: make semantic-workflow SOURCE_MODEL=gpt2"; \
+		exit 1; \
+	fi
+	@echo "🚀 Iniciando workflow semântico completo para '$(SOURCE_MODEL)'..."
+	@echo "   📥 Passo 1: Baixando modelo..."
+	make download-model SOURCE_MODEL=$(SOURCE_MODEL)
+	@echo "   🧠 Passo 2: Destilando conhecimento..."
+	make distill-knowledge SOURCE_MODEL=$(SOURCE_MODEL)
+	@echo "   🔮 Passo 3: Convertendo para formato semântico..."
+	make convert-to-semantic SOURCE_MODEL=$(SOURCE_MODEL)
+	@echo "   📊 Passo 4: Listando modelos disponíveis..."
+	make list-downloaded-models
+	make list-semantic-models
+	@echo "✅ Workflow semântico completo concluído!"
+	@echo ""
+	@echo "🎯 Modelos disponíveis:"
+	@echo "   • Baixados: models/source/$(SOURCE_MODEL)"
+	@echo "   • Destilados: models/distilled/psiqrh_distilled_$(SOURCE_MODEL).pt"
+	@echo "   • Semânticos: models/semantic/psiqrh_semantic_$(SOURCE_MODEL).pt"
 
 # Special Configurations
 .PHONY: gpu
@@ -335,6 +483,23 @@ e: evaluate ## Alias para evaluate
 
 .PHONY: a
 a: audit ## Alias para audit
+
+.PHONY: distill-knowledge
+distill-knowledge: ## Destila conhecimento de um LLM base para o espaço Hilbert do ΨQRH. Use: make distill-knowledge SOURCE_MODEL=gpt2
+	@if [ -z "$(SOURCE_MODEL)" ]; then \
+		echo "❌ SOURCE_MODEL não especificado. Use: make distill-knowledge SOURCE_MODEL=gpt2"; \
+		exit 1; \
+	fi
+	@echo "🔮 Iniciando destilação harmônica de '$(SOURCE_MODEL)' para o formato ΨQRH..."
+	@echo "   📥 Verificando se modelo já está baixado..."
+	@if [ ! -d "models/source/$(SOURCE_MODEL)" ]; then \
+		echo "   📥 Modelo não encontrado localmente - baixando..."; \
+		$(PYTHON) scripts/download_model_ultra_simple.py --model_name $(SOURCE_MODEL); \
+	else \
+		echo "   ✅ Modelo já baixado - usando cache local"; \
+	fi
+	$(PYTHON) model_converter_spectral_ultra_simple.py --mode distill --source_model $(SOURCE_MODEL) --output_model_name "psiqrh_distilled_$(SOURCE_MODEL)"
+	@echo "✅ Destilação concluída. Modelo salvo em 'models/distilled/'"
 
 .PHONY: h
 h: help ## Alias para help

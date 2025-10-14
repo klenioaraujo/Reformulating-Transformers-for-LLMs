@@ -271,7 +271,16 @@ class HarmonicOrchestrator:
             'c3_cross': c3_cross
         }
 
-        return base_mapping_function(signal, embed_dim, orchestrated_params)
+        try:
+            # CORREÇÃO: Garantir que a função base seja chamada corretamente
+            result = base_mapping_function(signal, embed_dim, orchestrated_params)
+            print(f"      ✅ Quantum mapping orchestrated successfully, result shape: {result.shape}")
+            return result
+        except Exception as e:
+            print(f"      ⚠️  Error in base_mapping_function: {e}")
+            print(f"      ⚠️  Signal shape: {signal.shape}, embed_dim: {embed_dim}")
+            # Fallback: chamar função base sem parâmetros orquestrados
+            return base_mapping_function(signal, embed_dim, proc_params)
 
     def _orchestrate_language_generation(self, signature: HarmonicSignature,
                                        base_generation_function: Callable,

@@ -40,7 +40,7 @@ class InverseCognitiveProjector(nn.Module):
         # Camadas de processamento quântico (aprendíveis)
         self.quantum_processor = nn.ModuleList([
             nn.Sequential(
-                nn.Linear(embed_dim if i == 0 else hidden_dim, hidden_dim),
+                nn.Linear(embed_dim * 4 if i == 0 else hidden_dim, hidden_dim),
                 nn.LayerNorm(hidden_dim),
                 nn.ReLU(),
                 nn.Dropout(dropout)
