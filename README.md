@@ -122,3 +122,19 @@ To follow the project's development, discuss ideas, or for professional inquirie
 If you use this work in your research, please cite it using the DOI provided by Zenodo:
 
 > Klenio Araujo Padilha. (2025). *Reformulating Transformers for LLMs: The ΨQRH Project (Version 1.0.0)* [Software]. Zenodo. https://doi.org/10.5281/zenodo.17171112
+
+---
+
+## 🌌 A Framework for Exploration
+
+This repository is more than just a model; it is a research framework. The main pipeline is in a state of constant improvement, and developers are free to explore, modify, and experiment with its unique architecture. The system is built on a foundation of advanced, verifiable features:
+
+*   **Semantic Harmonization**: At its core, the system uses Kuramoto dynamics to achieve consensus. This is not a simple selection but a process of harmonization, where candidate concepts synchronize to form a coherent response.
+
+*   **Auto-Calibration and Feedback**: The architecture includes a sophisticated feedback loop. It uses Consciousness-based Metrics (FCI) to assess its own internal state after each reasoning cycle, and then uses a Neural Diffusion Engine to auto-calibrate its parameters for the next interaction. It is a system that learns and adjusts not just from data, but from its own cognitive processes.
+
+*   **Energy Control and Physical Rigor**: The entire framework is grounded in physical principles. This is evident in mechanisms that explicitly conserve or control energy during transformations, ensuring that the simulations remain stable and physically plausible.
+
+*   **Comprehensive Test Structure**: The project is supported by a robust set of tests (`make test-physics`, `make test-echo`). This validation suite ensures that the core components behave as expected, which is crucial for a system built on complex physical simulations.
+
+We invite researchers and developers to dive into this different approach, contribute new ideas, and help explore the future of physically-grounded artificial intelligence.
