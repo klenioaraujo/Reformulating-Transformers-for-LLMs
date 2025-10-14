@@ -632,6 +632,13 @@ class PhysicalHarmonicOrchestrator(nn.Module):
                 print(f"[DEBUG] Chamando base_function: signal shape={signal.shape}, embed_dim={embed_dim}")
                 result = base_function(signal, embed_dim, proc_params)
                 print(f"[DEBUG] base_function retornou: result shape={result.shape}")
+
+                # CORREÇÃO: Garantir que o resultado seja 2D se o sinal era 2D
+                if signal.dim() == 2 and result.dim() == 1:
+                    print(f"[DEBUG] CORREÇÃO: Convertendo resultado 1D→2D: {result.shape} → {signal.shape}")
+                    result = result.unsqueeze(-1).expand(-1, embed_dim)
+                    print(f"[DEBUG] Resultado corrigido: {result.shape}")
+
                 print("[ORCH TRACER] Ponto 14: Função base retornou."); sys.stdout.flush()
             except Exception as e:
                 print(f"[DEBUG] ERRO em base_function: {e}")
@@ -689,16 +696,22 @@ class PhysicalHarmonicOrchestrator(nn.Module):
                 # CORREÇÃO: Verificar compatibilidade dimensional antes de expandir
                 print(f"[DEBUG] phase_perturbation shape: {phase_perturbation.shape}, phases shape: {phases.shape}")
 
+                # CORREÇÃO DEFINITIVA: Expandir corretamente para todas as dimensões
                 if phase_perturbation.dim() == 1 and phases.dim() >= 2:
                     # phase_perturbation: [n_freq], phases: [..., n_freq]
                     # Verificar se as dimensões são compatíveis
                     if phase_perturbation.size(0) == phases.size(-1):
-                        phase_perturbation_expanded = phase_perturbation.unsqueeze(0).expand_as(phases)
+                        # Expandir para todas as dimensões exceto a última
+                        target_shape = list(phases.shape)
+                        target_shape[-1] = phase_perturbation.size(0)
+                        phase_perturbation_expanded = phase_perturbation.view([1] * (phases.dim() - 1) + [-1]).expand(target_shape)
                     else:
                         # Ajustar para compatibilidade
                         print(f"[DEBUG] Ajustando phase_perturbation para compatibilidade")
                         min_dim = min(phase_perturbation.size(0), phases.size(-1))
-                        phase_perturbation_expanded = phase_perturbation[:min_dim].unsqueeze(0).expand_as(phases[..., :min_dim])
+                        target_shape = list(phases.shape)
+                        target_shape[-1] = min_dim
+                        phase_perturbation_expanded = phase_perturbation[:min_dim].view([1] * (phases.dim() - 1) + [-1]).expand(target_shape)
                 else:
                     # Tentar expandir diretamente se já compatível
                     try:
@@ -706,7 +719,12 @@ class PhysicalHarmonicOrchestrator(nn.Module):
                     except RuntimeError as e:
                         print(f"[DEBUG] Fallback necessário: {e}")
                         # Fallback: expandir manualmente
-                        phase_perturbation_expanded = phase_perturbation.unsqueeze(0).expand_as(phases)
+                        target_shape = list(phases.shape)
+                        if phase_perturbation.dim() == 1:
+                            target_shape[-1] = phase_perturbation.size(0)
+                            phase_perturbation_expanded = phase_perturbation.view([1] * (phases.dim() - 1) + [-1]).expand(target_shape)
+                        else:
+                            phase_perturbation_expanded = phase_perturbation.unsqueeze(0).expand_as(phases)
 
                 new_phases = phases + phase_perturbation_expanded
 
