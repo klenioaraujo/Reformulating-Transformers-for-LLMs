@@ -18,7 +18,7 @@ Or use the direct link:
 
 ---
 
-**ΨQRH — Quaternionic Recursive Harmonic (Ψ Wavefunction)** is a fundamental reimagining of the Transformer architecture. More than just a model, it is a research journey to build a language system that not only learns from data but operates on a foundation of rigorous physical and mathematical principles, aiming for a more authentic and interpretable form of "reasoning."
+**ΨQRH — Quaternionic Recursive Harmonic (Ψ Wavefunctions)** is a fundamental reimagining of the Transformer architecture. More than just a model, it is a research journey to build a language system that not only learns from data but operates on a foundation of rigorous physical and mathematical principles, aiming for a more authentic and interpretable form of "reasoning."
 
 ## 🌀 Project Status: Active and in Constant Evolution
 
