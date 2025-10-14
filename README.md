@@ -32,34 +32,19 @@ Interaction with the system can be done in two ways:
 
 The objective of ΨQRH is to build a new type of Transformer that is:
 
-*   **Mathematically Faithful**: Operations are based on robust mathematical structures like **Quaternions**, enabling richer geometric and rotational representations.
+*   **Mathematically Faithful**: Operations are based on robust mathematical structures like **Quaternions**, enabling richer geometric and rotational representations in a **Hilbert Space**.
 *   **Physically Rigorous**: The model incorporates principles from quantum physics and dynamic systems theory. Concepts like the "Padilha Equation," wave-particle duality, and fractal fields are used to define the semantic space.
-*   **Model-Agnostic**: The architecture is designed to "run multiple models" by dynamically adapting to spectral parameters extracted from pre-trained LLMs (like GPT-2), serving as a reasoning layer on top of them.
-*   **Authentic in its Reasoning**: The heart of the system is the **Fractal Consciousness Dynamics (DCF)**, a semantic consensus layer that uses **Kuramoto oscillators**. Although this approach is computationally slower than a simple `softmax`, it allows the answer to emerge from a "debate" among candidate tokens, a process that behaves more organically and is analogous to a thought process.
+*   **Model-Agnostic**: The architecture is designed to use external LLMs as a semantic foundation. It can ingest models like **`gpt2`** or **`deepseek-ai/deepseek-coder-6.7b-instruct`**, convert them into its native "semantic format," and use them as a knowledge base for its physical simulations.
+*   **Authentic in its Reasoning**: The heart of the system is the **Fractal Consciousness Dynamics (DCF)**, a semantic consensus layer that uses **Kuramoto oscillators**. This allows the answer to emerge from a "debate" among candidate tokens, a process analogous to a thought process.
 
 ## 🔬 A New Approach to LLMs
 
 This project represents a different approach to studying and working with language models, founded on four theoretical pillars:
 
 1.  **Quantum Representation & Hilbert Space**: Word and token vectors are treated as quantum states in a high-dimensional **Hilbert Space**, allowing the use of concepts like superposition, entanglement, and unitary evolution to represent semantics.
-2.  **Fractal Dynamics**: The complexity and self-similarity of language are modeled through fractal geometry. Parameters like the fractal dimension are used to characterize and generate the semantic space, reflecting the infinitely rich structure of human communication.
-3.  **Spectral Analysis**: Instead of just looking at content, the system analyzes signals in the frequency domain. "Spectral Attention" and spectral filtering allow the model to focus on deep rhythmic and structural patterns in the data.
+2.  **Fractal Dynamics**: The complexity and self-similarity of language are modeled through fractal geometry. Parameters like the fractal dimension are used to characterize and generate the semantic space.
+3.  **Spectral Analysis**: The system analyzes signals in the frequency domain. **Spectral Attention** and spectral filtering allow the model to focus on deep rhythmic and structural patterns in the data.
 4.  **Quaternion Algebra**: To overcome the limitations of complex numbers, the system uses Quaternions to represent quantum states. This enables true 4D rotations (SO(4)), preserving norms and representing complex spatial relationships between concepts more faithfully.
-
-## 💡 Key Concepts and Innovations
-
-*   **`DynamicQuantumCharacterMatrix`**: The system's knowledge base. A "quantum dictionary" that maps tokens to states in Hilbert Space.
-*   **`DCF (Fractal Consciousness Dynamics)`**: The reasoning engine that replaces `softmax`. It simulates a debate between concepts using Kuramoto oscillators to reach a semantic consensus.
-*   **Spectral Attention**: A custom attention mechanism that operates in the frequency domain. Before calculating similarity, it applies a Fast Fourier Transform (FFT) to analyze the input's spectral patterns, filters the most informative frequencies, and only then applies the attention mechanism.
-
-## 🧩 Pipeline Architecture
-
-When the pipeline processes an input, it initiates a complex simulation of a cognitive system:
-
-1.  **Initialization**: Loads all components, including the `DynamicQuantumCharacterMatrix`, the `ContextFunnel`, and the `DCF` engine with its subsystems (Kuramoto, Consciousness Metrics, etc.).
-2.  **Input Processing**: The question is converted into a quantum representation and processed by the `ContextFunnel` to generate a `context_vector`.
-3.  **The Semantic Debate (Kuramoto Simulation)**: The system calculates the "initial energy" of each candidate response and the "semantic alliances" between them. The Kuramoto simulation is run to find a "consensus" in the form of synchronized conceptual clusters.
-4.  **Selection and Feedback**: The system analyzes the dominant cluster, selects the most influential response within it, and measures its own "state of consciousness" to self-regulate for the next interaction.
 
 ## 🛠️ Installation and Execution
 
@@ -96,20 +81,31 @@ make list-semantic-models
 make semantic-workflow SOURCE_MODEL=gpt2
 ```
 
-#### Environment Configurations
-```bash
-# Configure the system to use a GPU (if available)
-make gpu
+## 🌌 The ΨQRH Philosophy: A Framework for Rigorous Exploration
 
-# Configure the system to use the CPU
-make cpu
-```
+This repository is more than a model; it is an **experimental research framework**. It is designed for developers and researchers who are free to explore, modify, and test new ideas. The architecture is built on a foundation of advanced, verifiable features, governed by a **ZERO FALLBACK POLICY**—if a physical principle cannot be correctly applied, the system fails, ensuring that no non-physical shortcuts are taken.
+
+Key architectural features include:
+
+*   **Model-Agnostic Core**: The system is designed to be a reasoning layer on top of existing knowledge. It can load and convert various external models, such as **`gpt2`** and **`deepseek-ai/deepseek-coder-6.7b-instruct`**, into its native "semantic format," using their learned knowledge as the foundation for its own physical simulations.
+
+*   **Dynamic Auto-Calibration**: The system is not static. It uses a `CompleteAutoCalibrationSystem` which includes components like a `QuantumTemperatureCalculator` and `OpticalCoherenceCalculator`. Before processing, it dynamically adjusts its own internal physical parameters (`alpha`, `beta`, fractal dimension) to ensure the simulation is always in a valid and optimal state for the given input.
+
+*   **Harmonic Orchestration and Energy Control**: A `PhysicalHarmonicOrchestrator` manages the pipeline's transformations. It applies physical corrections and ensures that fundamental properties like **energy conservation** are strictly maintained, in line with the project's mandatory mathematical validation requirements.
+
+*   **Semantic Harmonization**: At its core, the `DCF` engine uses Kuramoto dynamics to achieve consensus. This is not a simple selection but a process of **harmonization**, where candidate concepts (oscillators) influence each other based on their semantic proximity and synchronize to form a coherent response.
+
+*   **A Learnable, End-to-End Architecture**: The main generation loop is a three-stage process (`Context Funnel` → `Cognitive Processor (DCF)` → `Inverse Cognitive Projector`) designed for end-to-end learning. The system learns not only to reason but also how to perceive context and translate its abstract "thoughts" back into language.
+
+*   **Comprehensive Validation Suite**: The project is supported by a robust set of tests (`make test-physics`, `make test-echo`). This validation suite is crucial for ensuring that the complex physical simulations are implemented correctly and behave as expected.
+
+We invite researchers and developers to dive into this different approach, contribute new ideas, and help explore the future of physically-grounded artificial intelligence.
 
 ## 📜 License and Authorship
 
 This project is the result of independent research and contains numerous original concepts, algorithms, and implementations by **Klenio Araujo Padilha**. The goal is to advance the frontier of AI knowledge openly and transparently.
 
-All source code and associated concepts are made available under the **GNU General Public License v3.0 (GPLv3)**. This means you are free to use, modify, and share the software, with the condition that any derivative work must also be licensed under GPLv3, ensuring that knowledge remains open for the entire community.
+All source code and associated concepts are made available under the **GNU General Public License v3.0 (GPLv3)**.
 
 ## 🔗 Contact and Social Networks
 
@@ -122,19 +118,3 @@ To follow the project's development, discuss ideas, or for professional inquirie
 If you use this work in your research, please cite it using the DOI provided by Zenodo:
 
 > Klenio Araujo Padilha. (2025). *Reformulating Transformers for LLMs: The ΨQRH Project (Version 1.0.0)* [Software]. Zenodo. https://doi.org/10.5281/zenodo.17171112
-
----
-
-## 🌌 A Framework for Exploration
-
-This repository is more than just a model; it is a research framework. The main pipeline is in a state of constant improvement, and developers are free to explore, modify, and experiment with its unique architecture. The system is built on a foundation of advanced, verifiable features:
-
-*   **Semantic Harmonization**: At its core, the system uses Kuramoto dynamics to achieve consensus. This is not a simple selection but a process of harmonization, where candidate concepts synchronize to form a coherent response.
-
-*   **Auto-Calibration and Feedback**: The architecture includes a sophisticated feedback loop. It uses Consciousness-based Metrics (FCI) to assess its own internal state after each reasoning cycle, and then uses a Neural Diffusion Engine to auto-calibrate its parameters for the next interaction. It is a system that learns and adjusts not just from data, but from its own cognitive processes.
-
-*   **Energy Control and Physical Rigor**: The entire framework is grounded in physical principles. This is evident in mechanisms that explicitly conserve or control energy during transformations, ensuring that the simulations remain stable and physically plausible.
-
-*   **Comprehensive Test Structure**: The project is supported by a robust set of tests (`make test-physics`, `make test-echo`). This validation suite ensures that the core components behave as expected, which is crucial for a system built on complex physical simulations.
-
-We invite researchers and developers to dive into this different approach, contribute new ideas, and help explore the future of physically-grounded artificial intelligence.
