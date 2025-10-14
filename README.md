@@ -70,13 +70,26 @@ make list-downloaded-models
 
 #### Semantic Model Management
 The "semantic" format is ΨQRH's proprietary format, optimized for use within the system.
+
 ```bash
 # Convert a downloaded model to the semantic format
 make convert-to-semantic SOURCE_MODEL=gpt2
+# Or for other models:
+make convert-to-semantic SOURCE_MODEL=deepseek-ai/deepseek-coder-6.7b-instruct
+```
 
+```bash
 # List available semantic models
 make list-semantic-models
+```
+*Example output:*
+```
+🧠 Models in semantic format:
+   📁 psiqrh_semantic_deepseek-ai_deepseek-coder-6.7b-instruct (4020.99 MB)
+   📁 psiqrh_semantic_gpt2 (2187.80 MB)
+```
 
+```bash
 # Full workflow: download and convert
 make semantic-workflow SOURCE_MODEL=gpt2
 ```
