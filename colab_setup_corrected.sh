@@ -66,19 +66,7 @@ fi
 
 # 7. Check available scripts
 echo "🔍 Checking available scripts..."
-python3 -c "
-import os
-import glob
-
-print('Makefile exists:', os.path.exists('Makefile'))
-
-# Find all Python scripts
-scripts = glob.glob('*.py') + glob.glob('src/**/*.py')
-download_scripts = [s for s in scripts if any(x in s.lower() for x in ['download', 'convert', 'distill'])]
-
-print('Total Python scripts found:', len(scripts))
-print('Download/distill scripts:', download_scripts[:5])
-"
+python3 -c "import os, glob; print('Makefile exists:', os.path.exists('Makefile')); scripts = glob.glob('*.py') + glob.glob('src/**/*.py'); download_scripts = [s for s in scripts if any(x in s.lower() for x in ['download', 'convert', 'distill'])]; print('Total Python scripts found:', len(scripts)); print('Download/distill scripts:', download_scripts[:5])"
 
 # 8. Run the benchmark
 echo "🧪 Running GLUE SST-2 benchmark..."
@@ -88,15 +76,7 @@ python3 benchmark_psiqrh.py --benchmark glue --glue_task sst2
 
 # 9. Test basic imports
 echo "🧪 Testing basic imports..."
-python3 -c "
-try:
-    from psiqrh_llm import PsiQRHConfig, PsiQRHForCausalLM
-    print('✅ ΨQRH modules imported successfully')
-except Exception as e:
-    print(f'❌ Import error: {e}')
-    import traceback
-    traceback.print_exc()
-"
+python3 -c "try: from psiqrh_llm import PsiQRHConfig, PsiQRHForCausalLM; print('✅ ΨQRH modules imported successfully'); except Exception as e: print(f'❌ Import error: {e}'); import traceback; traceback.print_exc()"
 
 echo ""
 echo "🎉 ΨQRH Colab setup completed!"
