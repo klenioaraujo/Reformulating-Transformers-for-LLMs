@@ -233,6 +233,8 @@ def evaluate_glue_task(model, data_loader, device, task_name: str):
             num_batches += 1
 
             predictions = torch.argmax(logits, dim=-1).cpu().numpy()
+            # Ensure predictions are within valid range
+            predictions = np.clip(predictions, 0, config['num_labels'] - 1)
             all_predictions.extend(predictions)
             all_labels.extend(labels.cpu().numpy())
 
