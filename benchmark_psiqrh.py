@@ -188,6 +188,8 @@ def create_model_for_glue(vocab_size: int, num_labels: int, model_config: Dict[s
 
             loss = None
             if labels is not None:
+                # Ensure labels are within valid range
+                labels = torch.clamp(labels, 0, self.num_labels - 1)
                 loss_fct = nn.CrossEntropyLoss()
                 loss = loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
 
