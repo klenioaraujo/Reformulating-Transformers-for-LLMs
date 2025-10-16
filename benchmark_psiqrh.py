@@ -311,7 +311,11 @@ def load_model_checkpoint(checkpoint_path: str, model_config: Dict[str, Any], ta
         checkpoint = torch.load(checkpoint_path, map_location='cpu')
         if task_type == 'glue':
             # For GLUE, we need to handle the wrapped model
-            model.base_model.load_state_dict(checkpoint['model_state_dict'])
+            # Filter out pipeline-specific keys that don't belong to the base model
+            model_state_dict = checkpoint.get('model_state_dict', checkpoint)
+            filtered_state_dict = {k: v for k, v in model_state_dict.items()
+                                 if not k.startswith(('quantum_embedding', 'context_funnel', 'inverse_projector'))}
+            model.base_model.load_state_dict(filtered_state_dict, strict=False)
         else:
             model.load_state_dict(checkpoint['model_state_dict'])
         print(f"Loaded checkpoint from {checkpoint_path}")

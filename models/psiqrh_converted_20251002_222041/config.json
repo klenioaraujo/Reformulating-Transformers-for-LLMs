@@ -1,0 +1,38 @@
+{
+  "vocab_size": 34,
+  "d_model": 256,
+  "n_layers": 4,
+  "n_heads": 8,
+  "max_seq_length": 256,
+  "total_parameters": 281701,
+  "architecture": "\u03a8QRH Transformer",
+  "training_history": [
+    {
+      "epoch": 1,
+      "train_loss": 3.527017252785819,
+      "val_loss": 3.5258774757385254,
+      "val_perplexity": 33.98358154296875,
+      "time": 5.415356159210205
+    },
+    {
+      "epoch": 2,
+      "train_loss": 3.5263339621680125,
+      "val_loss": 3.524528980255127,
+      "val_perplexity": 33.93778610229492,
+      "time": 5.092087984085083
+    },
+    {
+      "epoch": 3,
+      "train_loss": 3.5253345455442155,
+      "val_loss": 3.5241259336471558,
+      "val_perplexity": 33.92411422729492,
+      "time": 4.926011800765991
+    }
+  ],
+  "best_val_loss": 3.5241259336471558,
+  "best_val_perplexity": 33.92411422729492,
+  "model_type": "PsiQRHTransformerComplete",
+  "use_complete": true,
+  "embed_dim": 128,
+  "n_rotations": 4
+}

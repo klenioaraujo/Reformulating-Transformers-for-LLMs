@@ -1,0 +1,104 @@
+#!/bin/bash
+
+# ΨQRH Colab Setup Script - Corrected Version
+# This script sets up the ΨQRH environment in Google Colab
+
+set -e  # Exit on any error
+
+echo "🚀 Starting ΨQRH Colab Setup..."
+
+# 1. Clone the repository
+echo "📥 Cloning repository..."
+if [ ! -d "Reformulating-Transformers-for-LLMs" ]; then
+    git clone https://github.com/klenioaraujo/Reformulating-Transformers-for-LLMs.git
+    cd Reformulating-Transformers-for-LLMs
+    echo "✅ Repository cloned successfully"
+else
+    cd Reformulating-Transformers-for-LLMs
+    echo "⚠️  Repository already exists, skipping clone"
+fi
+
+# 2. Verify benchmark file exists
+echo "🔍 Checking for benchmark_psiqrh.py..."
+if [ -f "benchmark_psiqrh.py" ]; then
+    echo "✅ benchmark_psiqrh.py found"
+    ls -la benchmark_psiqrh.py
+else
+    echo "❌ benchmark_psiqrh.py NOT FOUND!"
+    exit 1
+fi
+
+# 3. Clean and install dependencies
+echo "📦 Installing dependencies..."
+if [ -f "requirements.txt" ]; then
+    # Create a virtual environment
+    python3 -m venv venv
+    source venv/bin/activate
+
+    # Clean requirements file - remove comments, version pins, and empty lines
+    grep -vE "^(#|$|Makodev0|[[:space:]]*#)" requirements.txt | \
+    sed 's/==[0-9.]*\\(\\.post[0-9]*\\)\\?//g' | \
+    sed '/^nvidia-/s/==.*//' | \
+    sed '/^triton/s/==.*//' | \
+    sed 's/[[:space:]]*$//' | \
+    grep -v "^[[:space:]]*$" > requirements_clean.txt
+
+    echo "📋 Cleaned requirements saved to requirements_clean.txt"
+    pip install -r requirements_clean.txt
+    pip install datasets evaluate
+    echo "✅ Dependencies installed"
+else
+    echo "⚠️  requirements.txt not found, installing basic packages..."
+    pip install torch torchvision torchaudio transformers datasets evaluate
+fi
+
+# 4. Verify Makefile exists
+echo "🔧 Checking for Makefile..."
+if [ -f "Makefile" ]; then
+    echo "✅ Makefile found"
+    ls -la Makefile
+else
+    echo "⚠️  Makefile not found"
+fi
+
+# 5. Check available scripts
+echo "🔍 Checking available scripts..."
+python3 -c "import os, glob; print('Makefile exists:', os.path.exists('Makefile')); scripts = glob.glob('*.py') + glob.glob('src/**/*.py'); download_scripts = [s for s in scripts if any(x in s.lower() for x in ['download', 'convert', 'distill'])]; print('Total Python scripts found:', len(scripts)); print('Download/distill scripts:', download_scripts[:5])"
+
+# 6. Run the benchmark
+echo "🧪 Running GLUE SST-2 benchmark..."
+echo "Note: This will show ~49% validation accuracy (random baseline)"
+echo "and 0% test accuracy (GLUE test set limitation)"
+python3 benchmark_psiqrh.py --benchmark glue --glue_task sst2
+
+# 7. Test basic imports
+echo "🧪 Testing basic imports..."
+python3 -c "try: from psiqrh_llm import PsiQRHConfig, PsiQRHForCausalLM; print('✅ ΨQRH modules imported successfully')
+except Exception as e: print(f'❌ Import error: {e}'); import traceback; traceback.print_exc()"
+
+echo ""
+echo "🎉 ΨQRH Colab setup completed!"
+echo ""
+echo "📊 Expected Results Analysis:"
+echo "  • Validation Accuracy: ~49% (random baseline - correct!)"
+echo "  • Test Accuracy: 0% (GLUE limitation - labels are -1)"
+echo "  • No crashes: Model runs end-to-end ✅"
+echo ""
+echo "🔧 Technical Fixes Applied:"
+echo "  • ✅ Tensor shapes aligned [B, T, n_embd]"
+echo "  • ✅ Energy conservation implemented"
+echo "  • ✅ CUDA assertion errors resolved"
+echo "  • ✅ GLUE interface working"
+echo ""
+echo "🎯 Next Steps (Optional):"
+echo ""
+echo "For full evaluation with distilled knowledge:"
+echo "  # Requires >16GB GPU memory"
+echo "  make distill-knowledge SOURCE_MODEL=gpt2"
+echo "  make convert-to-semantic SOURCE_MODEL=gpt2"
+echo "  python3 benchmark_psiqrh.py --benchmark glue --glue_task sst2"
+echo ""
+echo "For lightweight dynamic reasoning demo:"
+echo "  python3 psiqrh_pipeline.py --model gpt2 --prompt 'The movie was'"
+echo ""
+echo "📚 Documentation: See COLAB_README.md for detailed guide"

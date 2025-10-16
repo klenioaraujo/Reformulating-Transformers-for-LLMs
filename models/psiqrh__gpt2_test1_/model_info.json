@@ -1,0 +1,42 @@
+{
+  "model_type": "PsiQRHTransformerComplete",
+  "framework": "\u03a8QRH",
+  "version": "1.0.0",
+  "architecture": "\u03a8QRH Transformer",
+  "checkpoint_path": "/home/padilha/trabalhos/QRH2/Reformulating-Transformers-for-LLMs/models/psiqrh__gpt2_test1_/pytorch_model.bin",
+  "config_path": "/home/padilha/trabalhos/QRH2/Reformulating-Transformers-for-LLMs/models/psiqrh__gpt2_test1_/config.json",
+  "vocab_size": 34,
+  "d_model": 256,
+  "n_layers": 4,
+  "n_heads": 8,
+  "max_seq_length": 256,
+  "total_parameters": 281701,
+  "training_history": [
+    {
+      "epoch": 1,
+      "train_loss": 3.5359550373894826,
+      "val_loss": 3.5288703441619873,
+      "val_perplexity": 34.08544158935547,
+      "time": 5.164798974990845
+    },
+    {
+      "epoch": 2,
+      "train_loss": 3.528581585202898,
+      "val_loss": 3.5256537199020386,
+      "val_perplexity": 33.975982666015625,
+      "time": 5.066728353500366
+    },
+    {
+      "epoch": 3,
+      "train_loss": 3.525818347930908,
+      "val_loss": 3.5241883993148804,
+      "val_perplexity": 33.926231384277344,
+      "time": 5.179479360580444
+    }
+  ],
+  "best_val_loss": 3.5241883993148804,
+  "best_val_perplexity": 33.926231384277344,
+  "use_complete": true,
+  "embed_dim": 128,
+  "n_rotations": 4
+}

@@ -17,7 +17,6 @@ lib64/
 parts/
 sdist/
 var/
-
 wheels/
 pip-log.txt
 pip-delete-this-directory.txt
@@ -25,7 +24,6 @@ pip-delete-this-directory.txt
 .nox/
 .coverage
 .coverage.*
-.coverage
 *.cover
 .hypothesis/
 .pytest_cache/
@@ -38,17 +36,30 @@ dmypy.json
 venv/
 env/
 ENV/
+env.bak/
+venv.bak/
+
+# ========== PASTAS LOCAIS (NÃO VERSIONAR) ==========
 VALIDACAO/
 DOCUMENTOS/
 DeepSeek/
 FINAL/
-env.bak/
-venv.bak/
-
-# ========== MODELOS GRANDES ==========
-# BLOQUEIA TODOS os modelos - IMPORTANTE!
-models/
+audit_logs/
+logs/
+reports/
+results/
+tmp/
 temp_models/
+optimized_chunks/
+secure_parts/
+SealProtocol/
+paper/
+templates/
+tools/
+scripts/
+examples/
+
+# ========== MODELOS E DADOS GRANDES ==========
 *.bin
 *.ot
 *.msgpack
@@ -58,6 +69,17 @@ temp_models/
 *.pth
 *.onnx
 *.ckpt
+*.zip
+*.tar.gz
+*.wav
+*.json  # cuidado: só ignore .json se forem resultados, não configs!
+*.txt   # cuidado: só ignore se forem logs ou saídas
+
+# Mas mantenha arquivos de configuração importantes!
+!config.yaml
+!configs/
+!metadata.yaml
+!calibrated_fci_thresholds.yaml
 
 # ========== IDE & EDITORES ==========
 .idea/
@@ -65,6 +87,8 @@ temp_models/
 *.swp
 *.swo
 *~
+*.sublime-project
+*.sublime-workspace
 
 # ========== SISTEMA ==========
 .DS_Store
@@ -74,17 +98,44 @@ temp_models/
 .Trashes
 ehthumbs.db
 Thumbs.db
-
-# ========== NOTEBOOKS & DOCS ==========
-.ipynb_checkpoints
-docs/_build/
-.readthedocs/
-
-# ========== OUTROS ==========
 *.log
 *.tmp
 *.temp
 *.bak
 *.orig
+
+# ========== NOTEBOOKS & DOCS ==========
+.ipynb_checkpoints/
+docs/_build/
+.readthedocs/
+*.ipynb
+
+# ========== OUTROS ==========
 .env
 .local/
+*.md  # opcional: ignore markdowns gerados, mas talvez queira manter README.md
+!README.md
+!COLAB_README.md
+!SETUP.md
+
+# ========== REPOSITÓRIO EMBUTIDO (EVITAR GIT DENTRO DE GIT) ==========
+Reformulating-Transformers-for-LLMs/
+
+# Datasets e dados grandes
+glue_data/
+paraphrase_identification/
+benchmark_results/
+glove.*.zip
+*.zip
+*.tar.gz
+
+# Modelos e binários
+*.pt
+*.pth
+*.bin
+*.safetensors
+*.onnx
+*.ckpt
+
+# Pastas de execução local
+Reformulating-Transformers-for-LLMs/  # evita recursão

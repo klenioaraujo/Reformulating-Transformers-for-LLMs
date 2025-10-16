@@ -1,0 +1,25 @@
+{
+  "model_type": "PsiQRHTransformer",
+  "framework": "\u03a8QRH",
+  "version": "1.0.0",
+  "architecture": "\u03a8QRH Transformer",
+  "checkpoint_path": "models/psiqrh_native_v1/pytorch_model.bin",
+  "config_path": "models/psiqrh_native_v1/config.json",
+  "vocab_size": 34,
+  "d_model": 128,
+  "n_layers": 2,
+  "n_heads": 4,
+  "max_seq_length": 128,
+  "total_parameters": 729632,
+  "training_history": [
+    {
+      "epoch": 1,
+      "train_loss": 3.73112925335213,
+      "val_loss": 2.6920246283213296,
+      "val_perplexity": 14.761533737182617,
+      "time": 12.226583480834961
+    }
+  ],
+  "best_val_loss": 2.6920246283213296,
+  "best_val_perplexity": 14.761533737182617
+}

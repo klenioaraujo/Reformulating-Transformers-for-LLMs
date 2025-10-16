@@ -1,0 +1,459 @@
+{
+  "source_model": "state_dict",
+  "target_architecture": "PsiQRHTransformerComplete",
+  "n_layers_analyzed": 32,
+  "avg_fractal_dim": 1.3607472997184646,
+  "avg_alpha": 2.1091583145636204,
+  "layer_details": {
+    "pos_encoding": {
+      "beta": 0.015578440723713038,
+      "fractal_dim": 1.4922107796381434,
+      "r_squared": -0.35393318587778944,
+      "spectrum_mean": 0.10473616421222687,
+      "spectrum_std": 0.11356586962938309,
+      "n_points": 512
+    },
+    "embedding.seed_embedding.weight": {
+      "beta": 0.21823546287760537,
+      "fractal_dim": 1.3908822685611972,
+      "r_squared": -0.5722268477312193,
+      "spectrum_mean": 4419.97412109375,
+      "spectrum_std": 4337.828125,
+      "n_points": 2176
+    },
+    "embedding.wave_to_quaternion.weight": {
+      "beta": -0.03351229305810085,
+      "fractal_dim": 1.5167561465290504,
+      "r_squared": -0.06349316467911081,
+      "spectrum_mean": 1.2819068431854248,
+      "spectrum_std": 1.43466055393219,
+      "n_points": 512
+    },
+    "transformer_blocks.0.input_proj.weight": {
+      "beta": -0.19072561258754311,
+      "fractal_dim": 1.5953628062937715,
+      "r_squared": -0.6184067408179705,
+      "spectrum_mean": 83.86990356445312,
+      "spectrum_std": 81.82499694824219,
+      "n_points": 512
+    },
+    "transformer_blocks.0.spectral_attention.out_proj.weight": {
+      "beta": -0.040986615656217314,
+      "fractal_dim": 1.5204933078281087,
+      "r_squared": -0.8853469287507183,
+      "spectrum_mean": 85.66993713378906,
+      "spectrum_std": 85.82317352294922,
+      "n_points": 32768
+    },
+    "transformer_blocks.0.output_proj.weight": {
+      "beta": -0.005806099832854999,
+      "fractal_dim": 1.5029030499164275,
+      "r_squared": -0.03843651910559687,
+      "spectrum_mean": 1.4077792167663574,
+      "spectrum_std": 1.4203178882598877,
+      "n_points": 512
+    },
+    "transformer_blocks.0.so4_evolution.theta_L": {
+      "beta": 1.0,
+      "fractal_dim": 1.0,
+      "r_squared": 0.0,
+      "spectrum_mean": 0.09135466068983078,
+      "spectrum_std": 0.07435284554958344,
+      "n_points": 6
+    },
+    "transformer_blocks.0.so4_evolution.theta_R": {
+      "beta": 1.0,
+      "fractal_dim": 1.0,
+      "r_squared": 0.0,
+      "spectrum_mean": 0.15217894315719604,
+      "spectrum_std": 0.07908450812101364,
+      "n_points": 6
+    },
+    "transformer_blocks.0.ff1.weight": {
+      "beta": -0.21786503921527492,
+      "fractal_dim": 1.6089325196076374,
+      "r_squared": -0.13303773213300651,
+      "spectrum_mean": 5.964885711669922,
+      "spectrum_std": 5.204402923583984,
+      "n_points": 32
+    },
+    "transformer_blocks.0.ff2.weight": {
+      "beta": 0.08164720143720774,
+      "fractal_dim": 1.4591763992813962,
+      "r_squared": -0.060832988652410824,
+      "spectrum_mean": 1.0013355016708374,
+      "spectrum_std": 0.8416213393211365,
+      "n_points": 32
+    },
+    "transformer_blocks.1.input_proj.weight": {
+      "beta": 0.16012204874253524,
+      "fractal_dim": 1.4199389756287324,
+      "r_squared": -0.8850650898635579,
+      "spectrum_mean": 82.09474182128906,
+      "spectrum_std": 82.45201873779297,
+      "n_points": 512
+    },
+    "transformer_blocks.1.spectral_attention.out_proj.weight": {
+      "beta": -0.007679911323925447,
+      "fractal_dim": 1.5038399556619628,
+      "r_squared": -0.9630282861627375,
+      "spectrum_mean": 84.95883178710938,
+      "spectrum_std": 84.66798400878906,
+      "n_points": 32768
+    },
+    "transformer_blocks.1.output_proj.weight": {
+      "beta": -0.013572955558953827,
+      "fractal_dim": 1.5067864777794768,
+      "r_squared": -0.03717727035863705,
+      "spectrum_mean": 1.3828845024108887,
+      "spectrum_std": 1.3960494995117188,
+      "n_points": 512
+    },
+    "transformer_blocks.1.so4_evolution.theta_L": {
+      "beta": 1.0,
+      "fractal_dim": 1.0,
+      "r_squared": 0.0,
+      "spectrum_mean": 0.12183826416730881,
+      "spectrum_std": 0.10277023166418076,
+      "n_points": 6
+    },
+    "transformer_blocks.1.so4_evolution.theta_R": {
+      "beta": 1.0,
+      "fractal_dim": 1.0,
+      "r_squared": 0.0,
+      "spectrum_mean": 0.16811583936214447,
+      "spectrum_std": 0.12105001509189606,
+      "n_points": 6
+    },
+    "transformer_blocks.1.ff1.weight": {
+      "beta": 0.006131629909778288,
+      "fractal_dim": 1.4969341850451108,
+      "r_squared": -0.2737572033595663,
+      "spectrum_mean": 4.863603591918945,
+      "spectrum_std": 4.243721961975098,
+      "n_points": 32
+    },
+    "transformer_blocks.1.ff2.weight": {
+      "beta": 0.1645430659177641,
+      "fractal_dim": 1.4177284670411179,
+      "r_squared": -0.06034079179564156,
+      "spectrum_mean": 1.2569620609283447,
+      "spectrum_std": 1.4949551820755005,
+      "n_points": 32
+    },
+    "transformer_blocks.2.input_proj.weight": {
+      "beta": 0.11524457461004689,
+      "fractal_dim": 1.4423777126949766,
+      "r_squared": -0.9056881694118635,
+      "spectrum_mean": 86.2608642578125,
+      "spectrum_std": 82.70249938964844,
+      "n_points": 512
+    },
+    "transformer_blocks.2.spectral_attention.out_proj.weight": {
+      "beta": 0.003989618029742068,
+      "fractal_dim": 1.498005190985129,
+      "r_squared": -0.8975052160365222,
+      "spectrum_mean": 85.52545166015625,
+      "spectrum_std": 85.5000991821289,
+      "n_points": 32768
+    },
+    "transformer_blocks.2.output_proj.weight": {
+      "beta": -0.005479787325867856,
+      "fractal_dim": 1.502739893662934,
+      "r_squared": -0.04117275103754925,
+      "spectrum_mean": 1.303884506225586,
+      "spectrum_std": 1.2351326942443848,
+      "n_points": 512
+    },
+    "transformer_blocks.2.so4_evolution.theta_L": {
+      "beta": 1.0,
+      "fractal_dim": 1.0,
+      "r_squared": 0.0,
+      "spectrum_mean": 0.08793654292821884,
+      "spectrum_std": 0.04378924518823624,
+      "n_points": 6
+    },
+    "transformer_blocks.2.so4_evolution.theta_R": {
+      "beta": 1.0,
+      "fractal_dim": 1.0,
+      "r_squared": 0.0,
+      "spectrum_mean": 0.034509871155023575,
+      "spectrum_std": 0.0316598005592823,
+      "n_points": 6
+    },
+    "transformer_blocks.2.ff1.weight": {
+      "beta": 0.04638611186213403,
+      "fractal_dim": 1.476806944068933,
+      "r_squared": -0.21397740560532208,
+      "spectrum_mean": 5.614561080932617,
+      "spectrum_std": 5.817453861236572,
+      "n_points": 32
+    },
+    "transformer_blocks.2.ff2.weight": {
+      "beta": -0.1629885265057025,
+      "fractal_dim": 1.5814942632528513,
+      "r_squared": -0.03955597428205371,
+      "spectrum_mean": 1.2354282140731812,
+      "spectrum_std": 1.134935975074768,
+      "n_points": 32
+    },
+    "transformer_blocks.3.input_proj.weight": {
+      "beta": -0.04758890971035001,
+      "fractal_dim": 1.523794454855175,
+      "r_squared": -0.7483934898620026,
+      "spectrum_mean": 80.49436950683594,
+      "spectrum_std": 80.91329193115234,
+      "n_points": 512
+    },
+    "transformer_blocks.3.spectral_attention.out_proj.weight": {
+      "beta": -0.00785773415219575,
+      "fractal_dim": 1.503928867076098,
+      "r_squared": -0.9173304700981217,
+      "spectrum_mean": 84.96977233886719,
+      "spectrum_std": 84.7096176147461,
+      "n_points": 32768
+    },
+    "transformer_blocks.3.output_proj.weight": {
+      "beta": 0.02086118581515346,
+      "fractal_dim": 1.4895694070924232,
+      "r_squared": -0.07100835057999788,
+      "spectrum_mean": 1.3033294677734375,
+      "spectrum_std": 1.2715075016021729,
+      "n_points": 512
+    },
+    "transformer_blocks.3.so4_evolution.theta_L": {
+      "beta": 1.0,
+      "fractal_dim": 1.0,
+      "r_squared": 0.0,
+      "spectrum_mean": 0.14618682861328125,
+      "spectrum_std": 0.19889681041240692,
+      "n_points": 6
+    },
+    "transformer_blocks.3.so4_evolution.theta_R": {
+      "beta": 1.0,
+      "fractal_dim": 1.0,
+      "r_squared": 0.0,
+      "spectrum_mean": 0.07628104835748672,
+      "spectrum_std": 0.0687953382730484,
+      "n_points": 6
+    },
+    "transformer_blocks.3.ff1.weight": {
+      "beta": -0.14385685565934864,
+      "fractal_dim": 1.5719284278296743,
+      "r_squared": -0.11845197803826113,
+      "spectrum_mean": 5.655553340911865,
+      "spectrum_std": 6.281421661376953,
+      "n_points": 32
+    },
+    "transformer_blocks.3.ff2.weight": {
+      "beta": -0.04264618132108756,
+      "fractal_dim": 1.5213230906605437,
+      "r_squared": 0.00929198515799734,
+      "spectrum_mean": 1.4339673519134521,
+      "spectrum_std": 1.1186275482177734,
+      "n_points": 32
+    },
+    "optical_probe.energy_proj.weight": {
+      "beta": 1.0,
+      "fractal_dim": 1.0,
+      "r_squared": 0.0,
+      "spectrum_mean": 0.17992068827152252,
+      "spectrum_std": 0.179199680685997,
+      "n_points": 2
+    }
+  },
+  "converted_params": {
+    "pos_encoding": {
+      "alpha": 2.3129267084391225,
+      "theta": 1.0993881225585938,
+      "fractal_dim": 1.4922107796381434,
+      "beta": 0.015578440723713038
+    },
+    "embedding.seed_embedding.weight": {
+      "alpha": 2.155867516269856,
+      "theta": -0.29776203632354736,
+      "fractal_dim": 1.3908822685611972,
+      "beta": 0.21823546287760537
+    },
+    "embedding.wave_to_quaternion.weight": {
+      "alpha": 2.350972027120028,
+      "theta": -2.3459324836730957,
+      "fractal_dim": 1.5167561465290504,
+      "beta": -0.03351229305810085
+    },
+    "transformer_blocks.0.input_proj.weight": {
+      "alpha": 2.472812349755346,
+      "theta": 1.8393157720565796,
+      "fractal_dim": 1.5953628062937715,
+      "beta": -0.19072561258754311
+    },
+    "transformer_blocks.0.spectral_attention.out_proj.weight": {
+      "alpha": 2.3567646271335683,
+      "theta": -1.0092065334320068,
+      "fractal_dim": 1.5204933078281087,
+      "beta": -0.040986615656217314
+    },
+    "transformer_blocks.0.output_proj.weight": {
+      "alpha": 2.3294997273704627,
+      "theta": 1.3265728950500488,
+      "fractal_dim": 1.5029030499164275,
+      "beta": -0.005806099832854999
+    },
+    "transformer_blocks.0.so4_evolution.theta_L": {
+      "alpha": 1.55,
+      "theta": 3.0236287117004395,
+      "fractal_dim": 1.0,
+      "beta": 1.0
+    },
+    "transformer_blocks.0.so4_evolution.theta_R": {
+      "alpha": 1.55,
+      "theta": 3.1415927410125732,
+      "fractal_dim": 1.0,
+      "beta": 1.0
+    },
+    "transformer_blocks.0.ff1.weight": {
+      "alpha": 2.493845405391838,
+      "theta": -1.7114958763122559,
+      "fractal_dim": 1.6089325196076374,
+      "beta": -0.21786503921527492
+    },
+    "transformer_blocks.0.ff2.weight": {
+      "alpha": 2.2617234188861643,
+      "theta": -2.5426719188690186,
+      "fractal_dim": 1.4591763992813962,
+      "beta": 0.08164720143720774
+    },
+    "transformer_blocks.1.input_proj.weight": {
+      "alpha": 2.200905412224535,
+      "theta": -3.047211170196533,
+      "fractal_dim": 1.4199389756287324,
+      "beta": 0.16012204874253524
+    },
+    "transformer_blocks.1.spectral_attention.out_proj.weight": {
+      "alpha": 2.3309519312760423,
+      "theta": -2.1311964988708496,
+      "fractal_dim": 1.5038399556619628,
+      "beta": -0.007679911323925447
+    },
+    "transformer_blocks.1.output_proj.weight": {
+      "alpha": 2.3355190405581894,
+      "theta": -1.1571406126022339,
+      "fractal_dim": 1.5067864777794768,
+      "beta": -0.013572955558953827
+    },
+    "transformer_blocks.1.so4_evolution.theta_L": {
+      "alpha": 1.55,
+      "theta": 0.0,
+      "fractal_dim": 1.0,
+      "beta": 1.0
+    },
+    "transformer_blocks.1.so4_evolution.theta_R": {
+      "alpha": 1.55,
+      "theta": 2.732522964477539,
+      "fractal_dim": 1.0,
+      "beta": 1.0
+    },
+    "transformer_blocks.1.ff1.weight": {
+      "alpha": 2.320247986819922,
+      "theta": 0.8734584450721741,
+      "fractal_dim": 1.4969341850451108,
+      "beta": 0.006131629909778288
+    },
+    "transformer_blocks.1.ff2.weight": {
+      "alpha": 2.1974791239137326,
+      "theta": 0.0,
+      "fractal_dim": 1.4177284670411179,
+      "beta": 0.1645430659177641
+    },
+    "transformer_blocks.2.input_proj.weight": {
+      "alpha": 2.235685454677214,
+      "theta": 2.8420863151550293,
+      "fractal_dim": 1.4423777126949766,
+      "beta": 0.11524457461004689
+    },
+    "transformer_blocks.2.spectral_attention.out_proj.weight": {
+      "alpha": 2.3219080460269503,
+      "theta": -1.2029668092727661,
+      "fractal_dim": 1.498005190985129,
+      "beta": 0.003989618029742068
+    },
+    "transformer_blocks.2.output_proj.weight": {
+      "alpha": 2.3292468351775475,
+      "theta": 2.392411470413208,
+      "fractal_dim": 1.502739893662934,
+      "beta": -0.005479787325867856
+    },
+    "transformer_blocks.2.so4_evolution.theta_L": {
+      "alpha": 1.55,
+      "theta": 3.1415927410125732,
+      "fractal_dim": 1.0,
+      "beta": 1.0
+    },
+    "transformer_blocks.2.so4_evolution.theta_R": {
+      "alpha": 1.55,
+      "theta": 0.8273215293884277,
+      "fractal_dim": 1.0,
+      "beta": 1.0
+    },
+    "transformer_blocks.2.ff1.weight": {
+      "alpha": 2.289050763306846,
+      "theta": -1.9886904954910278,
+      "fractal_dim": 1.476806944068933,
+      "beta": 0.04638611186213403
+    },
+    "transformer_blocks.2.ff2.weight": {
+      "alpha": 2.4513161080419197,
+      "theta": 2.5846920013427734,
+      "fractal_dim": 1.5814942632528513,
+      "beta": -0.1629885265057025
+    },
+    "transformer_blocks.3.input_proj.weight": {
+      "alpha": 2.3618814050255215,
+      "theta": 1.384516954421997,
+      "fractal_dim": 1.523794454855175,
+      "beta": -0.04758890971035001
+    },
+    "transformer_blocks.3.spectral_attention.out_proj.weight": {
+      "alpha": 2.331089743967952,
+      "theta": -0.4845135509967804,
+      "fractal_dim": 1.503928867076098,
+      "beta": -0.00785773415219575
+    },
+    "transformer_blocks.3.output_proj.weight": {
+      "alpha": 2.308832580993256,
+      "theta": 0.511886477470398,
+      "fractal_dim": 1.4895694070924232,
+      "beta": 0.02086118581515346
+    },
+    "transformer_blocks.3.so4_evolution.theta_L": {
+      "alpha": 1.55,
+      "theta": -0.5645121335983276,
+      "fractal_dim": 1.0,
+      "beta": 1.0
+    },
+    "transformer_blocks.3.so4_evolution.theta_R": {
+      "alpha": 1.55,
+      "theta": 0.9231339693069458,
+      "fractal_dim": 1.0,
+      "beta": 1.0
+    },
+    "transformer_blocks.3.ff1.weight": {
+      "alpha": 2.4364890631359954,
+      "theta": -0.2388649880886078,
+      "fractal_dim": 1.5719284278296743,
+      "beta": -0.14385685565934864
+    },
+    "transformer_blocks.3.ff2.weight": {
+      "alpha": 2.358050790523843,
+      "theta": 0.5726646780967712,
+      "fractal_dim": 1.5213230906605437,
+      "beta": -0.04264618132108756
+    },
+    "optical_probe.energy_proj.weight": {
+      "alpha": 1.55,
+      "theta": -1.4757769107818604,
+      "fractal_dim": 1.0,
+      "beta": 1.0
+    }
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "model_name": "gpt2",
+  "model_id": "openai-community/gpt2",
+  "tags": [
+    "transformers",
+    "pytorch",
+    "tf",
+    "jax",
+    "tflite",
+    "rust",
+    "onnx",
+    "safetensors",
+    "gpt2",
+    "text-generation",
+    "exbert",
+    "en",
+    "doi:10.57967/hf/0039",
+    "license:mit",
+    "autotrain_compatible",
+    "text-generation-inference",
+    "endpoints_compatible",
+    "region:us"
+  ],
+  "pipeline_tag": "text-generation",
+  "downloads": 10605001,
+  "config": {
+    "activation_function": "gelu_new",
+    "architectures": [
+      "GPT2LMHeadModel"
+    ],
+    "attn_pdrop": 0.1,
+    "bos_token_id": 50256,
+    "embd_pdrop": 0.1,
+    "eos_token_id": 50256,
+    "initializer_range": 0.02,
+    "layer_norm_epsilon": 1e-05,
+    "model_type": "gpt2",
+    "n_ctx": 1024,
+    "n_embd": 768,
+    "n_head": 12,
+    "n_layer": 12,
+    "n_positions": 1024,
+    "resid_pdrop": 0.1,
+    "summary_activation": null,
+    "summary_first_dropout": 0.1,
+    "summary_proj_to_labels": true,
+    "summary_type": "cls_index",
+    "summary_use_proj": true,
+    "task_specific_params": {
+      "text-generation": {
+        "do_sample": true,
+        "max_length": 50
+      }
+    },
+    "vocab_size": 50257
+  },
+  "vocab_size": 50257,
+  "hidden_size": 768,
+  "num_layers": 12,
+  "num_heads": 12,
+  "max_position_embeddings": 1024,
+  "weights_available": true
+}
