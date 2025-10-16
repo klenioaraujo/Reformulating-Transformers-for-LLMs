@@ -54,10 +54,10 @@ class TrainingConfig:
     weight_decay: float = 0.01
     max_grad_norm: float = 1.0
     warmup_steps: int = 1000
-    max_steps: int = 100000
-    save_steps: int = 5000
-    eval_steps: int = 1000
-    logging_steps: int = 100
+    max_steps: int = 20
+    save_steps: int = 20
+    eval_steps: int = 20
+    logging_steps: int = 5
 
     # Data config
     train_data_path: str = "data/train.txt"
