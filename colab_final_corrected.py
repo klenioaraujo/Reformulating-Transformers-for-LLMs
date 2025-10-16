@@ -9,20 +9,111 @@ import sys
 import subprocess
 import traceback
 import argparse
+import re
+from typing import List, Tuple
 
-def run_command(cmd, description="", check=True):
-    """Run a shell command and return success status"""
+def run_command(cmd, description="", check=True, show_output=False):
+    """Run a shell command and return success status with improved error handling"""
     try:
         print(f"🔄 {description}")
         result = subprocess.run(cmd, shell=True, check=check, capture_output=True, text=True)
-        print(f"✅ {description} completed")
-        return True, result.stdout.strip()
+
+        if result.returncode == 0:
+            print(f"✅ {description} completed")
+            if show_output and result.stdout.strip():
+                print(f"   Output: {result.stdout.strip()[:200]}...")
+            return True, result.stdout.strip()
+        else:
+            print(f"❌ {description} failed (exit code: {result.returncode})")
+            if result.stderr.strip():
+                print(f"   Error: {result.stderr.strip()[:200]}...")
+            return False, result.stderr.strip()
+
     except subprocess.CalledProcessError as e:
         print(f"❌ {description} failed: {e}")
         if not check:
             return False, e.stderr.strip()
-        print(f"Error output: {e.stderr}")
+        print(f"   Error output: {e.stderr[:200]}...")
         return False, e.stderr.strip()
+    except FileNotFoundError as e:
+        print(f"❌ {description} failed: Command not found - {e}")
+        return False, str(e)
+    except Exception as e:
+        print(f"❌ {description} failed with unexpected error: {e}")
+        return False, str(e)
+
+def parse_requirements_file(filepath: str) -> List[str]:
+    """Parse requirements.txt file robustly, handling various formats"""
+    if not os.path.exists(filepath):
+        raise FileNotFoundError(f"Requirements file not found: {filepath}")
+
+    packages = []
+    with open(filepath, 'r', encoding='utf-8') as f:
+        for line in f:
+            line = line.strip()
+            # Skip empty lines, comments, and system packages
+            if not line or line.startswith('#') or 'System package' in line:
+                continue
+            # Handle various package formats:
+            # - package==version
+            # - package>=version
+            # - package[extras]==version
+            # - package @ url
+            # - -e .
+            # Extract package name (everything before version specifiers or @)
+            # Remove version specifiers and extras
+            package = re.split(r'[>=<@]', line)[0].strip()
+            # Remove extras in brackets
+            package = re.sub(r'\[.*\]', '', package).strip()
+            if package and package not in packages:
+                packages.append(package)
+
+    return packages
+
+def validate_requirements_file(filepath: str) -> Tuple[bool, str]:
+    """Validate that a requirements file is properly formatted and installable"""
+    if not os.path.exists(filepath):
+        return False, "File does not exist"
+
+    try:
+        packages = parse_requirements_file(filepath)
+        if not packages:
+            return False, "No valid packages found"
+
+        # Check for obviously invalid package names
+        invalid_packages = []
+        for pkg in packages:
+            # Basic validation: package names should be alphanumeric with some special chars
+            if not re.match(r'^[a-zA-Z0-9][a-zA-Z0-9._-]*[a-zA-Z0-9]$|^[a-zA-Z0-9]$', pkg):
+                invalid_packages.append(pkg)
+
+        if invalid_packages:
+            return False, f"Invalid package names: {', '.join(invalid_packages)}"
+
+        return True, f"Valid requirements file with {len(packages)} packages"
+    except Exception as e:
+        return False, f"Validation error: {e}"
+
+def create_clean_requirements(input_file: str, output_file: str) -> bool:
+    """Create a clean requirements file with proper validation"""
+    try:
+        packages = parse_requirements_file(input_file)
+
+        with open(output_file, 'w', encoding='utf-8') as f:
+            for package in packages:
+                f.write(f"{package}\n")
+
+        # Validate the created file
+        is_valid, message = validate_requirements_file(output_file)
+        if is_valid:
+            print(f"✅ Created and validated clean requirements file: {output_file} ({len(packages)} packages)")
+            return True
+        else:
+            print(f"⚠️  Created requirements file but validation failed: {message}")
+            return False
+    except Exception as e:
+        print(f"❌ Failed to create clean requirements: {e}")
+        return False
 
 def check_distilled_model():
     """Check if distilled model exists"""
@@ -124,6 +215,10 @@ def main():
             "Cloning repository"
         )
         if not success:
+            print("💡 If git clone fails, you may need to:")
+            print("   • Check internet connection")
+            print("   • Verify repository URL")
+            print("   • Use alternative download methods")
             sys.exit(1)
 
     os.chdir("Reformulating-Transformers-for-LLMs")
@@ -133,21 +228,62 @@ def main():
         "Switching to correct branch"
     )
     if not success:
+        print("💡 If branch checkout fails, you may need to:")
+        print("   • Pull latest changes: git pull")
+        print("   • Check available branches: git branch -r")
+        print("   • Use alternative branch or commit")
         sys.exit(1)
 
-    # 2. Install dependencies
+    # 2. Check for required files before proceeding
+    required_files = ["benchmark_psiqrh.py", "psiqrh_pipeline.py"]
+    missing_files = [f for f in required_files if not os.path.exists(f)]
+    if missing_files:
+        print(f"❌ Critical files missing: {', '.join(missing_files)}")
+        print("   Please ensure all required files are present before running evaluation.")
+        sys.exit(1)
+
+    # 3. Install dependencies
     if os.path.exists("requirements.txt"):
-        run_command(
-            "grep -vE '^(#|$|Makodev0|[[:space:]]*#)' requirements.txt | sed 's/==[0-9.]*//g' | sed 's/[[:space:]]*$//' | grep -v '^[[:space:]]*$' > requirements_clean.txt",
-            "Cleaning requirements"
-        )
-        run_command("pip install -r requirements_clean.txt", "Installing dependencies")
+        # Create clean requirements using robust Python parsing
+        if create_clean_requirements("requirements.txt", "requirements_clean.txt"):
+            success, output = run_command("pip install --quiet -r requirements_clean.txt", "Installing core dependencies")
+            if not success:
+                print("⚠️  Core dependencies installation failed, falling back to basic installation")
+                run_command("pip install --quiet torch transformers", "Installing basic ML dependencies")
+        else:
+            print("⚠️  Requirements parsing failed, falling back to basic installation")
+            run_command("pip install --quiet torch transformers", "Installing basic ML dependencies")
 
-    run_command("pip install datasets evaluate", "Installing ML libraries")
+        # Install ML-specific libraries only if not already in requirements
+        if os.path.exists("requirements_clean.txt"):
+            try:
+                existing_packages = parse_requirements_file("requirements_clean.txt")
+                ml_packages = ["datasets", "evaluate", "transformers", "torch"]
+                missing_ml = [pkg for pkg in ml_packages if pkg not in existing_packages]
+                if missing_ml:
+                    success, output = run_command(f"pip install --quiet {' '.join(missing_ml)}", "Installing missing ML libraries")
+                    if not success:
+                        print(f"⚠️  ML libraries installation failed: {output}")
+                else:
+                    print("✅ All ML libraries already in requirements")
+            except Exception as e:
+                print(f"⚠️  Could not check existing packages: {e}")
+                run_command("pip install --quiet datasets evaluate transformers torch", "Installing ML libraries")
+        else:
+            run_command("pip install --quiet datasets evaluate transformers torch", "Installing ML libraries")
+    else:
+        print("⚠️  No requirements.txt found, installing basic dependencies")
+        run_command("pip install --quiet torch transformers datasets evaluate", "Installing basic dependencies")
 
-    # 3. Check system status
+    # 4. Check system status
     print("🔍 System Status:")
-    run_command("python3 -c \"import torch; print(f'PyTorch: {torch.__version__}, CUDA: {torch.cuda.is_available()}')\"", "Checking PyTorch")
+    success, output = run_command("python3 -c \"import torch; print(f'PyTorch: {torch.__version__}, CUDA: {torch.cuda.is_available()}')\"", "Checking PyTorch")
+    if not success:
+        print("⚠️  PyTorch check failed - dependencies may not be properly installed")
+
+    success, output = run_command("python3 -c \"import transformers; print(f'Transformers: {transformers.__version__}')\"", "Checking Transformers")
+    if not success:
+        print("⚠️  Transformers check failed - ML dependencies may not be properly installed")
 
     # 4. Run selected mode
     print(f"\n🎯 Running mode: {args.mode}")
@@ -159,11 +295,23 @@ def main():
             return
 
     if args.mode == 'benchmark':
-        run_benchmark_mode()
+        try:
+            run_benchmark_mode()
+        except Exception as e:
+            print(f"❌ Benchmark mode failed: {e}")
+            print("💡 Try pipeline mode instead for better results")
     elif args.mode == 'pipeline':
-        run_pipeline_mode(args.prompt)
+        try:
+            run_pipeline_mode(args.prompt)
+        except Exception as e:
+            print(f"❌ Pipeline mode failed: {e}")
+            print("💡 Check that all dependencies are installed and files are present")
     else:  # distill already handled above
-        run_pipeline_mode(args.prompt)
+        try:
+            run_pipeline_mode(args.prompt)
+        except Exception as e:
+            print(f"❌ Default pipeline mode failed: {e}")
+            print("💡 Check system setup and try again")
 
     print("\n" + "=" * 60)
     print("🎉 ΨQRH Evaluation Completed!")
