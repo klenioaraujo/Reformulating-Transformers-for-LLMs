@@ -110,19 +110,10 @@ def check_and_install_missing(packages_to_install, requirements_file):
 def main():
     """Função principal que orquestra a configuração do ambiente."""
     try:
-        # 1. Clonar o repositório
-        if not os.path.exists("Reformulating-Transformers-for-LLMs"):
-            if not run_command(
-                "git clone https://github.com/klenioaraujo/Reformulating-Transformers-for-LLMs.git",
-                "Clonando o repositório"
-            ):
-                return
-        else:
-            print("✅ Repositório já existe, pulando a clonagem.")
+        # O script agora é executado de dentro do repositório.
+        # A clonagem e a entrada no diretório são de responsabilidade do usuário.
 
-        os.chdir("Reformulating-Transformers-for-LLMs")
-
-        # 2. Mudar para a branch correta
+        # 1. Mudar para a branch correta
         if not run_command(
             "git checkout pure_physics_PsiQRH",
             "Mudando para a branch 'pure_physics_PsiQRH'"
