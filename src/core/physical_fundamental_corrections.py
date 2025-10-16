@@ -633,11 +633,34 @@ class PhysicalHarmonicOrchestrator(nn.Module):
                 result = base_function(signal, embed_dim, proc_params)
                 print(f"[DEBUG] base_function retornou: result shape={result.shape}")
 
-                # CORREÇÃO: Garantir que o resultado seja 2D se o sinal era 2D
+                # CORREÇÃO: Garantir que o resultado tenha dimensões compatíveis
                 if signal.dim() == 2 and result.dim() == 1:
                     print(f"[DEBUG] CORREÇÃO: Convertendo resultado 1D→2D: {result.shape} → {signal.shape}")
                     result = result.unsqueeze(-1).expand(-1, embed_dim)
                     print(f"[DEBUG] Resultado corrigido: {result.shape}")
+                elif signal.dim() == 2 and result.dim() == 2:
+                    # Verificar se as dimensões são compatíveis
+                    if result.shape[0] != signal.shape[0] or result.shape[1] != embed_dim:
+                        print(f"[DEBUG] CORREÇÃO: Ajustando dimensões do resultado: {result.shape} → {signal.shape[0], embed_dim}")
+                        if result.shape[0] != signal.shape[0]:
+                            # Ajustar sequência
+                            if result.shape[0] < signal.shape[0]:
+                                # Padding
+                                padding = torch.zeros(signal.shape[0] - result.shape[0], embed_dim, device=result.device)
+                                result = torch.cat([result, padding], dim=0)
+                            else:
+                                # Truncar
+                                result = result[:signal.shape[0]]
+                        if result.shape[1] != embed_dim:
+                            # Ajustar dimensão de embedding
+                            if result.shape[1] < embed_dim:
+                                # Padding
+                                padding = torch.zeros(result.shape[0], embed_dim - result.shape[1], device=result.device)
+                                result = torch.cat([result, padding], dim=1)
+                            else:
+                                # Truncar
+                                result = result[:, :embed_dim]
+                        print(f"[DEBUG] Resultado ajustado: {result.shape}")
 
                 print("[ORCH TRACER] Ponto 14: Função base retornou."); sys.stdout.flush()
             except Exception as e:
@@ -682,6 +705,11 @@ class PhysicalHarmonicOrchestrator(nn.Module):
 
                 # Modulação de fase como perturbação controlada
                 modulation_strength = 0.1  # Fator de escala pequeno para estabilidade
+
+                # CORREÇÃO: Garantir que freq_indices tenha a dimensão correta
+                if freq_indices.dim() == 1:
+                    freq_indices = freq_indices.to(result.device)
+
                 phase_perturbation = modulation_strength * (
                     w_sin * torch.sin(2 * torch.pi * freq_indices / n_freq) +
                     w_cos * torch.cos(2 * torch.pi * freq_indices / n_freq)
@@ -697,34 +725,33 @@ class PhysicalHarmonicOrchestrator(nn.Module):
                 print(f"[DEBUG] phase_perturbation shape: {phase_perturbation.shape}, phases shape: {phases.shape}")
 
                 # CORREÇÃO DEFINITIVA: Expandir corretamente para todas as dimensões
+                print(f"[DEBUG] phase_perturbation shape: {phase_perturbation.shape}, phases shape: {phases.shape}")
+
+                # Garantir que phase_perturbation tenha a mesma dimensão que a última dimensão de phases
                 if phase_perturbation.dim() == 1 and phases.dim() >= 2:
-                    # phase_perturbation: [n_freq], phases: [..., n_freq]
-                    # Verificar se as dimensões são compatíveis
-                    if phase_perturbation.size(0) == phases.size(-1):
-                        # Expandir para todas as dimensões exceto a última
-                        target_shape = list(phases.shape)
-                        target_shape[-1] = phase_perturbation.size(0)
-                        phase_perturbation_expanded = phase_perturbation.view([1] * (phases.dim() - 1) + [-1]).expand(target_shape)
-                    else:
-                        # Ajustar para compatibilidade
-                        print(f"[DEBUG] Ajustando phase_perturbation para compatibilidade")
-                        min_dim = min(phase_perturbation.size(0), phases.size(-1))
-                        target_shape = list(phases.shape)
-                        target_shape[-1] = min_dim
-                        phase_perturbation_expanded = phase_perturbation[:min_dim].view([1] * (phases.dim() - 1) + [-1]).expand(target_shape)
-                else:
-                    # Tentar expandir diretamente se já compatível
-                    try:
-                        phase_perturbation_expanded = phase_perturbation.expand_as(phases)
-                    except RuntimeError as e:
-                        print(f"[DEBUG] Fallback necessário: {e}")
-                        # Fallback: expandir manualmente
-                        target_shape = list(phases.shape)
-                        if phase_perturbation.dim() == 1:
-                            target_shape[-1] = phase_perturbation.size(0)
-                            phase_perturbation_expanded = phase_perturbation.view([1] * (phases.dim() - 1) + [-1]).expand(target_shape)
+                    if phase_perturbation.size(0) != phases.size(-1):
+                        print(f"[DEBUG] Ajustando phase_perturbation: {phase_perturbation.size(0)} → {phases.size(-1)}")
+                        if phase_perturbation.size(0) < phases.size(-1):
+                            # Padding
+                            padding = torch.zeros(phases.size(-1) - phase_perturbation.size(0), device=phase_perturbation.device)
+                            phase_perturbation = torch.cat([phase_perturbation, padding])
                         else:
-                            phase_perturbation_expanded = phase_perturbation.unsqueeze(0).expand_as(phases)
+                            # Truncar
+                            phase_perturbation = phase_perturbation[:phases.size(-1)]
+
+                # Expandir para todas as dimensões
+                try:
+                    phase_perturbation_expanded = phase_perturbation.view([1] * (phases.dim() - 1) + [-1]).expand_as(phases)
+                except RuntimeError as e:
+                    print(f"[DEBUG] Fallback necessário: {e}")
+                    # Fallback: criar tensor com dimensões corretas
+                    phase_perturbation_expanded = torch.zeros_like(phases)
+                    # Aplicar phase_perturbation apenas na última dimensão
+                    for idx in range(phases.size(-1)):
+                        if idx < phase_perturbation.size(0):
+                            phase_perturbation_expanded[..., idx] = phase_perturbation[idx]
+                        else:
+                            phase_perturbation_expanded[..., idx] = 0.0
 
                 new_phases = phases + phase_perturbation_expanded
 

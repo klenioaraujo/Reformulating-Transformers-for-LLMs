@@ -1,0 +1,38 @@
+# /home/padilha/trabalhos/QRH2/Reformulating-Transformers-for-LLMs/configs/pipeline_config.yaml
+# Configuração centralizada para o ΨQRH Pipeline Unificado
+
+# Configuração do vocabulário
+# Se especificado, define um vocabulário customizado. Se None, usa o padrão ASCII (32-126)
+vocabulary: null
+
+# Parâmetros para a QuantumCharacterMatrix
+quantum_matrix:
+  embed_dim: 256
+  alpha: 1.5
+  beta: 0.8
+  fractal_dim: 1.7
+
+# Parâmetros para o ContextFunnel
+context_funnel:
+  num_heads: 8
+  max_history: 50
+
+# Parâmetros para o DCFTokenAnalysis
+# Nota: quantum_vocab_representations e char_to_idx são fornecidos dinamicamente pelo pipeline.
+dcf_analyzer:
+  enable_cognitive_priming: True
+
+# Parâmetros para o ContextualPrimingModulator
+priming_modulator:
+  priming_strength: 0.3
+  history_window: 10
+
+# Parâmetros do Pipeline
+pipeline:
+  device: "cpu"
+  max_generation_length: 20
+
+# Modelos semânticos disponíveis para integração
+semantic_models:
+  - gpt2
+  - deepseek-ai_deepseek-coder-6.7b-instruct

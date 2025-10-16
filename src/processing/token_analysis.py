@@ -844,7 +844,7 @@ class DCFTokenAnalysis:
             best_in_cluster = 0
 
         selected_cluster_idx = cluster_indices[best_in_cluster]
-        selected_token_id = candidate_tokens[selected_cluster_idx].item()
+        selected_token_id = candidate_tokens[selected_cluster_idx].item() if hasattr(candidate_tokens[selected_cluster_idx], 'item') else candidate_tokens[selected_cluster_idx]
 
         # Calcular probabilidade final baseada no score do cluster
         final_probability = cluster_scores[best_in_cluster].item()

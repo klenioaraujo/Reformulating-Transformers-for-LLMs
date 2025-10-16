@@ -213,8 +213,21 @@ class ProcessingParameterCalibrator:
         import os
 
         # Path to the ground-truth vocabulary file
-        # This constructs the path from the current file's location
-        vocab_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'native_vocab.json'))
+        # Try model vocabulary first, then fallback to native vocabulary
+        vocab_paths = [
+            os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'models', 'gpt2_full_spectral_embeddings', 'vocab.json')),
+            os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'models', 'source', 'gpt2', 'vocab.json')),
+            os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'native_vocab.json'))
+        ]
+
+        vocab_path = None
+        for path in vocab_paths:
+            if os.path.exists(path):
+                vocab_path = path
+                break
+
+        if vocab_path is None:
+            raise FileNotFoundError("No vocabulary file found in any expected location")
 
         try:
             with open(vocab_path, 'r', encoding='utf-8') as f:

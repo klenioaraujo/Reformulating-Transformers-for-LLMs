@@ -231,27 +231,40 @@ class ΨQRHPipeline:
         self.enable_cognitive_priming = enable_cognitive_priming
         self.audit_mode = audit_mode
         self.reasoning_mode = reasoning_mode
+        self.generation_method = 'semantic'  # Default generation method
 
         # Unified configuration from ModelManager
         manager = ModelManager()
         self.config = manager.get_active_model_config().get('qrh_config', {})
         self.config['device'] = self.device # Ensure device is correctly set
 
-        # ========== FIXED ARCHITECTURE DEFINITION ==========
-        # Define fixed architecture parameters to ensure dimensional compatibility
-        # These values satisfy all mathematical constraints:
-        # - embed_dim must be divisible by num_heads (for attention)
-        # - embed_dim must be divisible by 4 (for quaternions)
-        self.fixed_embed_dim = 64    # Divisible by 4 (quaternions) and 8 (heads)
-        self.fixed_num_heads = 8     # Compatible with embed_dim=64
-        self.fixed_hidden_dim = 512  # Standard hidden dimension
+        # Load pipeline configuration from config file
+        import yaml
+        pipeline_config_path = Path("configs/pipeline_config.yaml")
+        if pipeline_config_path.exists():
+            with open(pipeline_config_path, 'r') as f:
+                pipeline_config = yaml.safe_load(f)
+            # Use values from pipeline config
+            self.config['embed_dim'] = pipeline_config.get('quantum_matrix', {}).get('embed_dim', 64)
+            self.config['num_heads'] = pipeline_config.get('context_funnel', {}).get('num_heads', 4)
+            self.config['hidden_dim'] = 128  # Default fallback
+            # Load semantic models from config
+            self.semantic_models = pipeline_config.get('semantic_models', ['gpt2'])
+        else:
+            # Fallback to qrh_config values
+            self.config['embed_dim'] = self.config.get('qrh_layer', {}).get('embed_dim', 64)
+            self.config['num_heads'] = 4
+            self.config['hidden_dim'] = 128
+            self.semantic_models = ['gpt2']
 
-        # Override config with fixed architecture
-        self.config['embed_dim'] = self.fixed_embed_dim
-        self.config['num_heads'] = self.fixed_num_heads
-        self.config['hidden_dim'] = self.fixed_hidden_dim
+        # ========== DYNAMIC ARCHITECTURE DEFINITION ==========
+        # Calculate architecture parameters dynamically based on input properties
+        # These values will be determined by auto-calibration and input analysis
+        self.dynamic_embed_dim = self.config['embed_dim']    # Will be updated by auto-calibration
+        self.dynamic_num_heads = self.config['num_heads']    # Will be updated by auto-calibration
+        self.dynamic_hidden_dim = self.config['hidden_dim']   # Will be updated by auto-calibration
 
-        print(f">> ARQUITETURA FIXA DEFINIDA: embed_dim={self.fixed_embed_dim}, num_heads={self.fixed_num_heads}, hidden_dim={self.fixed_hidden_dim}")
+        print(f">> ARQUITETURA DINÂMICA DEFINIDA: parâmetros serão calibrados automaticamente")
 
         # ========== LOAD PRETRAINED MODEL WEIGHTS ==========
         # Load pretrained state_dict for weight adaptation during inference
@@ -318,7 +331,7 @@ class ΨQRHPipeline:
             try:
                 self.dynamic_quantum_matrix = DynamicQuantumCharacterMatrix(
                     vocab_size=50257,  # GPT-2 vocab size
-                    hidden_size=self.fixed_embed_dim,
+                    hidden_size=None,  # Will be set dynamically
                     device=self.device
                 )
                 print("🔬 Dynamic Quantum Character Matrix initialized in ΨQRHPipeline")
@@ -342,41 +355,52 @@ class ΨQRHPipeline:
 
         # Initialize stable quantum evolution components
         self.stable_evolution = create_stable_quantum_evolution(
-            embed_dim=self.fixed_embed_dim,  # Use fixed dimension
+            embed_dim=None,  # Will be set dynamically
             device=self.device
         )
 
-        # Get dynamic vocabulary size from native vocabulary FIRST
-        # Use injected vocab_path if provided, otherwise try default locations
-        if vocab_path is not None:
-            native_vocab_path = vocab_path
-        else:
-            native_vocab_paths = [
-                os.path.join(os.getcwd(), "data", "native_vocab.json"),
-                os.path.join(BASE_DIR, "data", "native_vocab.json")
-            ]
-            native_vocab_path = None
-            for path in native_vocab_paths:
-                if os.path.exists(path):
-                    native_vocab_path = path
-                    break
+        # Get dynamic vocabulary size from model vocabulary FIRST
+        # Try to use model vocabulary from models/gpt2_full_spectral_embeddings/vocab.json
+        model_vocab_paths = [
+            os.path.join(os.getcwd(), "models", "gpt2_full_spectral_embeddings", "vocab.json"),
+            os.path.join(BASE_DIR, "models", "gpt2_full_spectral_embeddings", "vocab.json"),
+            os.path.join(os.getcwd(), "models", "source", "gpt2", "vocab.json"),
+            os.path.join(BASE_DIR, "models", "source", "gpt2", "vocab.json"),
+            # Fallback to native vocabulary
+            os.path.join(os.getcwd(), "data", "native_vocab.json"),
+            os.path.join(BASE_DIR, "data", "native_vocab.json")
+        ]
 
-        dynamic_vocab_size = 256  # Default fallback
-        if native_vocab_path and os.path.exists(native_vocab_path):
-            try:
-                with open(native_vocab_path, 'r', encoding='utf-8') as f:
-                    native_vocab_data = json.load(f)
-                dynamic_vocab_size = native_vocab_data.get('vocab_size', 256)
-                print(f"📚 Using dynamic vocabulary size: {dynamic_vocab_size} (from {native_vocab_path})")
-            except Exception as e:
-                print(f"⚠️  Error loading native vocabulary from {native_vocab_path}: {e}")
-        else:
-            print(f"⚠️  Native vocabulary not found, using fallback vocab_size: {dynamic_vocab_size}")
+        dynamic_vocab_size = 50257  # GPT-2 default vocab size
+        model_vocab_path = None
+
+        for path in model_vocab_paths:
+            if os.path.exists(path):
+                model_vocab_path = path
+                try:
+                    with open(path, 'r', encoding='utf-8') as f:
+                        vocab_data = json.load(f)
+                    # Handle different vocabulary formats
+                    if 'vocab_size' in vocab_data:
+                        dynamic_vocab_size = vocab_data['vocab_size']
+                    elif 'char_to_idx' in vocab_data:
+                        dynamic_vocab_size = len(vocab_data['char_to_idx'])
+                    elif 'tokens' in vocab_data:
+                        dynamic_vocab_size = len(vocab_data['tokens'])
+
+                    print(f"📚 Using model vocabulary size: {dynamic_vocab_size} (from {path})")
+                    break
+                except Exception as e:
+                    print(f"⚠️  Error loading model vocabulary from {path}: {e}")
+
+        if model_vocab_path is None:
+            print(f"⚠️  No model vocabulary found, using GPT-2 default vocab_size: {dynamic_vocab_size}")
 
         # Initialize learnable quantum embedding with dynamic vocab_size FIRST
+        # Use embed_dim from configuration
         self.quantum_embedding = QuantumEmbedding(
             vocab_size=dynamic_vocab_size,  # Dynamic from native vocabulary
-            embed_dim=self.fixed_embed_dim  # Use fixed dimension
+            embed_dim=self.config['embed_dim']  # From configuration
         ).to(self.device)
 
         # Initialize quantum vocabulary for semantic connectivity AFTER quantum embedding
@@ -409,17 +433,17 @@ class ΨQRHPipeline:
         # Context Funnel - Mecanismo de atenção para histórico de conversa
         from src.core.context_funnel import create_context_funnel
         self.context_funnel = create_context_funnel(
-            embed_dim=self.fixed_embed_dim,  # Use fixed dimension
-            num_heads=self.fixed_num_heads,  # Use fixed num_heads
+            embed_dim=self.config['embed_dim'],  # From configuration
+            num_heads=self.config['num_heads'],   # From configuration
             max_history=10
         )
 
         # Inverse Cognitive Projector - Balança de Calibragem aprendível
         from src.core.inverse_cognitive_projector import create_inverse_cognitive_projector
         self.inverse_projector = create_inverse_cognitive_projector(
-            embed_dim=self.fixed_embed_dim,  # Use fixed dimension
+            embed_dim=self.config['embed_dim'],  # From configuration
             vocab_size=dynamic_vocab_size,  # Dynamic from native vocabulary
-            hidden_dim=self.fixed_hidden_dim,  # Use fixed hidden_dim
+            hidden_dim=self.config['hidden_dim'],  # From configuration
             num_layers=3,
             dropout=0.1
         )
@@ -483,7 +507,7 @@ class ΨQRHPipeline:
 
         # ========== HARMONIZATION CHECK ==========
         print(f"🔬 ΨQRH Pipeline Físico inicializado no dispositivo: {self.device}")
-        print(f"   📐 Configuração FIXA: embed_dim={self.fixed_embed_dim}, num_heads={self.fixed_num_heads}")
+        print(f"   📐 Configuração DINÂMICA: parâmetros serão calibrados automaticamente")
 
         # Test Dynamic Quantum Matrix if available
         if self.dynamic_quantum_matrix is not None:
@@ -721,11 +745,13 @@ class ΨQRHPipeline:
         # Use Physical Harmonic Orchestrator if available for cross-coupled mapping
         if self.physical_harmonic_orchestrator is not None:
             # Get orchestrated quantum mapping with cross-coupling
+            # Pass the mean signal for signature analysis, and the full signal to the base function
             psi = self.physical_harmonic_orchestrator.orchestrate_transformation(
-                signal,  # Pass full signal for base function
+                signal.mean(dim=0),  # 1D signal for signature analysis
                 'quantum_mapping',
                 self._signal_to_quaternions_base,
-                embed_dim=embed_dim, proc_params=proc_params
+                embed_dim=embed_dim,
+                proc_params=proc_params
             )
         else:
             # Fallback to base function if no orchestrator
@@ -911,15 +937,17 @@ class ΨQRHPipeline:
                     if hasattr(self.optical_probe, 'safe_extract_text'):
                         result = self.optical_probe.safe_extract_text(optical_output)
                         print(f"      🔍 safe_extract_text result: '{result}'")
-                        return result
+                        # Adicionar token ID à saída
+                        return f"{result} (token {token_id})"
                     else:
                         # Fallback: converter token_id para caractere ASCII
                         result = chr(token_id % 128) if 32 <= token_id % 128 < 127 else '?'
                         print(f"      🔍 ASCII fallback result: '{result}'")
-                        return result
+                        # Adicionar token ID à saída
+                        return f"{result} (token {token_id})"
                 else:
                     print(f"      ⚠️  Empty tuple, using fallback")
-                    return 'Ψ'
+                    return 'Ψ (token 0)'
 
             # Método 2: Tentar acesso direto
             if hasattr(optical_output, '__getitem__'):
@@ -1021,8 +1049,8 @@ class ΨQRHPipeline:
         if self.dynamic_quantum_matrix is not None and input_text:
             try:
                 print(f"   🔬 [Dynamic Quantum Matrix] Enhancing semantic tokens...")
-                # Adapt matrix to available semantic models
-                semantic_models = ['gpt2']
+                # Adapt matrix to available semantic models from config
+                semantic_models = self.semantic_models
                 for model_name in semantic_models:
                     try:
                         success = self.dynamic_quantum_matrix.adapt_to_model(model_name.replace('deepseek-ai_', ''))
@@ -1151,46 +1179,54 @@ class ΨQRHPipeline:
             else:
                 psi_final_abstract = psi_final[0, 0]
 
-            # ========== COMPONENTE 3: OPTICAL PROBE (Padilha Wave Equation) ==========
-            print(f"   🔬 [Optical Probe] Aplicando equação de onda de Padilha...")
+            # ========== COMPONENTE 3: GERAÇÃO DE TEXTO ==========
+            if self.generation_method == 'optical':
+                print(f"   🔬 [Optical Probe] Aplicando equação de onda de Padilha...")
 
-            # Ajustar dimensão se necessário (DCF pode usar dimensão diferente)
-            if psi_final_abstract.shape[0] != self.config['embed_dim']:
-                # Projetar para a dimensão correta
-                print(f"   🔧 Projecting embed_dim {psi_final_abstract.shape[0]} → {self.config['embed_dim']}")
-                proj_layer = torch.nn.Linear(psi_final_abstract.shape[0], self.config['embed_dim']).to(psi_final_abstract.device)
-                psi_final_abstract = proj_layer(psi_final_abstract)
-                print(f"   ✅ Projection successful: {psi_final_abstract.shape}")
+                # Ajustar dimensão se necessário (DCF pode usar dimensão diferente)
+                if psi_final_abstract.shape[0] != self.config['embed_dim']:
+                    # Projetar para a dimensão correta
+                    print(f"   🔧 Projecting embed_dim {psi_final_abstract.shape[0]} → {self.config['embed_dim']}")
+                    proj_layer = torch.nn.Linear(psi_final_abstract.shape[0], self.config['embed_dim']).to(psi_final_abstract.device)
+                    psi_final_abstract = proj_layer(psi_final_abstract)
+                    print(f"   ✅ Projection successful: {psi_final_abstract.shape}")
 
-            # Preparar estado quântico para optical probe [1, 1, embed_dim, 4]
-            # Usar psi_final_abstract como base para todos os componentes quaterniônicos
-            psi_for_optical = torch.zeros(1, 1, self.config['embed_dim'], 4, device=psi_final_abstract.device)
-            psi_for_optical[0, 0, :, 0] = psi_final_abstract  # w component
-            psi_for_optical[0, 0, :, 1] = torch.roll(psi_final_abstract, 1)  # x component (shifted)
-            psi_for_optical[0, 0, :, 2] = torch.sin(psi_final_abstract)  # y component
-            psi_for_optical[0, 0, :, 3] = torch.cos(psi_final_abstract)  # z component
+                # Preparar estado quântico para optical probe [1, 1, embed_dim, 4]
+                # Usar psi_final_abstract como base para todos os componentes quaterniônicos
+                psi_for_optical = torch.zeros(1, 1, self.config['embed_dim'], 4, device=psi_final_abstract.device)
+                psi_for_optical[0, 0, :, 0] = psi_final_abstract  # w component
+                psi_for_optical[0, 0, :, 1] = torch.roll(psi_final_abstract, 1)  # x component (shifted)
+                psi_for_optical[0, 0, :, 2] = torch.sin(psi_final_abstract)  # y component
+                psi_for_optical[0, 0, :, 3] = torch.cos(psi_final_abstract)  # z component
 
-            # Aplicar Optical Probe com equação de Padilha
-            # Optical probe expects [seq_len, embed_dim, 4], so squeeze batch and seq dims
-            psi_for_optical_squeezed = psi_for_optical.squeeze(0).squeeze(0)  # [embed_dim, 4]
-            psi_reconstructed_text = self.optical_probe(psi_for_optical_squeezed.unsqueeze(0))  # Add seq dim back
-            confidence = 0.8  # Placeholder confidence for optical probe
+                # Aplicar Optical Probe com equação de Padilha
+                # Optical probe expects [seq_len, embed_dim, 4], so squeeze batch and seq dims
+                psi_for_optical_squeezed = psi_for_optical.squeeze(0).squeeze(0)  # [embed_dim, 4]
+                psi_reconstructed_text = self.optical_probe(psi_for_optical_squeezed.unsqueeze(0))  # Add seq dim back
+                confidence = 0.8  # Placeholder confidence for optical probe
 
-            print(f"      ✅ Equação de Padilha aplicada: texto '{psi_reconstructed_text}', confiança {confidence:.3f}")
+                print(f"      ✅ Equação de Padilha aplicada: texto '{psi_reconstructed_text}', confiança {confidence:.3f}")
 
-            # ========== AUDIT LOGGING: FINAL RECONSTRUCTED STATE ==========
-            if self.audit_logger:
-                self.audit_logger.log_tensor_state("optical_probe_output", psi_for_optical, {"stage": "optical_probe_output"})
+                # ========== AUDIT LOGGING: FINAL RECONSTRUCTED STATE ==========
+                if self.audit_logger:
+                    self.audit_logger.log_tensor_state("optical_probe_output", psi_for_optical, {"stage": "optical_probe_output"})
 
-            # ========== TEXTO FINAL GERADO PELA OPTICAL PROBE ==========
-            # Use the new safe extraction method
-            emergent_text = self._safe_optical_probe_extraction(psi_reconstructed_text)
-            print(f"   📝 Texto final da Optical Probe: '{emergent_text}'")
+                # ========== TEXTO FINAL GERADO PELA OPTICAL PROBE ==========
+                # Use the new safe extraction method
+                emergent_text = self._safe_optical_probe_extraction(psi_reconstructed_text)
+                print(f"   📝 Texto final da Optical Probe: '{emergent_text}'")
+                selected_method = 'Optical Probe with Padilha Wave Equation'
+            else:
+                # ========== GERAÇÃO SEMÂNTICA NATIVA ==========
+                print(f"   🧠 [Semantic Native] Gerando texto via modelos semânticos...")
+                emergent_text = self._generate_semantic_text(psi_final_abstract, text)
+                print(f"   📝 Texto final via Semantic Native: '{emergent_text}'")
+                selected_method = 'Semantic Native Generation'
 
             print(f"   ✅ Arquitetura de 3 componentes concluída!")
             print(f"      📊 Ψ_context: {psi_context.shape}")
             print(f"      🧠 Ψ_final: {psi_final_abstract.shape}")
-            print(f"      🔬 Optical Probe: Aplicada equação de Padilha")
+            print(f"      🎯 Método: {selected_method}")
             print(f"      📝 Texto gerado: '{emergent_text}'")
             print(f"      🧠 FCI: {dcf_result.get('fci_value', 0):.4f}")
 
@@ -1270,16 +1306,15 @@ class ΨQRHPipeline:
 
             return {
                 'selected_text': emergent_text,
-                'selected_method': 'Optical Probe with Padilha Wave Equation',
+                'selected_method': selected_method,
                 'architecture_components': {
                     'context_funnel': psi_context.shape,
                     'cognitive_processor': psi_final_abstract.shape,
-                    'optical_probe': 'f(λ,t) = I₀ sin(ωt + αλ) e^(i(ωt - kλ + βλ²))'
+                    'generation_method': selected_method
                 },
                 'confidence': confidence,
                 'dcf_analysis': dcf_result,
                 'validation': validation,
-                'optical_probe_output': psi_reconstructed_text,
                 'final_quantum_state': psi_final_abstract
             }
 
@@ -2785,15 +2820,17 @@ class ΨQRHPipeline:
                     if hasattr(self.optical_probe, 'safe_extract_text'):
                         result = self.optical_probe.safe_extract_text(optical_output)
                         print(f"      🔍 safe_extract_text result: '{result}'")
-                        return result
+                        # Adicionar token ID à saída
+                        return f"{result} (token {token_id})"
                     else:
                         # Fallback: converter token_id para caractere ASCII
                         result = chr(token_id % 128) if 32 <= token_id % 128 < 127 else '?'
                         print(f"      🔍 ASCII fallback result: '{result}'")
-                        return result
+                        # Adicionar token ID à saída
+                        return f"{result} (token {token_id})"
                 else:
                     print(f"      ⚠️  Empty tuple, using fallback")
-                    return 'Ψ'
+                    return 'Ψ (token 0)'
 
             # Método 2: Tentar acesso direto
             if hasattr(optical_output, '__getitem__'):
@@ -3943,33 +3980,29 @@ class ΨQRHPipeline:
         print(f"\n🔬 EXECUTANDO PIPELINE FÍSICO ΨQRH PARA: '{text[:50]}...'")
 
         # ========== PASSO 0: SETUP ÚNICO COM CALIBRAÇÃO ==========
-        # 1. DEFINIR ARQUITETURA FIXA E COMPATÍVEL
-        print(f">> USANDO ARQUITETURA FIXA: embed_dim={self.fixed_embed_dim}, num_heads={self.fixed_num_heads}")
+        # 1. EXECUTAR CALIBRAÇÃO COMPLETA PARA DETERMINAR ARQUITETURA
+        print(f">> EXECUTANDO CALIBRAÇÃO DINÂMICA: parâmetros serão determinados automaticamente")
 
-        # 2. A calibração ainda pode rodar para os parâmetros FÍSICOS, mas ignoraremos sua sugestão de arquitetura.
+        # 2. A calibração determinará todos os parâmetros de arquitetura
         calibrated_params = self._setup_and_calibrate(text)
 
-        # Extrair parâmetros calibrados (apenas físicos e processamento)
+        # Extrair parâmetros calibrados (incluindo arquitetura)
         phys_params = calibrated_params['physical_params']
+        arch_params = calibrated_params['architecture_params']
         proc_params = calibrated_params['processing_params']
         ctrl_params = calibrated_params['control_params']
         calibrated_config = calibrated_params['calibrated_config']
 
-        # 3. DEFINIR ARQUITETURA FIXA (ignorando calibração)
-        arch_params = {
-            'embed_dim': self.fixed_embed_dim,
-            'num_heads': self.fixed_num_heads,
-            'hidden_dim': self.fixed_hidden_dim,  # Use fixed hidden_dim
-            'num_layers': 3     # Valor fixo compatível
-        }
+        # 3. USAR ARQUITETURA CALIBRADA DINAMICAMENTE
+        print(f">> USANDO ARQUITETURA DINÂMICA: embed_dim={arch_params['embed_dim']}, num_heads={arch_params['num_heads']}")
 
-        # 5. RE-INICIALIZAR COMPONENTES COM DIMENSÕES FIXAS
-        print("   🔄 Re-inicializando componentes com arquitetura fixa...")
+        # 5. RE-INICIALIZAR COMPONENTES COM DIMENSÕES CALIBRADAS
+        print("   🔄 Re-inicializando componentes com arquitetura calibrada...")
         self._reinitialize_components_with_calibrated_params(phys_params, arch_params, proc_params, ctrl_params)
 
         # ========== PASSO 1: TEXTO → FRACTAL EMBEDDING ==========
         print(f"   📐 Passo 1: Calculando dimensão fractal D...")
-        embed_dim = arch_params.get('embed_dim', self.config['embed_dim'])
+        embed_dim = arch_params['embed_dim']
         fractal_signal = self._text_to_fractal_signal(text, embed_dim, proc_params)
         D_fractal = self._calculate_fractal_dimension(fractal_signal.mean(dim=-1))  # Mean over embed_dim for fractal calculation
         print(f"      ✅ Dimensão fractal calculada: D = {D_fractal:.3f}")
@@ -4159,64 +4192,128 @@ class ΨQRHPipeline:
         else:
             psi_final_abstract = psi_final[0, 0]
 
-        # ========== COMPONENTE 3: OPTICAL PROBE (Padilha Wave Equation) ==========
-        print(f"   🔬 [Optical Probe] Applying Padilha wave equation...")
+        # ========== COMPONENTE 3: TEXT GENERATION ==========
+        max_length = kwargs.get('max_length', 50)
 
-        # Adjust dimension if necessary (DCF may use different dimension)
-        if psi_final_abstract.shape[0] != self.config['embed_dim']:
-            # Project to correct dimension
-            proj_layer = torch.nn.Linear(psi_final_abstract.shape[0], self.config['embed_dim']).to(psi_final_abstract.device)
-            psi_final_abstract = proj_layer(psi_final_abstract)
+        if self.generation_method == 'optical':
+            print(f"   🔬 [Optical Probe] Applying Padilha wave equation...")
 
-        # Prepare quantum state for optical probe [1, 1, embed_dim, 4]
-        psi_for_optical = torch.zeros(1, 1, self.config['embed_dim'], 4, device=psi_final_abstract.device)
-        psi_for_optical[0, 0, :, 0] = psi_final_abstract  # w component
-        psi_for_optical[0, 0, :, 1] = torch.roll(psi_final_abstract, 1)  # x component (shifted)
-        psi_for_optical[0, 0, :, 2] = torch.sin(psi_final_abstract)  # y component
-        psi_for_optical[0, 0, :, 3] = torch.cos(psi_final_abstract)  # z component
+            # Adjust dimension if necessary (DCF may use different dimension)
+            if psi_final_abstract.shape[0] != self.config['embed_dim']:
+                # Project to correct dimension
+                proj_layer = torch.nn.Linear(psi_final_abstract.shape[0], self.config['embed_dim']).to(psi_final_abstract.device)
+                psi_final_abstract = proj_layer(psi_final_abstract)
 
-        # Apply Optical Probe with Padilha wave equation
-        psi_for_optical_squeezed = psi_for_optical.squeeze(0).squeeze(0)  # [embed_dim, 4]
+            # Prepare quantum state for optical probe [1, 1, embed_dim, 4]
+            psi_for_optical = torch.zeros(1, 1, self.config['embed_dim'], 4, device=psi_final_abstract.device)
+            psi_for_optical[0, 0, :, 0] = psi_final_abstract  # w component
+            psi_for_optical[0, 0, :, 1] = torch.roll(psi_final_abstract, 1)  # x component (shifted)
+            psi_for_optical[0, 0, :, 2] = torch.sin(psi_final_abstract)  # y component
+            psi_for_optical[0, 0, :, 3] = torch.cos(psi_final_abstract)  # z component
 
-        # Safe optical probe call with error handling
-        try:
-            psi_reconstructed_text = self.optical_probe(psi_for_optical_squeezed.unsqueeze(0))  # Add seq dim back
-            confidence = 0.8  # Placeholder confidence for optical probe
+            # Apply Optical Probe with Padilha wave equation
+            psi_for_optical_squeezed = psi_for_optical.squeeze(0).squeeze(0)  # [embed_dim, 4]
 
-            print(f"      ✅ Padilha wave equation applied: text '{psi_reconstructed_text}', confidence {confidence:.3f}")
-            print(f"      🔍 Optical probe result type: {type(psi_reconstructed_text)}")
-            if hasattr(psi_reconstructed_text, '__len__'):
-                print(f"      🔍 Optical probe result length: {len(psi_reconstructed_text)}")
-        except Exception as e:
-            print(f"      ⚠️  Optical probe error: {e}")
-            # Fallback: create a simple tuple result
-            psi_reconstructed_text = (32, 0.5, True)  # Space character as fallback
-            confidence = 0.1
-            print(f"      🔄 Using fallback result: {psi_reconstructed_text}")
+            # Safe optical probe call with error handling
+            try:
+                psi_reconstructed_text = self.optical_probe(psi_for_optical_squeezed.unsqueeze(0))  # Add seq dim back
+                confidence = 0.8  # Placeholder confidence for optical probe
 
-        # ========== AUDIT LOGGING: FINAL RECONSTRUCTED STATE ==========
-        if self.audit_logger:
-            self.audit_logger.log_tensor_state("optical_probe_output", psi_for_optical, {"stage": "optical_probe_output"})
+                print(f"      ✅ Padilha wave equation applied: text '{psi_reconstructed_text}', confidence {confidence:.3f}")
+                print(f"      🔍 Optical probe result type: {type(psi_reconstructed_text)}")
+                if hasattr(psi_reconstructed_text, '__len__'):
+                    print(f"      🔍 Optical probe result length: {len(psi_reconstructed_text)}")
+            except Exception as e:
+                print(f"      ⚠️  Optical probe error: {e}")
+                # Fallback: create a simple tuple result
+                psi_reconstructed_text = (32, 0.5, True)  # Space character as fallback
+                confidence = 0.1
+                print(f"      🔄 Using fallback result: {psi_reconstructed_text}")
 
-        # ========== FINAL TEXT GENERATED BY OPTICAL PROBE ==========
-        # Use the new safe extraction method with comprehensive error handling
-        try:
-            print(f"      🔍 Before safe extraction: result={psi_reconstructed_text}, type={type(psi_reconstructed_text)}")
-            if hasattr(psi_reconstructed_text, '__len__'):
-                print(f"      🔍 Result length: {len(psi_reconstructed_text)}")
-            emergent_text = self._safe_optical_probe_extraction(psi_reconstructed_text)
-            print(f"   📝 Final text from Optical Probe: '{emergent_text}'")
-        except Exception as e:
-            print(f"      ⚠️  Error in optical probe extraction: {e}")
-            print(f"      🔍 Error details: {type(e).__name__}: {e}")
-            # Ultimate fallback
-            emergent_text = 'H'  # Simple fallback character
-            print(f"   📝 Fallback text from Optical Probe: '{emergent_text}'")
+            # ========== AUDIT LOGGING: FINAL RECONSTRUCTED STATE ==========
+            if self.audit_logger:
+                self.audit_logger.log_tensor_state("optical_probe_output", psi_for_optical, {"stage": "optical_probe_output"})
+
+            # ========== FINAL TEXT GENERATED BY OPTICAL PROBE ==========
+            # Use the new safe extraction method with comprehensive error handling
+            try:
+                print(f"      🔍 Before safe extraction: result={psi_reconstructed_text}, type={type(psi_reconstructed_text)}")
+                if hasattr(psi_reconstructed_text, '__len__'):
+                    print(f"      🔍 Result length: {len(psi_reconstructed_text)}")
+                emergent_text = self._safe_optical_probe_extraction(psi_reconstructed_text)
+                print(f"   📝 Final text from Optical Probe: '{emergent_text}'")
+            except Exception as e:
+                print(f"      ⚠️  Error in optical probe extraction: {e}")
+                print(f"      🔍 Error details: {type(e).__name__}: {e}")
+                # Ultimate fallback
+                emergent_text = 'H'  # Simple fallback character
+                print(f"   📝 Fallback text from Optical Probe: '{emergent_text}'")
+            selected_method = 'Optical Probe with Padilha Wave Equation'
+
+            # ========== GERAR SEQUÊNCIA COMPLETA ==========
+            if max_length > 1:
+                print(f"   🔄 Gerando sequência completa (max_length={max_length})...")
+                generated_tokens = [emergent_text]
+
+                for i in range(min(max_length - 1, 10)):
+                    # Evoluir estado quântico para próximo token
+                    evolved_psi = psi_final_abstract + torch.randn_like(psi_final_abstract) * 0.1 * (i + 1)
+
+                    # Preparar estado evoluído para optical probe
+                    evolved_psi_for_optical = torch.zeros(1, 1, self.config['embed_dim'], 4, device=evolved_psi.device)
+                    evolved_psi_for_optical[0, 0, :, 0] = evolved_psi
+                    evolved_psi_for_optical[0, 0, :, 1] = torch.roll(evolved_psi, 1)
+                    evolved_psi_for_optical[0, 0, :, 2] = torch.sin(evolved_psi)
+                    evolved_psi_for_optical[0, 0, :, 3] = torch.cos(evolved_psi)
+
+                    evolved_psi_squeezed = evolved_psi_for_optical.squeeze(0).squeeze(0)
+
+                    try:
+                        next_psi_reconstructed = self.optical_probe(evolved_psi_squeezed.unsqueeze(0))
+                        next_token = self._safe_optical_probe_extraction(next_psi_reconstructed)
+                        generated_tokens.append(next_token)
+
+                        # Parar em pontuação
+                        if next_token in ['.', '!', '?', '\n']:
+                            break
+                    except Exception as e:
+                        print(f"      ⚠️  Erro na geração do token {i+1}: {e}")
+                        break
+
+                emergent_text = ' '.join(generated_tokens)
+        else:
+            # ========== SEMANTIC NATIVE GENERATION ==========
+            print(f"   🧠 [Semantic Native] Generating text via semantic models...")
+            emergent_text = self._generate_semantic_text(psi_final_abstract, text)
+            print(f"   📝 Final text via Semantic Native: '{emergent_text}'")
+            selected_method = 'Semantic Native Generation'
+
+            # ========== GERAR SEQUÊNCIA COMPLETA ==========
+            if max_length > 1:
+                print(f"   🔄 Gerando sequência completa (max_length={max_length})...")
+                generated_tokens = [emergent_text]
+
+                for i in range(min(max_length - 1, 10)):
+                    # Evoluir estado quântico para próximo token
+                    evolved_psi = psi_final_abstract + torch.randn_like(psi_final_abstract) * 0.1 * (i + 1)
+
+                    try:
+                        next_token = self._generate_semantic_text(evolved_psi, text)
+                        generated_tokens.append(next_token)
+
+                        # Parar em pontuação
+                        if next_token in ['.', '!', '?', '\n']:
+                            break
+                    except Exception as e:
+                        print(f"      ⚠️  Erro na geração do token {i+1}: {e}")
+                        break
+
+                emergent_text = ' '.join(generated_tokens)
 
         print(f"   ✅ 3-component architecture completed!")
         print(f"      📊 Ψ_context: N/A (sequential processing)")
         print(f"      🧠 Ψ_final: {psi_final_abstract.shape}")
-        print(f"      🔬 Optical Probe: Padilha wave equation applied")
+        print(f"      🎯 Método: {selected_method}")
         print(f"      📝 Generated text: '{emergent_text}'")
         print(f"      🧠 FCI: {dcf_result.get('fci_value', 0):.4f}")
 
@@ -4230,16 +4327,15 @@ class ΨQRHPipeline:
 
         emergent_result = {
             'selected_text': emergent_text,
-            'selected_method': 'Optical Probe with Padilha Wave Equation',
+            'selected_method': selected_method,
             'architecture_components': {
                 'sequential_processing': 'Applied',
                 'inverse_projector': 'Used on last token',
-                'optical_probe': 'f(λ,t) = I₀ sin(ωt + αλ) e^(i(ωt - kλ + βλ²))'
+                'generation_method': selected_method
             },
-            'confidence': confidence,
+            'confidence': 0.8 if self.generation_method == 'optical' else 0.9,
             'dcf_analysis': dcf_result,
             'validation': validation,
-            'optical_probe_output': psi_reconstructed_text,
             'final_quantum_state': psi_final_abstract
         }
 
@@ -4496,6 +4592,86 @@ class ΨQRHPipeline:
             import traceback
             traceback.print_exc()
             return None
+
+    def _generate_semantic_text(self, psi_final_abstract: torch.Tensor, input_text: str) -> str:
+        """
+        Gera texto usando modelos semânticos nativos do diretório models/semantic/
+
+        Args:
+            psi_final_abstract: Estado quântico final [embed_dim]
+            input_text: Texto de entrada original
+
+        Returns:
+            Texto gerado usando modelos semânticos
+        """
+        try:
+            print(f"      🔍 Carregando modelos semânticos de: models/semantic/")
+
+            # Verificar se existem modelos semânticos disponíveis
+            semantic_models_dir = Path("models/semantic")
+            if not semantic_models_dir.exists():
+                raise FileNotFoundError("Diretório de modelos semânticos não encontrado")
+
+            # Listar modelos semânticos disponíveis
+            semantic_models = list(semantic_models_dir.glob("*.pt"))
+            if not semantic_models:
+                raise FileNotFoundError("Nenhum modelo semântico encontrado")
+
+            print(f"      ✅ Modelos semânticos encontrados: {len(semantic_models)}")
+
+            # Usar o primeiro modelo disponível (poderia ser expandido para seleção inteligente)
+            selected_model = semantic_models[0]
+            print(f"      🎯 Usando modelo: {selected_model.name}")
+
+            # Carregar o modelo semântico
+            semantic_model = torch.load(selected_model, map_location=self.device)
+            print(f"      ✅ Modelo semântico carregado com sucesso")
+
+            # Verificar se é um modelo GPT2 ou similar
+            if hasattr(semantic_model, 'generate'):
+                # Usar o estado quântico como prompt condicional
+                quantum_prompt = f"Quantum state: {psi_final_abstract[:10].tolist()}... Input: {input_text}"
+
+                # Gerar texto usando o modelo semântico
+                with torch.no_grad():
+                    generated = semantic_model.generate(
+                        quantum_prompt,
+                        max_length=50,
+                        num_return_sequences=1,
+                        temperature=0.7
+                    )
+                return generated[0] if isinstance(generated, list) else generated
+            else:
+                # Para outros tipos de modelo, usar o vocabulário do modelo para selecionar token
+                print(f"      ℹ️  Modelo não suporta geração direta, usando vocabulário do modelo")
+
+                # Usar o estado quântico para selecionar um token do vocabulário do modelo
+                if psi_final_abstract.numel() > 0:
+                    # Converter o estado quântico para um índice de token usando o vocabulário atual
+                    vocab_size = self.quantum_embedding.vocab_size
+                    token_idx = int(torch.abs(psi_final_abstract[0]).item() * (vocab_size - 1)) % vocab_size
+
+                    # Tentar mapear para caractere se possível, senão usar índice
+                    try:
+                        # Usar o vocabulário do modelo se disponível
+                        if hasattr(self, 'quantum_vocab_representations') and self.quantum_vocab_representations is not None:
+                            # Encontrar o token correspondente no vocabulário
+                            char = list(self.quantum_vocab_representations.keys())[token_idx % len(self.quantum_vocab_representations)]
+                        else:
+                            # Fallback para caractere ASCII se não houver vocabulário
+                            char = chr(ord('A') + (token_idx % 26))
+
+                        # Retornar tanto o caractere quanto o índice do token
+                        return f"{char} (token {token_idx})"
+                    except Exception as e:
+                        # Se falhar, retornar apenas o índice do token
+                        return f"token_{token_idx}"
+                else:
+                    raise ValueError("Estado quântico vazio")
+
+        except Exception as e:
+            print(f"      ❌ Erro na geração semântica: {e}")
+            raise
 
     def _enhance_with_auto_learning(self, input_text: str, base_output: str) -> Optional[str]:
         """
@@ -4826,6 +5002,13 @@ Exemplos:
         help='Modo de raciocínio DCF: geometric (padrão, rápido) ou analogical (lento, profundo)'
     )
 
+    parser.add_argument(
+        '--generation-method',
+        choices=['optical', 'semantic'],
+        default='semantic',
+        help='Método de geração: optical (Optical Probe) ou semantic (padrão, modelos semânticos nativos)'
+    )
+
     args = parser.parse_args()
 
     # Configurar modo quiet/verbose
@@ -4884,7 +5067,7 @@ Exemplos:
 
     # Processamento de texto único
     if args.text:
-        return process_single_text(args.text, args.task, args.device, args.verbose, args.model_dir, enable_auto_calibration, tokenizer_config, args.json, audit_mode, selected_model, reasoning_mode)
+        return process_single_text(args.text, args.task, args.device, args.verbose, args.model_dir, enable_auto_calibration, tokenizer_config, args.json, audit_mode, selected_model, reasoning_mode, args.generation_method)
 
     # Se nenhum argumento, mostrar ajuda
     parser.print_help()
@@ -5165,7 +5348,7 @@ Comandos disponíveis:
 
     return 0
 
-def process_single_text(text: str, task: str, device: Optional[str], verbose: bool = False, model_dir: Optional[str] = None, enable_auto_calibration: bool = True, tokenizer_config: Optional[Dict[str, Any]] = None, json_output: bool = False, audit_mode: bool = False, selected_model: str = 'gpt2', reasoning_mode: str = 'geometric') -> int:
+def process_single_text(text: str, task: str, device: Optional[str], verbose: bool = False, model_dir: Optional[str] = None, enable_auto_calibration: bool = True, tokenizer_config: Optional[Dict[str, Any]] = None, json_output: bool = False, audit_mode: bool = False, selected_model: str = 'gpt2', reasoning_mode: str = 'geometric', generation_method: str = 'semantic') -> int:
     """Processa um único texto com auto-aprendizagem e salva saídas estruturadas"""
     import yaml
     from datetime import datetime
@@ -5173,6 +5356,9 @@ def process_single_text(text: str, task: str, device: Optional[str], verbose: bo
 
     # Usar detecção automática de tarefa baseada no conteúdo do texto
     pipeline = ΨQRHPipeline(task=task, device=device, input_text=text, model_dir=model_dir, enable_auto_calibration=enable_auto_calibration, tokenizer_config=tokenizer_config, audit_mode=audit_mode, reasoning_mode=reasoning_mode)
+
+    # Configurar método de geração
+    pipeline.generation_method = generation_method
 
     # Integrar seleção de modelo na configuração do pipeline
     if hasattr(pipeline, 'config') and selected_model != 'gpt2':
@@ -5183,6 +5369,7 @@ def process_single_text(text: str, task: str, device: Optional[str], verbose: bo
 
     print(f"🧠 Processando: {text}")
     print(f"📋 Tarefa detectada: {pipeline.task}")
+    print(f"🎯 Método de geração: {generation_method}")
     if enable_auto_calibration:
         print(f"🤖 Auto-calibração: ATIVADA")
     result = pipeline(text)

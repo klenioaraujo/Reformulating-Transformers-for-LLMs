@@ -279,21 +279,22 @@ class StableQuantumEvolution(nn.Module):
     ressonante e embedding em Leech Lattice.
     """
 
-    def __init__(self, embed_dim: int = 64, device: str = 'cpu'):
+    def __init__(self, embed_dim: int = None, device: str = 'cpu'):
         """
         Inicializa o framework de evolução estável.
 
         Args:
-            embed_dim: Dimensão do embedding
+            embed_dim: Dimensão do embedding (será definida dinamicamente)
             device: Dispositivo para computação
         """
         super().__init__()
         self.embed_dim = embed_dim
         self.device = device
 
-        # Componentes principais
+        # Componentes principais - inicializados com dimensões padrão
+        # As dimensões reais serão definidas durante a execução
         self.resonant_filter = PrimeResonantFilter(dimension=24, device=device)
-        self.lattice_embedding = LeechLatticeEmbedding(input_dim=embed_dim, leech_dim=24, device=device)
+        self.lattice_embedding = None  # Será inicializado quando embed_dim for definido
 
         # Operadores de evolução unitária aprendíveis
         self.unitary_operator = nn.Parameter(torch.eye(24, dtype=torch.complex64))
@@ -314,6 +315,10 @@ class StableQuantumEvolution(nn.Module):
         Returns:
             Estado evoluído de forma estável
         """
+        # Inicializar lattice embedding se necessário
+        if self.lattice_embedding is None and self.embed_dim is not None:
+            self.lattice_embedding = LeechLatticeEmbedding(input_dim=self.embed_dim, leech_dim=24, device=self.device)
+
         # Simplificação extrema para teste: apenas aplicar uma pequena transformação
         # sem os componentes complexos que estão causando problemas de dimensão
         evolved_state = quantum_state * 0.99  # Aplicar pequena atenuação

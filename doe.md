@@ -1,9 +1,4 @@
-Reformulating Transformers for LLMs: A Quaternionic-Harmonic Framework with Empirical Validation ΨQRH
-Creators
 
-    Padilha, Klenio Araujo (Contact person)1
-
-Description
 Reformulating Transformers for LLMs: A Quaternionic-Harmonic Framework with Empirical Validation
 
 Author: Klenio Araujo Padilha

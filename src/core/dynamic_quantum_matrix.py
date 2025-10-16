@@ -85,7 +85,8 @@ class DynamicQuantumCharacterMatrix(nn.Module):
     Adapta-se aos parâmetros espectrais dos modelos semânticos específicos.
     """
 
-    def __init__(self, vocab_size: int = 50257, hidden_size: int = 256, device: str = "cpu"):
+    def __init__(self, vocab_size: int = 50257, hidden_size: int = 256, device: str = "cpu",
+                 default_alpha: float = 1.5, default_beta: float = 0.8, default_fractal_dim: float = 1.7):
         """
         Inicializa a matriz quântica dinâmica com quarteniões.
 
@@ -93,6 +94,9 @@ class DynamicQuantumCharacterMatrix(nn.Module):
             vocab_size: Tamanho do vocabulário
             hidden_size: Dimensão do espaço latente (deve ser múltiplo de 4 para quarteniões)
             device: Dispositivo para computação
+            default_alpha: Valor padrão para o parâmetro alpha
+            default_beta: Valor padrão para o parâmetro beta
+            default_fractal_dim: Valor padrão para a dimensão fractal
         """
         super().__init__()
 
@@ -101,6 +105,10 @@ class DynamicQuantumCharacterMatrix(nn.Module):
         # Garantir que hidden_size seja múltiplo de 4 para quarteniões
         self.hidden_size = (hidden_size // 4) * 4
         self.quaternion_dim = self.hidden_size // 4  # Dimensão de cada componente quaterniónico
+
+        self.default_alpha = default_alpha
+        self.default_beta = default_beta
+        self.default_fractal_dim = default_fractal_dim
 
         self.spectral_integrator = SpectralParametersIntegrator()
         from src.core.quaternion_operations import OptimizedQuaternionOperations
@@ -178,9 +186,9 @@ class DynamicQuantumCharacterMatrix(nn.Module):
         """
         with torch.no_grad():
             # Parâmetros padrão (serão sobrescritos pela adaptação)
-            alpha_default = 1.5
-            beta_default = 0.8
-            fractal_dim_default = 1.7
+            alpha_default = self.default_alpha
+            beta_default = self.default_beta
+            fractal_dim_default = self.default_fractal_dim
 
             return self._compute_padilha_quantum_matrix(
                 alpha_default, beta_default, fractal_dim_default
@@ -226,9 +234,9 @@ class DynamicQuantumCharacterMatrix(nn.Module):
         """
         Atualiza matriz quântica com parâmetros específicos do modelo.
         """
-        alpha = model_params.get('alpha_final', 1.5)
-        beta = model_params.get('beta_final', 0.8)
-        fractal_dim = model_params.get('fractal_dim_final', 1.7)
+        alpha = model_params.get('alpha_final', self.default_alpha)
+        beta = model_params.get('beta_final', self.default_beta)
+        fractal_dim = model_params.get('fractal_dim_final', self.default_fractal_dim)
 
         # Computar nova matriz com Equação de Padilha
         self.quantum_matrix = self._compute_padilha_quantum_matrix(alpha, beta, fractal_dim)
@@ -394,13 +402,20 @@ class DynamicQuantumCharacterMatrix(nn.Module):
         results['energy_conservation'] = abs(filtered_energy / original_energy - 1.0) < 0.01
 
         # Teste 3: Quaternions unitários gerados corretamente
-        test_angles = torch.randn(50, 6) * 2 * torch.pi
-        q_left = torch.stack([
-            torch.cos(test_angles[:, 0]/2) * torch.cos(test_angles[:, 1]/2) * torch.cos(test_angles[:, 2]/2),
-            torch.sin(test_angles[:, 0]/2) * torch.cos(test_angles[:, 1]/2) * torch.cos(test_angles[:, 2]/2),
-            torch.cos(test_angles[:, 0]/2) * torch.sin(test_angles[:, 1]/2) * torch.cos(test_angles[:, 2]/2),
-            torch.cos(test_angles[:, 0]/2) * torch.cos(test_angles[:, 1]/2) * torch.sin(test_angles[:, 2]/2)
-        ], dim=-1)
+        test_angles = torch.randn(50, 3) * 2 * torch.pi # Usar 3 ângulos para um quaternião (roll, pitch, yaw)
+
+        phi, theta, psi = test_angles[:, 0] / 2, test_angles[:, 1] / 2, test_angles[:, 2] / 2
+
+        cr, sr = torch.cos(phi), torch.sin(phi)
+        cp, sp = torch.cos(theta), torch.sin(theta)
+        cy, sy = torch.cos(psi), torch.sin(psi)
+
+        w = cr * cp * cy + sr * sp * sy
+        x = sr * cp * cy - cr * sp * sy
+        y = cr * sp * cy + sr * cp * sy
+        z = cr * cp * sy - sr * sp * cy
+        
+        q_left = torch.stack([w, x, y, z], dim=-1)
 
         q_left_norm = torch.norm(q_left, dim=-1)
         results['unitary_quaternions'] = torch.allclose(q_left_norm, torch.ones_like(q_left_norm), atol=1e-6)
@@ -481,8 +496,7 @@ class DynamicQuantumCharacterMatrix(nn.Module):
             Tensor quântico [len(text), hidden_size] com representação quaterniónica
         """
         if not self.current_model_params:
-            print("⚠️  Matriz não adaptada a nenhum modelo. Usando parâmetros padrão.")
-            self.adapt_to_model('gpt2')  # Fallback
+            raise RuntimeError("A matriz quântica não foi adaptada a nenhum modelo. Chame `adapt_to_model(model_name)` primeiro.")
 
         # Converter texto para índices com modulação prima
         char_indices = []
@@ -533,6 +547,36 @@ class DynamicQuantumCharacterMatrix(nn.Module):
             normalized = torch.complex(real_normalized, imag_normalized)
 
             return normalized
+
+    def decode_text(self, encoded_tensor: torch.Tensor) -> List[int]:
+        """
+        Decodifica um tensor de embeddings de volta para uma lista de índices de vocabulário.
+        Usa uma busca pelo vizinho mais próximo na matriz quântica original como uma aproximação.
+
+        Args:
+            encoded_tensor: Tensor de embeddings [sequence_length, hidden_size].
+
+        Returns:
+            Lista de índices de vocabulário decodificados.
+        """
+        decoded_indices = []
+        
+        # Prepara a matriz quântica para a busca, achatando a representação do quaternião.
+        qm_flat = self.quantum_matrix.reshape(self.vocab_size, -1)
+
+        with torch.no_grad():
+            for i in range(encoded_tensor.shape[0]):
+                # Pega o vetor de embedding para um caractere
+                embedding_vector = encoded_tensor[i]
+
+                # Calcula a distância Euclidiana do vetor para todos os vetores na matriz quântica
+                distances = torch.norm(qm_flat - embedding_vector.unsqueeze(0), dim=1)
+                
+                # Encontra o índice da menor distância, que corresponde ao caractere mais provável
+                best_match_idx = torch.argmin(distances).item()
+                decoded_indices.append(best_match_idx)
+            
+        return decoded_indices
 
     def _apply_prime_modulation_to_index(self, base_idx: int, position: int) -> float:
         """Aplica modulação prima a um índice de caractere."""
