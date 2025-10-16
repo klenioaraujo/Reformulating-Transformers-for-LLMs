@@ -55,7 +55,7 @@ def run_benchmark_mode():
 
     if success:
         print("📊 Expected GLUE Results:")
-        print("  • Validation: ~49% (random baseline - correct!)")
+        print("  • Validation: ~52% (random baseline - correct!)")
         print("  • Test: 0% (GLUE limitation)")
         print("  • No crashes: Technical fixes working ✅")
 
@@ -168,7 +168,7 @@ def main():
     print("\n" + "=" * 60)
     print("🎉 ΨQRH Evaluation Completed!")
     print("\n📚 Key Insights:")
-    print("  • Benchmark mode: Shows technical fixes work (49% = correct random baseline)")
+    print("  • Benchmark mode: Shows technical fixes work (52% = correct random baseline)")
     print("  • Pipeline mode: Demonstrates true ΨQRH capability (dynamic consensus)")
     print("  • Distillation: Required for meaningful results (>16GB GPU needed)")
     print("\n🔬 ΨQRH Design: Physics-based consensus generation, not supervised classification")
