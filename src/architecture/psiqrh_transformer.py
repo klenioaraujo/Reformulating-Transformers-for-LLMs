@@ -26,6 +26,20 @@ from ..core.quaternion_operations import (
     RealTimeFractalAnalyzer
 )
 from ..core.spectral_harmonic_processor import QuaternionMLP
+from ..core.relative_attention_sink import (
+    RelativeAttentionSink,
+    SinkAwareAttention,
+    SinkAwarePsiQRHBlock,
+    monitor_sink_formation,
+    forward_with_relative_sink
+)
+from ..core.relative_attention_sink import (
+    RelativeAttentionSink,
+    SinkAwareAttention,
+    SinkAwarePsiQRHBlock,
+    monitor_sink_formation,
+    forward_with_relative_sink
+)
 
 
 def load_transformer_config(config_path: Optional[Union[str, Path]] = None, preset: str = 'standard') -> Dict:
@@ -450,9 +464,10 @@ class PsiQRHTransformerBlock(nn.Module):
         self.use_fractal_analysis = config['components']['use_fractal_analysis']
         self.use_harmonic_coupling = config['harmonic_coupling']['enabled']
 
-        # ΨQRH attention - input is d_model * quaternion_multiplier
+        # ΨQRH attention with relative sink awareness - input is d_model * quaternion_multiplier
         input_dim = self.d_model * config['model']['quaternion_multiplier']
-        self.self_attention = PsiQRHAttention(input_dim, self.n_heads)
+        sink_strength = config.get('attention', {}).get('sink_strength', 0.1)
+        self.self_attention = SinkAwareAttention(input_dim, self.n_heads, sink_strength)
         self.attention_norm = nn.LayerNorm(input_dim)
 
         # Kuramoto Spectral Layer (optional)
@@ -529,17 +544,25 @@ class PsiQRHTransformerBlock(nn.Module):
                 device=self.device
             )
 
-    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, Dict]:
+    def forward(self, x: torch.Tensor, positions: Optional[torch.Tensor] = None, attention_mask: Optional[torch.Tensor] = None) -> Tuple[torch.Tensor, Dict]:
         # Import energy normalization from BKP implementation
         from ..core.utils import energy_normalize
 
         metrics = {}
         layer_outputs_for_coupling = {}
 
-        # Self-attention with residual and energy conservation
+        # Generate positions if not provided
+        if positions is None:
+            batch_size, seq_len, _ = x.shape
+            positions = torch.arange(seq_len, device=x.device).unsqueeze(0).expand(batch_size, -1)
+
+        # Self-attention with relative sink awareness and residual and energy conservation
         residual = x
         x = self.attention_norm(x)
-        attention_out = self.self_attention(x, x, x)
+        attention_out, sink_indices = self.self_attention(x, x, x, positions, attention_mask)
+
+        # Store sink indices in metrics for monitoring
+        metrics['sink_indices'] = sink_indices
 
         # Apply energy normalization to preserve energy conservation
         attention_out = energy_normalize(x, attention_out)
@@ -726,13 +749,14 @@ class PsiQRHTransformer(nn.Module):
         self.token_embedding = QuaternionTokenEmbedding(vocab_size, d_model)
         self.positional_encoding = SpectralPositionalEncoding(d_model * quaternion_multiplier, max_seq_length)
 
-        # ΨQRH transformer blocks - optimized for parameter efficiency
+        # ΨQRH transformer blocks with relative sink awareness - optimized for parameter efficiency
         self.layers = nn.ModuleList([
             PsiQRHTransformerBlock(
                 config={'model': {'d_model': d_model, 'n_heads': n_heads, 'dim_feedforward': dim_feedforward // 2, 'quaternion_multiplier': quaternion_multiplier, 'max_seq_length': max_seq_length},
                         'performance': {'device': 'cpu'},
                         'components': {'use_kuramoto': False, 'use_working_memory': False, 'use_phase_sync': False, 'use_fractal_analysis': False},
                         'harmonic_coupling': {'enabled': False},
+                        'attention': {'sink_strength': 0.1},  # Add sink strength configuration
                         'layer_scaling': {'init_values': {'attention': 1.0, 'kuramoto': 1.0, 'memory': 1.0, 'feedforward': 1.0}},
                         'energy_conservation': {'enabled': False, 'tolerance': 0.01, 'log_violations': False}}
             ) for _ in range(n_layers)
@@ -747,9 +771,14 @@ class PsiQRHTransformer(nn.Module):
         # Instead of output_projection, we use the embedding matrix transposed
         self.to_real_space = nn.Linear(d_model * quaternion_multiplier, d_model)
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, positions: Optional[torch.Tensor] = None, attention_mask: Optional[torch.Tensor] = None) -> torch.Tensor:
         # Import energy normalization from BKP implementation
         from ..core.utils import energy_normalize
+
+        # Generate positions if not provided
+        if positions is None:
+            batch_size, seq_len = x.shape
+            positions = torch.arange(seq_len, device=x.device).unsqueeze(0).expand(batch_size, -1)
 
         # Embed tokens as quaternions
         x = self.token_embedding(x)
@@ -758,13 +787,22 @@ class PsiQRHTransformer(nn.Module):
         # Apply spectral positional encoding
         x = self.positional_encoding(x)
 
-        # Process through ΨQRH layers with energy conservation
+        # Process through ΨQRH layers with energy conservation and sink monitoring
+        all_sink_indices = []
         for i, layer in enumerate(self.layers):
             x_before_layer = x
-            x, metrics = layer(x)
+            x, metrics = layer(x, positions, attention_mask)
+
+            # Collect sink indices for monitoring
+            if 'sink_indices' in metrics:
+                all_sink_indices.append(metrics['sink_indices'])
 
             # Apply energy conservation after each layer (from BKP)
             x = energy_normalize(x_before_layer, x)
+
+            # Monitor sink formation on strategic layers
+            if i in [0, 4, 8, 16, 31] and len(all_sink_indices) > 0:
+                monitor_sink_formation(x, positions, i)
 
             # Adaptive fractal analysis and parameter adjustment (placeholder)
             # if i % self.fractal_analysis_freq == 0:

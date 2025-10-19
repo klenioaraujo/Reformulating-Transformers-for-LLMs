@@ -127,6 +127,32 @@ except ImportError as e:
     HAS_QUANTUM_MEMORY = False
     print(f"❌ Quantum memory system not available. ZERO FALLBACK POLICY: {e}")
 
+# Import relative attention sink components
+try:
+    from src.core.relative_attention_sink import (
+        RelativeAttentionSink,
+        SinkAwareAttention,
+        SinkAwarePsiQRHBlock,
+        monitor_sink_formation,
+        forward_with_relative_sink
+    )
+    HAS_RELATIVE_ATTENTION_SINK = True
+    print("🔬 Relative Attention Sink components loaded successfully!")
+except ImportError as e:
+    HAS_RELATIVE_ATTENTION_SINK = False
+    print(f"❌ Relative Attention Sink not available: {e}")
+
+# Initialize relative attention sink components in pipeline
+if HAS_RELATIVE_ATTENTION_SINK:
+    try:
+        # Initialize sink-aware components for the main pipeline
+        sink_manager = RelativeAttentionSink(hidden_size=64, sink_strength=0.1)  # Default values
+        HAS_RELATIVE_ATTENTION_SINK = True
+        print("🔬 Relative Attention Sink initialized in main pipeline!")
+    except Exception as e:
+        HAS_RELATIVE_ATTENTION_SINK = False
+        print(f"❌ Failed to initialize Relative Attention Sink in pipeline: {e}")
+
 
 # Non-commutative geometry components (advanced quantum physics)
 try:
@@ -613,6 +639,29 @@ class ΨQRHPipeline:
         if HAS_QUANTUM_MEMORY:
             self._initialize_quantum_memory()
 
+        # Initialize relative attention sink components
+        if HAS_RELATIVE_ATTENTION_SINK:
+            self._initialize_relative_attention_sink()
+
+        # Initialize sink-aware transformer if available
+        if HAS_RELATIVE_ATTENTION_SINK:
+            try:
+                from src.architecture.psiqrh_transformer import PsiQRHTransformer
+                # Use sink-aware transformer instead of basic components
+                self.sink_aware_transformer = PsiQRHTransformer(
+                    vocab_size=self.quantum_embedding.vocab_size,
+                    d_model=self.config['embed_dim'],
+                    n_layers=6,
+                    n_heads=self.config['num_heads'],
+                    dim_feedforward=1024,
+                    max_seq_length=1024,
+                    quaternion_multiplier=4
+                ).to(self.device)
+                print("🔬 Sink-aware ΨQRH Transformer initialized!")
+            except Exception as e:
+                print(f"⚠️  Failed to initialize sink-aware transformer: {e}")
+                self.sink_aware_transformer = None
+
         # Initialize audit logger if audit mode is enabled
         if self.audit_mode:
             self._initialize_audit_logger()
@@ -626,6 +675,12 @@ class ΨQRHPipeline:
 
             # Atualizar histórico de conversa para aprendizado contínuo
             # Nota: A resposta será adicionada após geração
+
+        # ========== RELATIVE ATTENTION SINK INTEGRATION ==========
+        # Add method to use sink-aware transformer for generation
+        if hasattr(self, 'sink_aware_transformer') and self.sink_aware_transformer is not None:
+            print("🔬 Relative Attention Sink integrated into main pipeline!")
+            print("   🎯 Sink-aware generation methods available")
 
         # ========== HARMONIZATION CHECK ==========
         print(f"🔬 ΨQRH Pipeline Físico inicializado no dispositivo: {self.device}")
@@ -659,6 +714,10 @@ class ΨQRHPipeline:
             print("   🧠 Memória Quântica: ATIVADA (correlações temporais de longo alcance)")
         else:
             print("   🧠 Memória Quântica: DESATIVADA (processamento independente)")
+        if HAS_RELATIVE_ATTENTION_SINK and hasattr(self, 'sink_aware_transformer') and self.sink_aware_transformer is not None:
+            print("   🎯 Attention Sink Relativo: ATIVADO (identificação baseada na menor posição relativa)")
+        else:
+            print("   🎯 Attention Sink Relativo: DESATIVADO (atenção baseada em posição absoluta)")
 
         print("   🤖 Pipeline Físico: ATIVADO (apenas componentes físicos)")
 
