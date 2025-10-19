@@ -21,10 +21,10 @@ class QuantumWordMatrix(nn.Module):
     funcionalidades de codificação e decodificação baseadas em similaridade.
     """
 
-    def __init__(self, 
-                 embed_dim: int, 
-                 device: str, 
-                 word_to_id: Dict[str, int], 
+    def __init__(self,
+                 embed_dim: int,
+                 device: str,
+                 word_to_id: Dict[str, int],
                  id_to_word: Dict[int, str]):
         super().__init__()
         self.device = device
@@ -38,10 +38,28 @@ class QuantumWordMatrix(nn.Module):
         self.vocab_size = len(word_to_id)
 
         # A abordagem correta: usar uma camada de embedding para representar as palavras.
+        # Inicialização melhorada para evitar concentração em poucos tokens
         self.embedding = nn.Embedding(self.vocab_size, self.embed_dim)
+
+        # Inicialização personalizada para melhor diversidade
+        self._initialize_embeddings()
+
         print(f"✅ [QuantumWordMatrix] Camada de Embedding criada com sucesso para {self.vocab_size} tokens.")
 
         self.to(device)
+
+    def _initialize_embeddings(self):
+        """Inicialização personalizada dos embeddings para melhor diversidade"""
+        # Usar inicialização Xavier uniforme para melhor distribuição
+        nn.init.xavier_uniform_(self.embedding.weight)
+
+        # Adicionar pequeno ruído para evitar similaridade excessiva
+        noise = torch.randn_like(self.embedding.weight) * 0.01
+        self.embedding.weight.data += noise
+
+        # Normalizar para ter normas mais uniformes
+        norms = torch.norm(self.embedding.weight, dim=1, keepdim=True)
+        self.embedding.weight.data = self.embedding.weight.data / norms
 
     def encode_word(self, word: str) -> torch.Tensor:
         """Codifica uma palavra para seu vetor de embedding."""

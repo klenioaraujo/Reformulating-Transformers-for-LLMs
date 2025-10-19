@@ -18,26 +18,44 @@ try:
         """Análise DCF aprimorada que gera sequências de tokens coerentes"""
         import torch.nn.functional as F
 
-        # Gerar sequência de tokens usando amostragem autoregressiva
+        # Gerar sequência de tokens usando amostragem autoregressiva aprimorada
         temperature = 0.8
         max_length = 20  # Generate longer sequences
 
         # Se logits tem shape [256, 4], precisamos converter para [vocab_size]
         if logits.dim() == 2 and logits.shape[1] == 4:
             # Converter quaternions para logits de vocabulário
-            # Usar a norma dos quaternions como logits aproximados
-            logits = torch.norm(logits, dim=1)  # [256]
-            # Expandir para o tamanho do vocabulário
+            # Usar uma combinação mais inteligente dos quaternions
+            # Calcular magnitude e fase para criar logits mais diversificados
+            magnitudes = torch.norm(logits, dim=1)  # [256]
+            phases = torch.atan2(logits[:, 1], logits[:, 0])  # Fase dos primeiros componentes
+
+            # Combinar magnitude e fase para criar logits mais diversificados
+            logits = magnitudes * (1.0 + 0.5 * torch.sin(phases))  # [256]
+
+            # Expandir para o tamanho do vocabulário usando interpolação
             if embeddings is not None:
                 vocab_size = embeddings.shape[0]
                 if logits.shape[0] < vocab_size:
-                    padding = torch.zeros(vocab_size - logits.shape[0], device=logits.device)
-                    logits = torch.cat([logits, padding], dim=0)
+                    # Interpolar para preencher o espaço do vocabulário
+                    logits = torch.cat([
+                        logits,
+                        torch.randn(vocab_size - logits.shape[0], device=logits.device) * 0.1
+                    ], dim=0)
                 elif logits.shape[0] > vocab_size:
                     logits = logits[:vocab_size]
+        else:
+            # Se logits já tem shape [vocab_size], garantir diversidade
+            if logits.shape[0] > 1000:
+                # Adicionar ruído para evitar concentração em poucos tokens
+                logits = logits + torch.randn_like(logits) * 0.5
 
+        # Aplicar temperatura com suavização
         logits = logits / temperature
+
+        # Suavizar a distribuição para evitar concentração extrema
         probs = F.softmax(logits, dim=-1)
+        probs = (probs + 1e-8) / (probs + 1e-8).sum()  # Renormalizar
 
         # Amostrar tokens autoregressivamente para formar uma sequência coerente
         token_ids = []
@@ -48,22 +66,30 @@ try:
             token_id = torch.multinomial(current_probs, 1).item()
             token_ids.append(token_id)
 
-            # Para geração autoregressiva, atualizar logits baseado no token anterior
-            # Simular dependência contextual reduzindo probabilidade de repetição
-            if i > 0 and token_id == token_ids[i-1]:
-                # Penalizar repetições consecutivas
-                current_probs[token_id] *= 0.3
-            else:
-                # Pequena penalização para tokens já usados recentemente
-                current_probs[token_id] *= 0.8
+            # Penalização mais agressiva para evitar repetição
+            if i > 0:
+                # Penalizar tokens repetidos consecutivamente
+                if token_id == token_ids[i-1]:
+                    current_probs[token_id] *= 0.1  # Penalidade forte para repetição
+                else:
+                    # Penalizar tokens que apareceram recentemente
+                    recent_tokens = token_ids[max(0, i-3):i]  # Últimos 3 tokens
+                    if token_id in recent_tokens:
+                        current_probs[token_id] *= 0.3
+                    else:
+                        current_probs[token_id] *= 0.7
 
-            # Adicionar ruído quântico para diversidade
-            noise = torch.randn_like(current_probs) * 0.1
+            # Adicionar ruído quântico mais forte para diversidade
+            noise = torch.randn_like(current_probs) * 0.3
             current_probs = F.softmax(current_probs + noise, dim=-1)
 
-            # Parar se gerou token de fim de sequência (simular)
-            if len(token_ids) >= 5 and torch.rand(1).item() < 0.1:  # 10% chance de parar após 5 tokens
-                break
+            # Critério de parada mais inteligente
+            if len(token_ids) >= 8:
+                # Parar se a diversidade for baixa ou com probabilidade crescente
+                unique_tokens = len(set(token_ids))
+                diversity = unique_tokens / len(token_ids)
+                if diversity < 0.4 or torch.rand(1).item() < 0.2:  # 20% chance após 8 tokens
+                    break
 
         # Criar estado quântico baseado na sequência completa de tokens
         if embeddings is not None and len(token_ids) > 0:
