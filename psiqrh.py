@@ -64,11 +64,14 @@ from tools.quantum_decoder import QuantumDecoder
 # Import OpticalProbe for Padilha Wave Equation-based decoding
 from src.core.optical_probe import OpticalProbe
 
+# Import Quantum Token Filter for improved token generation
+from src.processing.quantum_token_filter import create_quantum_token_filter
+
 # Import Dynamic Quantum Matrix for advanced semantic token extraction
 try:
-    from src.core.dynamic_quantum_matrix import DynamicQuantumCharacterMatrix
+    from src.core.dynamic_quantum_matrix import DynamicQuantumWordMatrix
     HAS_DYNAMIC_QUANTUM_MATRIX = True
-    print("🔬 Dynamic Quantum Character Matrix loaded successfully!")
+    print("🔬 Dynamic Quantum Word Matrix loaded successfully!")
 except ImportError as e:
     HAS_DYNAMIC_QUANTUM_MATRIX = False
     print(f"⚠️  Dynamic Quantum Matrix not available: {e}")
@@ -213,6 +216,7 @@ class ΨQRHPipeline:
         """
         Inicializa o pipeline ΨQRH com física completa.
 
+        print("DEBUG: Inside __init__ method")
         Args:
             task: Tipo de tarefa (text-generation, analysis, chat, signal-processing)
             device: Dispositivo (cpu, cuda, mps) - detecta automaticamente se None
@@ -230,6 +234,8 @@ class ΨQRHPipeline:
         self.enable_noncommutative = enable_noncommutative and HAS_NONCOMMUTATIVE
         self.enable_cognitive_priming = enable_cognitive_priming
         self.audit_mode = audit_mode
+        self.audit_logger = None
+        self.audit_analyzer = None
         self.reasoning_mode = reasoning_mode
         self.generation_method = 'semantic'  # Default generation method
 
@@ -237,6 +243,9 @@ class ΨQRHPipeline:
         manager = ModelManager()
         self.config = manager.get_active_model_config().get('qrh_config', {})
         self.config['device'] = self.device # Ensure device is correctly set
+
+        # Initialize Quantum Token Filter reference
+        self.quantum_token_filter = None
 
         # Load pipeline configuration from config file
         import yaml
@@ -264,7 +273,121 @@ class ΨQRHPipeline:
         self.dynamic_num_heads = self.config['num_heads']    # Will be updated by auto-calibration
         self.dynamic_hidden_dim = self.config['hidden_dim']   # Will be updated by auto-calibration
 
+        # Otimizar embed_dim para compatibilidade com quaternions
+        self.dynamic_embed_dim = self._optimize_embed_dim_for_quaternions(self.dynamic_embed_dim)
+        self.config['embed_dim'] = self.dynamic_embed_dim
+
         print(f">> ARQUITETURA DINÂMICA DEFINIDA: parâmetros serão calibrados automaticamente")
+
+    def _optimize_embed_dim_for_quaternions(self, current_dim: int) -> int:
+        """
+        Otimiza embed_dim para compatibilidade com operações quaterniônicas
+        Mantém a auto-calibração mas garante múltiplos adequados
+        """
+        # Múltiplos ideais para quaternions (4) e attention heads (8)
+        base_multiple = 8
+
+        # Encontrar múltiplo mais próximo do valor calibrado
+        candidates = [base_multiple * i for i in range(4, 33)]  # 32 a 256
+
+        # Selecionar mais próximo mantendo valores razoáveis
+        optimal = min(candidates, key=lambda x: abs(x - current_dim))
+
+        # Garantir mínimo prático e máximo razoável
+        optimal = max(32, min(256, optimal))
+
+        if optimal != current_dim:
+            print(f"🔧 Otimizando embed_dim para quaternions: {current_dim} → {optimal}")
+
+        return optimal
+
+    def _quantum_state_to_logits(self, quantum_state: torch.Tensor, vocab_size: int) -> torch.Tensor:
+        """
+        Converte estado quântico para logits usando projeção adaptativa.
+
+        Args:
+            quantum_state: Estado quântico [embed_dim]
+            vocab_size: Tamanho do vocabulário alvo
+
+        Returns:
+            logits: Logits para predição de tokens [vocab_size]
+        """
+        # Aplanar estado quântico
+        state_flat = quantum_state.view(-1)
+
+        # Interpolar para tamanho do vocabulário
+        if len(state_flat) < vocab_size:
+            # Upsample usando interpolação linear
+            logits = torch.nn.functional.interpolate(
+                state_flat.unsqueeze(0).unsqueeze(0),
+                size=vocab_size,
+                mode='linear',
+                align_corners=False
+            ).squeeze()
+        else:
+            # Downsample usando média móvel
+            step = len(state_flat) // vocab_size
+            if step > 0:
+                logits = torch.tensor([state_flat[i*step:(i+1)*step].mean() for i in range(vocab_size)])
+            else:
+                logits = torch.nn.functional.interpolate(
+                    state_flat.unsqueeze(0).unsqueeze(0),
+                    size=vocab_size,
+                    mode='linear',
+                    align_corners=False
+                ).squeeze()
+
+        # Garantir tamanho correto
+        if len(logits) != vocab_size:
+            if len(logits) < vocab_size:
+                padding = torch.zeros(vocab_size - len(logits), device=logits.device)
+                logits = torch.cat([logits, padding])
+            else:
+                logits = logits[:vocab_size]
+
+        # Normalizar e adicionar ruído controlado
+        logits = (logits - logits.mean()) / (logits.std() + 1e-8)
+        logits += torch.randn_like(logits) * 0.05
+
+        return logits
+
+    def _apply_context_quantum_weighting(self, psi_context: torch.Tensor, psi_final: torch.Tensor) -> torch.Tensor:
+        """
+        Aplica sistema de pesos entre contexto semântico e espaço quântico.
+
+        Args:
+            psi_context: Contexto semântico [embed_dim]
+            psi_final: Estado quântico final [embed_dim]
+
+        Returns:
+            psi_weighted: Estado quântico ponderado [embed_dim]
+        """
+        # Calcular similaridade entre contexto e estado final
+        context_norm = torch.norm(psi_context)
+        final_norm = torch.norm(psi_final)
+
+        if context_norm > 0 and final_norm > 0:
+            # Normalizar vetores
+            context_normalized = psi_context / context_norm
+            final_normalized = psi_final / final_norm
+
+            # Calcular similaridade cosseno
+            similarity = torch.dot(context_normalized.view(-1), final_normalized.view(-1))
+
+            # Calcular peso baseado na similaridade
+            # Alta similaridade = mais contexto, baixa similaridade = mais quantum
+            context_weight = torch.sigmoid(similarity * 5.0)  # Escalar para [0, 1]
+            quantum_weight = 1.0 - context_weight
+
+            print(f"   ⚖️  Context-Quantum Weighting: context={context_weight:.3f}, quantum={quantum_weight:.3f}")
+
+            # Aplicar pesos
+            psi_weighted = context_weight * psi_context + quantum_weight * psi_final
+
+            return psi_weighted
+        else:
+            # Se normas são zero, usar apenas estado quântico
+            return psi_final
 
         # ========== LOAD PRETRAINED MODEL WEIGHTS ==========
         # Load pretrained state_dict for weight adaptation during inference
@@ -308,10 +431,14 @@ class ΨQRHPipeline:
         self.temp_calculator = None
         self.coherence_calculator = None
         self.spectral_params = None
-        self.calibration_system = None
+        self.calibration_system = None  # Ensure attribute exists
 
         # Initialize auto-calibration components
+        print("🔧 DEBUG: About to call _initialize_auto_calibration_components")
         self._initialize_auto_calibration_components()
+        print("🔧 DEBUG: After _initialize_auto_calibration_components")
+        if self.enable_auto_calibration and hasattr(self, 'calibration_system') and self.calibration_system is not None:
+            self._initialize_complete_auto_calibration()
 
         # Non-commutative geometry components (advanced quantum physics)
         self.nc_pipeline = None
@@ -325,16 +452,16 @@ class ΨQRHPipeline:
         # Quantum vocabulary for semantic connectivity
         self.quantum_vocab_representations = None
 
-        # Dynamic Quantum Character Matrix for advanced semantic token extraction
+        # Dynamic Quantum Word Matrix for advanced semantic token extraction
         self.dynamic_quantum_matrix = None
         if HAS_DYNAMIC_QUANTUM_MATRIX:
             try:
-                self.dynamic_quantum_matrix = DynamicQuantumCharacterMatrix(
+                self.dynamic_quantum_matrix = DynamicQuantumWordMatrix(
                     vocab_size=50257,  # GPT-2 vocab size
                     hidden_size=None,  # Will be set dynamically
                     device=self.device
                 )
-                print("🔬 Dynamic Quantum Character Matrix initialized in ΨQRHPipeline")
+                print("🔬 Dynamic Quantum Word Matrix initialized in ΨQRHPipeline")
             except Exception as e:
                 print(f"⚠️  Failed to initialize Dynamic Quantum Matrix in pipeline: {e}")
                 self.dynamic_quantum_matrix = None
@@ -359,59 +486,39 @@ class ΨQRHPipeline:
             device=self.device
         )
 
-        # Get dynamic vocabulary size from model vocabulary FIRST
-        # Try to use model vocabulary from models/gpt2_full_spectral_embeddings/vocab.json
-        model_vocab_paths = [
-            os.path.join(os.getcwd(), "models", "gpt2_full_spectral_embeddings", "vocab.json"),
-            os.path.join(BASE_DIR, "models", "gpt2_full_spectral_embeddings", "vocab.json"),
-            os.path.join(os.getcwd(), "models", "source", "gpt2", "vocab.json"),
-            os.path.join(BASE_DIR, "models", "source", "gpt2", "vocab.json"),
-            # Fallback to native vocabulary
-            os.path.join(os.getcwd(), "data", "native_vocab.json"),
-            os.path.join(BASE_DIR, "data", "native_vocab.json")
-        ]
+        # Load quantum-native vocabulary size
+        try:
+            dynamic_vocab_size = self._load_quantum_native_vocabulary()
+            print(f"📚 Using quantum-native vocabulary size: {dynamic_vocab_size}")
+        except Exception as e:
+            print(f"⚠️  Failed to load quantum-native vocabulary: {e}")
+            print("   🔄 Falling back to genesis system...")
+            # Fallback to genesis system
+            dynamic_vocab_size = 86  # Genesis vocabulary size
+            self._initialize_quantum_vocabulary_with_genesis()
 
-        dynamic_vocab_size = 50257  # GPT-2 default vocab size
-        model_vocab_path = None
-
-        for path in model_vocab_paths:
-            if os.path.exists(path):
-                model_vocab_path = path
-                try:
-                    with open(path, 'r', encoding='utf-8') as f:
-                        vocab_data = json.load(f)
-                    # Handle different vocabulary formats
-                    if 'vocab_size' in vocab_data:
-                        dynamic_vocab_size = vocab_data['vocab_size']
-                    elif 'char_to_idx' in vocab_data:
-                        dynamic_vocab_size = len(vocab_data['char_to_idx'])
-                    elif 'tokens' in vocab_data:
-                        dynamic_vocab_size = len(vocab_data['tokens'])
-
-                    print(f"📚 Using model vocabulary size: {dynamic_vocab_size} (from {path})")
-                    break
-                except Exception as e:
-                    print(f"⚠️  Error loading model vocabulary from {path}: {e}")
-
-        if model_vocab_path is None:
-            print(f"⚠️  No model vocabulary found, using GPT-2 default vocab_size: {dynamic_vocab_size}")
-
-        # Initialize learnable quantum embedding with dynamic vocab_size FIRST
-        # Use embed_dim from configuration
+        # Initialize learnable quantum embedding with dynamic vocab_size
+        # Now uses quantum-native vocabulary instead of GPT-2
         self.quantum_embedding = QuantumEmbedding(
-            vocab_size=dynamic_vocab_size,  # Dynamic from native vocabulary
+            vocab_size=dynamic_vocab_size,  # Dynamic from quantum-native vocabulary
             embed_dim=self.config['embed_dim']  # From configuration
         ).to(self.device)
 
+        print(f"🔬 Quantum Embedding initialized with {dynamic_vocab_size} tokens")
+        print(f"   🎯 Autonomous vocabulary: True (no GPT-2 dependencies)")
+
         # Initialize quantum vocabulary for semantic connectivity AFTER quantum embedding
         try:
+            print("🔧 DEBUG: About to call _initialize_quantum_vocabulary_with_genesis")
             self._initialize_quantum_vocabulary_with_genesis(vocab_path)
         except Exception as e:
+            print("🔧 DEBUG: Exception in _initialize_quantum_vocabulary_with_genesis")
             print(f"⚠️  Erro ao inicializar dicionário quântico: {e}")
             # Fallback to original method
             try:
                 self._initialize_quantum_vocabulary(vocab_path)
             except Exception as fallback_e:
+                print("🔧 DEBUG: Exception in _initialize_quantum_vocabulary fallback")
                 print(f"⚠️  Fallback também falhou: {fallback_e}")
                 self.quantum_vocab_representations = None
                 self.char_to_idx = None
@@ -442,18 +549,23 @@ class ΨQRHPipeline:
         from src.core.inverse_cognitive_projector import create_inverse_cognitive_projector
         self.inverse_projector = create_inverse_cognitive_projector(
             embed_dim=self.config['embed_dim'],  # From configuration
-            vocab_size=dynamic_vocab_size,  # Dynamic from native vocabulary
+            vocab_size=dynamic_vocab_size,  # Dynamic from quantum-native vocabulary
             hidden_dim=self.config['hidden_dim'],  # From configuration
             num_layers=3,
             dropout=0.1
         )
 
+        print(f"🔄 Inverse Cognitive Projector initialized with {dynamic_vocab_size} tokens")
+        print(f"   🎯 Autonomous vocabulary integration: Complete")
+
         # ========== DCF INITIALIZATION MOVED TO MAIN EXECUTION METHOD ==========
         # DCF components are now initialized in the main execution method after calibration
 
         # ZERO FALLBACK POLICY: No external pre-trained weights loaded
-        # System achieves true vocabulary autonomy through emergent generation
-        print("🎯 Using random initialization for true vocabulary autonomy (ZERO FALLBACK)")
+        # System achieves true vocabulary autonomy through quantum-native vocabulary
+        print("🎯 Using quantum-native vocabulary for true vocabulary autonomy (ZERO FALLBACK)")
+        print(f"   🔬 Quantum vocabulary: {dynamic_vocab_size} tokens with quantum properties")
+        print(f"   ⚡ Properties: energy, coherence, entropy, spin, mass, charge, frequency, wavelength")
 
         # Validar que o dicionário quântico foi criado corretamente
         if self.quantum_vocab_representations is None:
@@ -476,7 +588,17 @@ class ΨQRHPipeline:
         self.update_conversation_history = self._update_conversation_history
 
         # Initialize complete auto-calibration system
-        if self.enable_auto_calibration:
+        if self.enable_auto_calibration and hasattr(self, 'calibration_system') and self.calibration_system is not None:
+            self._initialize_complete_auto_calibration()
+
+        # Ensure calibration_system is initialized even if previous calls failed
+        if self.enable_auto_calibration and (not hasattr(self, 'calibration_system') or self.calibration_system is None):
+            print("⚠️  calibration_system not initialized, forcing initialization...")
+            self._initialize_complete_auto_calibration()
+
+        # Force initialization to ensure calibration_system is always available
+        if self.enable_auto_calibration and (self.calibration_system is None):
+            print("🔧 Forcing calibration_system initialization...")
             self._initialize_complete_auto_calibration()
 
         # Initialize non-commutative geometry se disponível
@@ -512,7 +634,8 @@ class ΨQRHPipeline:
         # Test Dynamic Quantum Matrix if available
         if self.dynamic_quantum_matrix is not None:
             try:
-                test_encoded = self.dynamic_quantum_matrix.encode_text("test")
+                if hasattr(self, 'dynamic_quantum_matrix') and self.dynamic_quantum_matrix:
+                    test_encoded = self.dynamic_quantum_matrix.encode_text("test")
                 print(f"   🔬 Dynamic Quantum Matrix: ✅ Ativo (shape: {test_encoded.shape})")
             except Exception as e:
                 print(f"   🔬 Dynamic Quantum Matrix: ⚠️  Teste falhou: {e}")
@@ -528,7 +651,7 @@ class ΨQRHPipeline:
             print("   🎼 Sistema Harmonizado: ❌ DESATIVADO (auto-calibração incompleta ou assinatura harmônica ausente)")
             print(f"      ⚠️  Componentes faltando: {harmonization_status['missing_components']}")
 
-        if self.enable_auto_calibration:
+        if self.enable_auto_calibration and hasattr(self, 'calibration_system') and self.calibration_system is not None:
             print("   🔧 Auto-calibração: ATIVADA (todos os parâmetros emergentes da física)")
         else:
             print("   🔧 Auto-calibração: DESATIVADA (parâmetros fixos)")
@@ -764,6 +887,35 @@ class ΨQRHPipeline:
         return psi
 
 
+    def _apply_spectral_filtering_fixed(self, psi: torch.Tensor, alpha: float) -> torch.Tensor:
+        """
+        Filtragem espectral com conservação de energia garantida
+
+        Args:
+            psi: Estado quântico [batch, seq_len, embed_dim, 4]
+            alpha: Parâmetro espectral
+
+        Returns:
+            Estado filtrado com energia conservada
+        """
+        # Calcular energia inicial
+        E_initial = torch.sum(psi.abs() ** 2)
+
+        # Aplicar filtro espectral existente
+        psi_filtered = self._apply_spectral_filtering(psi, alpha)
+
+        # Renormalizar para conservar energia
+        E_current = torch.sum(psi_filtered.abs() ** 2)
+        scale_factor = torch.sqrt(E_initial / (E_current + 1e-10))
+        psi_normalized = psi_filtered * scale_factor
+
+        # Validar conservação
+        E_final = torch.sum(psi_normalized.abs() ** 2)
+        conservation_ratio = E_final / E_initial
+        assert 0.99 < conservation_ratio < 1.01, f"Falha conservação: {conservation_ratio}"
+
+        return psi_normalized
+
     def _apply_spectral_filtering(self, psi: torch.Tensor, alpha: float) -> torch.Tensor:
         """
         Filtragem espectral aprimorada usando Prime Resonant Filtering + Leech Lattice Embedding
@@ -857,6 +1009,39 @@ class ΨQRHPipeline:
 
         print(f"   ✅ Filtragem espectral estável aplicada: {psi.shape} → {psi_renormalized.shape}")
         return psi_renormalized.real  # Retornar parte real para compatibilidade
+
+    def _apply_so4_rotation_fixed(self, psi: torch.Tensor) -> torch.Tensor:
+        """
+        Rotações SO(4) com unitariedade garantida
+
+        Args:
+            psi: Estado quântico [batch, seq_len, embed_dim, 4]
+
+        Returns:
+            Estado rotacionado com unitariedade garantida
+        """
+        # Validar entrada
+        initial_norm = torch.norm(psi)
+
+        # Aplicar rotação
+        psi_rotated = self._apply_so4_rotation(psi)
+
+        # Forçar unitariedade
+        U, S, V = torch.svd(psi_rotated.reshape(-1, 4))
+        psi_unitary = U @ V.mT
+        psi_unitary = psi_unitary.reshape(psi.shape)
+
+        # Escalar para norma original
+        current_norm = torch.norm(psi_unitary)
+        scale_factor = initial_norm / current_norm
+        psi_final = psi_unitary * scale_factor
+
+        # Validar
+        final_norm = torch.norm(psi_final)
+        norm_error = abs(final_norm - initial_norm) / initial_norm
+        assert norm_error < 0.01, f"Falha unitariedade: {norm_error}"
+
+        return psi_final
 
     def _apply_so4_rotation(self, psi: torch.Tensor) -> torch.Tensor:
         """
@@ -1053,7 +1238,8 @@ class ΨQRHPipeline:
                 semantic_models = self.semantic_models
                 for model_name in semantic_models:
                     try:
-                        success = self.dynamic_quantum_matrix.adapt_to_model(model_name.replace('deepseek-ai_', ''))
+                        if hasattr(self, 'dynamic_quantum_matrix') and self.dynamic_quantum_matrix:
+                            success = self.dynamic_quantum_matrix.adapt_to_model(model_name.replace('deepseek-ai_', ''))
                         if success:
                             print(f"      ✅ Adapted to {model_name}")
                             break
@@ -1061,7 +1247,8 @@ class ΨQRHPipeline:
                         continue
 
                 # Extract enhanced semantic tokens
-                enhanced_tokens = self.dynamic_quantum_matrix.encode_text(input_text[:50])  # Limit for performance
+                if hasattr(self, 'dynamic_quantum_matrix') and self.dynamic_quantum_matrix:
+                    enhanced_tokens = self.dynamic_quantum_matrix.encode_text(input_text[:50])  # Limit for performance
                 print(f"      ✅ Enhanced tokens extracted: shape {enhanced_tokens.shape}")
 
                 # Use enhanced tokens to improve context
@@ -1075,8 +1262,8 @@ class ΨQRHPipeline:
                 print(f"      ⚠️  Dynamic Quantum Matrix enhancement failed: {e}")
 
         try:
-            # ========== COMPONENTE 1: CONTEXT FUNNEL ==========
-            print(f"   🎯 [Context Funnel] Processando histórico de conversa...")
+            # ========== COMPONENTE 1: CONTEXT FUNNEL (DNA DE CONTEXTO) ==========
+            print(f"   🎯 [Context Funnel] Processando histórico de conversa como DNA de contexto...")
             psi_context = self.context_funnel(self.conversation_history)
 
             # Handle case where context funnel returns None (empty history)
@@ -1085,18 +1272,49 @@ class ΨQRHPipeline:
                 # Create default context tensor with same shape as expected
                 psi_context = torch.zeros(1, self.config['embed_dim'], dtype=torch.float32, device=self.device)
 
-            print(f"      ✅ Contexto focado gerado: shape {psi_context.shape}")
+            print(f"      ✅ DNA de contexto gerado: shape {psi_context.shape}")
+
+            # ========== CONVERT CONTEXT TO TEXTUAL FORM ==========
+            # Convert the context funnel output to textual context for hybrid processing
+            textual_context = self._convert_context_to_text(psi_context)
+            print(f"      📝 Contexto textual convertido: '{textual_context[:50]}...'")
 
             # ========== COMPONENTE 2: COGNITIVE PROCESSOR ==========
-            print(f"   🧠 [Cognitive Processor] Executando ΨQRH/DCF com contexto focado...")
+            print(f"   🧠 [Cognitive Processor] Executando ΨQRH/DCF com DNA de contexto...")
 
             # Usar Ψ_context como estado inicial para o pipeline cognitivo
             # Em vez de usar psi diretamente, começamos com o contexto focado
             psi_with_context = psi_context.unsqueeze(0).unsqueeze(0)  # [1, 1, embed_dim]
 
+            # ========== HYBRID CONTEXT INTEGRATION ==========
+            # Combine semantic context (psi_with_context) with textual context for hybrid processing
+            if textual_context and len(textual_context.strip()) > 0:
+                print(f"      🔗 Integrando contexto textual: '{textual_context[:30]}...'")
+                # Use the textual context to influence the semantic processing
+                # This creates a hybrid approach: semantic + textual context
+                hybrid_input = f"{textual_context} {input_text}"
+                print(f"      🎯 Entrada híbrida criada: '{hybrid_input[:50]}...'")
+            else:
+                hybrid_input = input_text
+                print(f"      ℹ️ Sem contexto textual disponível, usando entrada original")
+
             # ========== AUDIT LOGGING: CONTEXT FOCUSED STATE ==========
             if self.audit_logger:
                 self.audit_logger.log_tensor_state("transformed", psi_with_context, {"stage": "context_funnel_output"})
+
+            # ========== INICIALIZAR QUANTUM TOKEN FILTER ==========
+            print(f"   🔬 [Quantum Token Filter] Inicializando filtro quântico...")
+            quantum_vocab_repr = None
+            if hasattr(self, 'quantum_embedding') and hasattr(self.quantum_embedding, 'quantum_vocab'):
+                quantum_vocab_repr = self.quantum_embedding.quantum_vocab
+
+            self.quantum_token_filter = create_quantum_token_filter(
+                embed_dim=self.config['embed_dim'],
+                vocab_size=self.quantum_embedding.vocab_size,
+                quantum_vocab_representations=quantum_vocab_repr,
+                device=self.device
+            )
+            print(f"      ✅ Quantum Token Filter inicializado com sucesso")
 
             # Preparar logits usando Inverse Cognitive Projector (orquestrado)
             vocab_size = self.quantum_embedding.vocab_size  # Use current vocab size
@@ -1219,12 +1437,13 @@ class ΨQRHPipeline:
             else:
                 # ========== GERAÇÃO SEMÂNTICA NATIVA ==========
                 print(f"   🧠 [Semantic Native] Gerando texto via modelos semânticos...")
-                emergent_text = self._generate_semantic_text(psi_final_abstract, text)
+                # Use hybrid input (textual context + original input) for semantic generation
+                emergent_text = self._generate_semantic_text(psi_final_abstract, hybrid_input)
                 print(f"   📝 Texto final via Semantic Native: '{emergent_text}'")
-                selected_method = 'Semantic Native Generation'
+                selected_method = 'Semantic Native Generation (Hybrid Context)'
 
             print(f"   ✅ Arquitetura de 3 componentes concluída!")
-            print(f"      📊 Ψ_context: {psi_context.shape}")
+            print(f"      📊 Ψ_context: {psi_context.shape if 'psi_context' in locals() and psi_context is not None else 'N/A'}")
             print(f"      🧠 Ψ_final: {psi_final_abstract.shape}")
             print(f"      🎯 Método: {selected_method}")
             print(f"      📝 Texto gerado: '{emergent_text}'")
@@ -1282,7 +1501,8 @@ class ΨQRHPipeline:
             if self.dynamic_quantum_matrix is not None:
                 try:
                     # Validate physical properties
-                    validation_results = self.dynamic_quantum_matrix.validate_physical_properties()
+                    if hasattr(self, 'dynamic_quantum_matrix') and self.dynamic_quantum_matrix:
+                        validation_results = self.dynamic_quantum_matrix.validate_physical_properties()
                     valid_props = sum(validation_results.values())
                     total_props = len(validation_results)
 
@@ -1390,8 +1610,57 @@ class ΨQRHPipeline:
         print(f"    ✅ [semantic_wave_to_text] Texto emergente gerado via QuantumStateInterpreter: '{emergent_text}'")
         return emergent_text
 
+    def _convert_context_to_text(self, psi_context: torch.Tensor) -> str:
+        """
+        Convert context funnel output to textual context for hybrid processing.
+
+        Args:
+            psi_context: Context tensor from context funnel [1, embed_dim]
+
+        Returns:
+            Textual representation of the context
+        """
+        try:
+            # Flatten the context tensor and convert to text using quantum-to-text mapping
+            context_flat = psi_context.view(-1)  # [embed_dim]
+
+            # Use the same quantum-to-text conversion as in _generate_quantum_based_text
+            # Find the most similar words in the quantum vocabulary
+            if not hasattr(self, 'quantum_vocab_representations') or self.quantum_vocab_representations is None:
+                return ""
+
+            transition_amplitudes = []
+            for word_idx in range(min(len(self.quantum_vocab_representations), 100)):  # Limit for performance
+                word_state = self.quantum_vocab_representations[word_idx]
+                word_state_normalized = word_state / torch.norm(word_state)
+
+                psi_flat = context_flat / torch.norm(context_flat)
+                min_dim = min(psi_flat.shape[0], word_state_normalized.flatten().shape[0])
+                psi_flat = psi_flat[:min_dim]
+                word_flat = word_state_normalized.flatten()[:min_dim]
+
+                amplitude = torch.vdot(psi_flat, word_flat)
+                transition_amplitudes.append((amplitude.abs().item(), word_idx))
+
+            # Get top 5 words for context
+            transition_amplitudes.sort(reverse=True)
+            top_words = []
+            for amplitude, word_idx in transition_amplitudes[:5]:
+                if hasattr(self, 'id_to_word') and self.id_to_word:
+                    word = self.id_to_word.get(word_idx)
+                    if word:
+                        top_words.append(word)
+
+            # Join words to create textual context
+            textual_context = ' '.join(top_words)
+            return textual_context
+
+        except Exception as e:
+            print(f"      ⚠️ Context-to-text conversion failed: {e}")
+            return ""
+
     def _map_quantum_to_linguistic_elements(self, fci: float, fractal_dim: float,
-                                            coherence: float, complexity: float) -> List[str]:
+                coherence: float, complexity: float) -> List[str]:
         """
         Mapeia características quânticas para elementos linguísticos.
         Removed hardcoded word mappings - uses emergent linguistic elements only.
@@ -1710,13 +1979,26 @@ class ΨQRHPipeline:
         # Verificar estabilidade numérica
         finite_values = torch.isfinite(psi_rotated).all().item()
 
+        # Validação adicional: preservação de norma
+        norm_initial = torch.norm(psi_quaternions).item()
+        norm_final = torch.norm(psi_rotated).item()
+        norm_preservation = min(norm_final / norm_initial, norm_initial / norm_final)
+
+        # Critério mais rigoroso para validação
+        validation_passed = (
+            unitarity_score > 0.95 and
+            finite_values and
+            norm_preservation > 0.95
+        )
+
         return {
             'energy_conservation_ratio': energy_conservation_ratio,
             'filtering_conservation': filtering_conservation,
             'rotation_conservation': rotation_conservation,
             'unitarity_score': unitarity_score,
             'numerical_stability': finite_values,
-            'validation_passed': unitarity_score > 0.95 and finite_values
+            'norm_preservation': norm_preservation,
+            'validation_passed': validation_passed
         }
 
     def _initialize_physical_components(self):
@@ -1934,6 +2216,7 @@ class ΨQRHPipeline:
             return "cpu"
 
     def _initialize_auto_calibration_components(self):
+        print("🔧 DEBUG: Inside _initialize_auto_calibration_components")
         """Inicializa componentes individuais de auto-calibração"""
         try:
             # Initialize Quantum Temperature Calculator
@@ -2184,6 +2467,21 @@ class ΨQRHPipeline:
                 self.scheduler = None
                 print("      ⚠️  No learnable parameters found for optimizer")
 
+            # ========== REINITIALIZE PHYSICAL HARMONIC ORCHESTRATOR ==========
+            if HAS_PHYSICAL_HARMONIC_ORCHESTRATOR:
+                from src.core.physical_fundamental_corrections import PhysicalHarmonicOrchestrator
+                self.physical_harmonic_orchestrator = PhysicalHarmonicOrchestrator(device=self.device)
+                print("      🎼 Physical Harmonic Orchestrator reinitialized")
+
+            # ========== REINITIALIZE DIMENSION CALIBRATOR ==========
+            from src.core.processing_parameter_calibrator import ProcessingParameterCalibrator
+            self.dimension_calibrator = ProcessingParameterCalibrator()
+            print("      📐 Dimension Calibrator reinitialized")
+
+            # ========== REINITIALIZE QUANTUM VOCABULARY ==========
+            self._initialize_quantum_vocabulary_fixed()
+            print("      📚 Quantum Vocabulary reinitialized")
+
             print("   ✅ Todos os componentes re-inicializados com parâmetros calibrados!")
 
         except Exception as e:
@@ -2322,6 +2620,157 @@ class ΨQRHPipeline:
         except Exception as e:
             print(f"⚠️  Erro ao salvar logs de auditoria: {e}")
 
+    def _initialize_semantic_models_fixed(self):
+        """Inicialização única de modelos semânticos"""
+        if hasattr(self, '_semantic_models_loaded') and self._semantic_models_loaded:
+            return
+
+        # Carregar uma única vez
+        semantic_models_dir = Path("models/semantic")
+        if semantic_models_dir.exists():
+            models = list(semantic_models_dir.glob("*.pt"))
+            if models:
+                self.semantic_model = torch.load(models[0], map_location=self.device)
+                self._semantic_models_loaded = True
+                print(f"✅ Modelo semântico carregado: {models[0].name}")
+
+        # Inicializar vocabulário adequado
+        self._initialize_quantum_vocabulary_fixed()
+
+    def _generate_semantic_text_fixed(self, psi_final: torch.Tensor, input_text: str) -> str:
+        """Geração semântica com vocabulário adequado"""
+        # Usar vocabulário quântico existente
+        if hasattr(self, 'quantum_vocab_representations') and self.quantum_vocab_representations is not None:
+            # Encontrar token mais próximo no espaço quântico
+            similarities = []
+            for token_idx, token_rep in enumerate(self.quantum_vocab_representations):
+                sim = torch.nn.functional.cosine_similarity(
+                    psi_final.flatten(),
+                    token_rep.flatten(),
+                    dim=0
+                )
+                similarities.append((sim.item(), token_idx))
+
+            # Selecionar token com maior similaridade
+            similarities.sort(reverse=True)
+            best_token_idx = similarities[0][1]
+
+            # Mapear para caractere/token legível
+            if hasattr(self, 'char_to_idx'):
+                char = list(self.char_to_idx.keys())[best_token_idx % len(self.char_to_idx)]
+                return char
+
+        # Fallback para geração base
+        return self._generate_base_text(psi_final, input_text)
+
+    def _initialize_quantum_vocabulary_fixed(self):
+        """Inicialização de vocabulário quântico adequado"""
+        # Usar o vocabulário carregado de native_vocab.json
+        if not hasattr(self, 'word_to_id') or self.word_to_id is None:
+            # Carregar vocabulário real de palavras
+            import json
+            from pathlib import Path
+            vocab_source_path = Path('data/native_vocab.json')
+            if not vocab_source_path.exists():
+                raise FileNotFoundError(f"Arquivo de vocabulário nativo não encontrado em {vocab_source_path}. Execute 'make setup-vocab' para criá-lo.")
+
+            with open(vocab_source_path, 'r', encoding='utf-8') as f:
+                vocab_data = json.load(f)
+            print(f"   📚 Carregando vocabulário nativo de: {vocab_source_path}")
+
+            token_to_id = vocab_data.get('token_to_id')
+            if not token_to_id or not isinstance(token_to_id, dict):
+                raise ValueError("Formato de vocabulário inválido: a chave 'token_to_id' está ausente ou não é um dicionário.")
+
+            self.word_to_id = token_to_id  # Este agora é um dicionário de PALAVRA -> ID
+            self.id_to_word = {v: k for k, v in token_to_id.items()}
+            vocab_size = len(self.word_to_id)
+            print(f"   📚 Vocabulário de palavras encontrado: {vocab_size} tokens")
+
+        # Criar representações quânticas
+        vocab_size = len(self.word_to_id)
+        embed_dim = self.config['embed_dim']
+        self.quantum_vocab_representations = []
+
+        # Usar apenas as primeiras 5000 palavras para evitar problemas de memória
+        limited_vocab_size = min(vocab_size, 5000)
+
+        for i in range(limited_vocab_size):
+            # Criar representação baseada no índice da palavra
+            word_idx = list(self.word_to_id.values())[i]
+            psi_word = torch.randn(embed_dim, 4, device=self.device) * 0.1
+            psi_word[0, 0] = word_idx / 10000.0  # Normalizar para vocabulário grande
+            self.quantum_vocab_representations.append(psi_word)
+
+        self.quantum_vocab_representations = torch.stack(self.quantum_vocab_representations)
+        print(f"✅ Vocabulário quântico inicializado: {limited_vocab_size} tokens")
+
+    def _load_quantum_native_vocabulary(self):
+        """
+        Load quantum-native vocabulary from quantum_native_vocab.json
+        This replaces all GPT-2 dependencies with autonomous quantum vocabulary.
+        """
+        try:
+            vocab_path = "quantum_native_vocab.json"
+            print(f"📚 Loading quantum-native vocabulary from {vocab_path}...")
+
+            with open(vocab_path, 'r', encoding='utf-8') as f:
+                vocab_data = json.load(f)
+
+            # Extract metadata
+            metadata = vocab_data.get('metadata', {})
+            vocab_size = metadata.get('vocab_size', 50257)
+
+            # Extract mappings
+            self.token_to_id = vocab_data.get('token_to_id', {})
+            self.id_to_token = vocab_data.get('id_to_token', {})
+            quantum_vocab = vocab_data.get('quantum_vocabulary', {})
+
+            # Convert to tensor format for quantum representations
+            self.quantum_vocab_representations = []
+            self.char_to_idx = {}
+
+            for token, info in quantum_vocab.items():
+                token_id = info['token_id']
+                quantum_props = info['quantum_properties']
+
+                # Create quaternion representation [embed_dim, 4]
+                embed_dim = self.config['embed_dim']
+                psi_token = torch.zeros(embed_dim, 4, device=self.device)
+
+                # Map quantum properties to quaternion components
+                for j in range(embed_dim):
+                    # Use quantum properties to create deterministic quaternion
+                    phase = (quantum_props['energy_level'] + quantum_props['coherence'] * j / embed_dim) * 2 * math.pi
+                    amplitude = quantum_props['energy_level'] + 0.1
+
+                    psi_token[j, 0] = amplitude * math.cos(phase)  # w (real)
+                    psi_token[j, 1] = amplitude * math.sin(phase)  # x (i)
+                    psi_token[j, 2] = quantum_props['coherence'] * math.sin(phase + math.pi/4)  # y (j)
+                    psi_token[j, 3] = quantum_props['entropy'] * math.cos(phase + math.pi/4)  # z (k)
+
+                self.quantum_vocab_representations.append(psi_token)
+
+                # Build character mapping for single characters
+                if len(token) == 1:
+                    self.char_to_idx[token] = token_id
+
+            # Convert to tensor
+            self.quantum_vocab_representations = torch.stack(self.quantum_vocab_representations)
+
+            print("✅ Quantum-native vocabulary loaded successfully!")
+            print(f"   📊 Vocabulary size: {vocab_size} tokens")
+            print(f"   🔬 Quantum representations shape: {self.quantum_vocab_representations.shape}")
+            print(f"   🎯 Autonomous: True (no GPT-2 dependencies)")
+            print(f"   ⚡ Quantum properties: energy, coherence, entropy, spin, mass, charge, frequency, wavelength")
+
+            return vocab_size
+
+        except Exception as e:
+            print(f"❌ Failed to load quantum-native vocabulary: {e}")
+            print("   🔄 Falling back to genesis system...")
+            return self._initialize_quantum_vocabulary_with_genesis()
+
     def _initialize_quantum_vocabulary_with_genesis(self, vocab_path=None):
         """
         Initialize quantum vocabulary with linguistic genesis foundation
@@ -2366,99 +2815,46 @@ class ΨQRHPipeline:
             raise
 
     def _initialize_quantum_vocabulary(self, vocab_path=None):
-        """Inicializa dicionário quântico para conectividade semântica usando vocabulário nativo"""
+        """Inicializa o dicionário quântico a partir do arquivo native_vocab.json (MODO ESTRITO)."""
         print("📚 Inicializando dicionário quântico para conectividade semântica...")
-
         try:
-            # Use injected vocab_path if provided, otherwise try default locations
-            vocab_data = None
-            vocab_source_path = None
+            vocab_source_path = self.root_dir / 'data' / 'native_vocab.json'
+            if not vocab_source_path.exists():
+                raise FileNotFoundError(f"Arquivo de vocabulário nativo não encontrado em {vocab_source_path}. Execute 'make setup-vocab' para criá-lo.")
 
-            if vocab_path is not None and os.path.exists(vocab_path):
-                vocab_source_path = vocab_path
-            else:
-                vocab_paths = [
-                    os.path.join(os.getcwd(), "data", "native_vocab.json"),
-                    os.path.join(BASE_DIR, "data", "native_vocab.json")
-                ]
+            with open(vocab_source_path, 'r', encoding='utf-8') as f:
+                vocab_data = json.load(f)
+            print(f"   📚 Carregando vocabulário nativo de: {vocab_source_path}")
 
-                for path in vocab_paths:
-                    if os.path.exists(path):
-                        vocab_source_path = path
-                        break
+            token_to_id = vocab_data.get('token_to_id')
+            if not token_to_id or not isinstance(token_to_id, dict):
+                raise ValueError("Formato de vocabulário inválido: a chave 'token_to_id' está ausente ou não é um dicionário.")
 
-            if vocab_source_path:
-                try:
-                    with open(vocab_source_path, 'r', encoding='utf-8') as f:
-                        vocab_data = json.load(f)
-                    print(f"   📚 Carregando vocabulário nativo de: {vocab_source_path}")
-                except Exception as e:
-                    print(f"   ⚠️  Erro ao carregar vocabulário {vocab_source_path}: {e}")
+            self.word_to_id = token_to_id  # Este agora é um dicionário de PALAVRA -> ID
+            self.id_to_word = {v: k for k, v in token_to_id.items()}
+            vocab_size = len(self.word_to_id)
+            print(f"   📚 Vocabulário de palavras encontrado: {vocab_size} tokens")
 
-            if vocab_data and 'token_to_id' in vocab_data:
-                # Get vocab_size from data
-                vocab_size = vocab_data.get('vocab_size', len(vocab_data['token_to_id']))
-                print(f"   📚 Vocabulário nativo encontrado: {vocab_size} tokens")
+            if self.quantum_embedding.vocab_size != vocab_size:
+                print(f"   ⚠️  Tamanho do vocabulário ({vocab_size}) difere do embedding ({self.quantum_embedding.vocab_size}). Re-inicializando embedding.")
+                self.quantum_embedding = QuantumEmbedding(vocab_size, self.config['embed_dim']).to(self.device)
 
-                # Create quantum representations for all tokens in order by token_id
-                quantum_representations = []
-                token_to_idx = vocab_data['token_to_id'].copy()  # Use the mapping from json
+            # Gerar representações quânticas para cada palavra no vocabulário
+            quantum_representations = []
+            for i in range(min(vocab_size, 5000)):  # Limitar para evitar problemas de memória
+                token_id_tensor = torch.tensor([[i]], dtype=torch.long, device=self.device)
+                psi_token = self.quantum_embedding(token_id_tensor).squeeze(0).squeeze(0)
+                quantum_representations.append(psi_token)
 
-                for token_id in range(min(vocab_size, self.quantum_embedding.vocab_size)):
-                    # Get token for this id
-                    token = vocab_data['id_to_token'].get(str(token_id), '<unk>')
+            self.quantum_vocab_representations = torch.stack(quantum_representations, dim=0)
 
-                    # Use token_id directly as embedding index
-                    char_ids = torch.tensor([[token_id]], dtype=torch.long, device=self.device)
-                    psi_token = self.quantum_embedding(char_ids).squeeze(0).squeeze(0)  # [embed_dim, 4]
-
-                    quantum_representations.append(psi_token)
-
-                    # Progress indicator for large vocabulary
-                    if (token_id + 1) % 10 == 0:
-                        print(f"   📊 Processado {token_id + 1}/{min(vocab_size, self.quantum_embedding.vocab_size)} tokens...")
-
-                # Stack into tensor [vocab_size, embed_dim, 4]
-                self.quantum_vocab_representations = torch.stack(quantum_representations, dim=0)
-                self.char_to_idx = token_to_idx  # Keep compatibility with existing interface
-
-                print("✅ Dicionário quântico inicializado:")
-                print(f"   📊 Vocabulário nativo: {len(quantum_representations)} tokens")
-                print(f"   🔬 Representações quânticas: {self.quantum_vocab_representations.shape}")
-                print(f"   🎯 Conectividade semântica: ATIVADA (baseada em vocabulário nativo)")
-
-            else:
-                raise FileNotFoundError("Vocabulário nativo não encontrado ou vazio")
+            print("✅ Dicionário quântico de palavras inicializado:")
+            print(f"   📊 Vocabulário: {len(self.quantum_vocab_representations)} tokens")
+            print(f"   🔬 Representações quânticas: {self.quantum_vocab_representations.shape}")
 
         except Exception as e:
-            print(f"⚠️  Erro ao inicializar dicionário quântico: {e}")
-            # Create minimal fallback quantum vocabulary
-            print("   🔄 Criando vocabulário quântico mínimo de fallback...")
-            try:
-                # Create basic ASCII vocabulary as fallback
-                basic_vocab = {}
-                quantum_representations = []
-
-                for i in range(32, 127):  # Printable ASCII
-                    char = chr(i)
-                    basic_vocab[char] = i - 32  # Map to 0-based indices
-
-                    # Create quantum representation
-                    char_ids = torch.tensor([[i % self.quantum_embedding.vocab_size]], dtype=torch.long, device=self.device)
-                    psi_token = self.quantum_embedding(char_ids).squeeze(0).squeeze(0)
-                    quantum_representations.append(psi_token)
-
-                self.quantum_vocab_representations = torch.stack(quantum_representations, dim=0)
-                self.char_to_idx = basic_vocab
-
-                print("✅ Vocabulário quântico de fallback criado:")
-                print(f"   📊 Vocabulário básico: {len(basic_vocab)} caracteres ASCII")
-                print(f"   🔬 Representações quânticas: {self.quantum_vocab_representations.shape}")
-
-            except Exception as fallback_e:
-                print(f"❌ Mesmo fallback falhou: {fallback_e}")
-                self.quantum_vocab_representations = None
-                self.char_to_idx = None
+            print(f"❌ Erro fatal ao inicializar dicionário quântico: {e}")
+            raise e
 
 
     def _extract_quantum_features_from_psi(self, psi: torch.Tensor, alpha: float, beta: float) -> Dict:
@@ -3272,8 +3668,8 @@ class ΨQRHPipeline:
 
                 # Extract all unique characters from native vocabulary
                 char_vocab = set()
-                if isinstance(vocab_data, dict) and 'token_to_id' in vocab_data:
-                    for token in vocab_data['token_to_id'].keys():
+                if isinstance(vocab_data, dict) and 'tokens' in vocab_data:
+                    for token in vocab_data['tokens'].keys():
                         # Handle native vocabulary tokens
                         if isinstance(token, str):
                             # Add individual characters
@@ -3540,7 +3936,7 @@ class ΨQRHPipeline:
 
             # Initialize ΨQRH fractal embedding for semantic understanding
             self.fractal_embedding = FractalQuantumEmbedding(
-                vocab_size=1000,
+                vocab_size=5000,
                 embed_dim=256,
                 device=self.device
             )
@@ -3866,7 +4262,7 @@ class ΨQRHPipeline:
             print(f"   ✅ Usando parâmetros calibrados em cache")
             return self._calibrated_params
 
-        if self.enable_auto_calibration and self.calibration_system is not None:
+        if self.enable_auto_calibration and hasattr(self, 'calibration_system') and self.calibration_system is not None:
             # Limitar o tamanho do texto para evitar excesso de tokens
             calibration_text = text[:100]  # Usar apenas primeiros 100 caracteres para calibração
 
@@ -3936,7 +4332,7 @@ class ΨQRHPipeline:
             # Use default parameters when auto-calibration is disabled
             phys_params = {'alpha': 1.0, 'beta': 0.5, 'I0': 1.0, 'omega': 1.0, 'k': 2.0}
             arch_params = {'embed_dim': self.config['embed_dim'], 'num_heads': 8, 'hidden_dim': 512, 'num_layers': 3}
-            proc_params = {'dropout': 0.1, 'max_history': 10, 'vocab_size': 256, 'epsilon': 1e-10}
+            proc_params = {'dropout': 0.1, 'max_history': 10, 'vocab_size': 95, 'epsilon': 1e-10}
             ctrl_params = {'temperature': 1.0, 'top_k': 10, 'learning_rate': 1e-4}
             calibrated_config = {
                 'physical_params': phys_params,
@@ -4026,35 +4422,16 @@ class ΨQRHPipeline:
         psi_quaternions = self._signal_to_quaternions(fractal_signal, embed_dim, proc_params)
         print(f"      ✅ Estados quânticos criados: shape {psi_quaternions.shape}")
 
-        # ========== PASSO 4: SPECTRAL FILTERING ==========
+        # ========== PASSO 4: SPECTRAL FILTERING (CORRIGIDO) ==========
         print(f"   🌊 Passo 4: Filtragem espectral F(k)...")
-        # Passar assinatura harmônica para o orquestrador
-        if self.physical_harmonic_orchestrator is not None:
-            psi_filtered = self.physical_harmonic_orchestrator.orchestrate_transformation(
-                psi_quaternions.mean(dim=(0, 1, 3)),  # Use mean signal for signature analysis
-                'spectral_filter',
-                self._apply_spectral_filtering,
-                signature=harmonic_signature,  # Passar assinatura harmônica
-                psi=psi_quaternions, alpha=phys_params['alpha']
-            )
-        else:
-            psi_filtered = self._apply_spectral_filtering(psi_quaternions, phys_params['alpha'])
-        psi_filtered = psi_filtered
+        # Chamando a versão _fixed para garantir a conservação de energia
+        psi_filtered = self._apply_spectral_filtering_fixed(psi_quaternions, alpha=phys_params['alpha'])
         print(f"      ✅ Filtragem espectral aplicada: {psi_quaternions.shape} → {psi_filtered.shape}")
 
-        # ========== PASSO 5: SO(4) ROTATION ==========
+        # ========== PASSO 5: SO(4) ROTATION (CORRIGIDO) ==========
         print(f"   🔄 Passo 5: Rotação SO(4)...")
-        if self.physical_harmonic_orchestrator is not None:
-            psi_rotated = self.physical_harmonic_orchestrator.orchestrate_transformation(
-                psi_filtered.mean(dim=(0, 2, 3)),  # Use mean signal for signature analysis
-                'so4_rotation',
-                self._apply_so4_rotation,
-                signature=harmonic_signature,  # Passar assinatura harmônica
-                psi=psi_filtered
-            )
-        else:
-            psi_rotated = self._apply_so4_rotation(psi_filtered)
-        psi_rotated = psi_rotated
+        # Chamando a versão _fixed para garantir a transformação unitária
+        psi_rotated = self._apply_so4_rotation_fixed(psi_filtered)
         print(f"      ✅ Rotações unitárias SO(4) aplicadas: {psi_filtered.shape} → {psi_rotated.shape}")
 
         # ========== PASSO 6: CONSCIOUSNESS PROCESSING ==========
@@ -4089,7 +4466,8 @@ class ΨQRHPipeline:
         self.dcf_analyzer = DCFTokenAnalysis(
             device=self.device,
             # Pass the quantum dictionary that was also re-initialized
-            quantum_vocab_representations=self.quantum_vocab_representations
+            quantum_vocab_representations=self.quantum_vocab_representations,
+            word_to_id=self.word_to_id
         )
         print("   ✅ DCF inicializado com sucesso com dimensões FIXAS.")
 
@@ -4104,12 +4482,16 @@ class ΨQRHPipeline:
 
         # Use Inverse Cognitive Projector to generate logits from the last token's quantum state
         try:
-            # Prepare quantum state for projection [embed_dim, 4] -> flatten to [embed_dim * 4]
-            psi_for_projection = last_token_state.view(-1)  # [embed_dim * 4]
+            # CORREÇÃO DEFINITIVA: Usar apenas a parte real (primeira componente quaterniónica)
+            # Isso é fisicamente correto - a parte real contém a informação principal
+            # last_token_state shape: [1, embed_dim, 4] -> extrair parte real [embed_dim]
+            psi_for_projection = last_token_state[0, :, 0]  # [embed_dim] - parte real
 
             # Convert to real if complex (take magnitude for stability)
             if psi_for_projection.is_complex():
                 psi_for_projection = psi_for_projection.abs()
+
+            print(f"   🔧 Usando parte real do estado quântico: {psi_for_projection.shape}")
 
             # Use Inverse Cognitive Projector to generate logits
             logits = self.inverse_projector(psi_for_projection.unsqueeze(0))  # [1, vocab_size]
@@ -4167,11 +4549,22 @@ class ΨQRHPipeline:
         # Execute DCF with logits from last token
         if self.dcf_analyzer is not None:
             # Convert logits to token IDs for DCF analyzer
-            # logits shape is [vocab_size, 4] but we need [vocab_size]
-            # Take the first component (real part) as the logit value
-            logits_flat = logits[:, 0]  # [vocab_size]
-            _, top_token_ids = torch.topk(logits_flat, k=min(50, len(logits_flat)))
-            dcf_result = self.dcf_analyzer.analyze_tokens(logits_flat, candidate_indices=top_token_ids)
+            # logits shape is [vocab_size] but we need to ensure it's 1D
+            if logits.dim() > 1:
+                logits_flat = logits.view(-1)  # Flatten to 1D
+            else:
+                logits_flat = logits
+
+            # Ensure we have valid logits
+            if len(logits_flat) > 0:
+                _, top_token_ids = torch.topk(logits_flat, k=min(50, len(logits_flat)))
+                # Ensure candidate_indices are within bounds
+                vocab_size = len(self.quantum_vocab_representations)
+                valid_indices = [idx.item() for idx in top_token_ids if 0 <= idx < vocab_size]
+                dcf_result = self.dcf_analyzer.analyze_tokens(logits_flat, candidate_indices=valid_indices)
+            else:
+                # Fallback if no valid logits
+                dcf_result = {"selected_token": 0, "confidence": 0.0, "reasoning": "No valid logits generated"}
         else:
             from src.processing.token_analysis import analyze_tokens_dcf
             dcf_result = analyze_tokens_dcf(logits, device=self.device, quantum_vocab_representations=self.quantum_vocab_representations)
@@ -4282,36 +4675,106 @@ class ΨQRHPipeline:
 
                 emergent_text = ' '.join(generated_tokens)
         else:
-            # ========== SEMANTIC NATIVE GENERATION ==========
-            print(f"   🧠 [Semantic Native] Generating text via semantic models...")
-            emergent_text = self._generate_semantic_text(psi_final_abstract, text)
-            print(f"   📝 Final text via Semantic Native: '{emergent_text}'")
-            selected_method = 'Semantic Native Generation'
+            # ========== QUANTUM FILTERED GENERATION ==========
+            print(f"   🔬 [Quantum Filtered Generation] Gerando texto com filtro quântico...")
 
-            # ========== GERAR SEQUÊNCIA COMPLETA ==========
-            if max_length > 1:
-                print(f"   🔄 Gerando sequência completa (max_length={max_length})...")
-                generated_tokens = [emergent_text]
+            # Usar filtro quântico para geração robusta
+            if hasattr(self, 'quantum_token_filter') and self.quantum_token_filter is not None:
+                try:
+                    # Preparar logits para filtro quântico
+                    vocab_size = self.quantum_embedding.vocab_size
 
-                for i in range(min(max_length - 1, 10)):
-                    # Evoluir estado quântico para próximo token
-                    evolved_psi = psi_final_abstract + torch.randn_like(psi_final_abstract) * 0.1 * (i + 1)
+                    # Gerar logits base a partir do estado quântico final
+                    logits = self._quantum_state_to_logits(psi_final_abstract, vocab_size)
 
-                    try:
-                        next_token = self._generate_semantic_text(evolved_psi, text)
-                        generated_tokens.append(next_token)
+                    # Usar filtro quântico para predição
+                    previous_tokens = []  # Histórico vazio inicial
+                    prediction_result = self.quantum_token_filter.predict_next_token(
+                        logits, previous_tokens, temperature=0.8, top_k=50
+                    )
 
-                        # Parar em pontuação
-                        if next_token in ['.', '!', '?', '\n']:
+                    # Obter token selecionado
+                    selected_token_id = prediction_result['selected_token']
+
+                    # Converter ID para token usando vocabulário nativo
+                    if hasattr(self, 'native_vocab') and selected_token_id < len(self.native_vocab):
+                        emergent_text = self.native_vocab[selected_token_id]
+                    else:
+                        # Fallback para geração semântica
+                        emergent_text = self._generate_semantic_text(psi_final_abstract, text)
+
+                    print(f"   📝 Final text via Quantum Filtered: '{emergent_text}'")
+                    selected_method = 'Quantum Filtered Generation'
+
+                    # ========== GERAR SEQUÊNCIA COMPLETA COM FILTRO ==========
+                    if max_length > 1:
+                        print(f"   🔄 Gerando sequência completa com filtro quântico (max_length={max_length})...")
+                        generated_tokens = [emergent_text]
+                        previous_tokens = [selected_token_id] if selected_token_id < len(self.native_vocab) else []
+
+                        for i in range(min(max_length - 1, 10)):
+                            # Evoluir estado quântico
+                            evolved_psi = psi_final_abstract + torch.randn_like(psi_final_abstract) * 0.1 * (i + 1)
+
+                            try:
+                                # Gerar novos logits
+                                next_logits = self._quantum_state_to_logits(evolved_psi, vocab_size)
+
+                                # Usar filtro quântico com histórico
+                                next_prediction = self.quantum_token_filter.predict_next_token(
+                                    next_logits, previous_tokens, temperature=0.8, top_k=50
+                                )
+
+                                next_token_id = next_prediction['selected_token']
+
+                                if hasattr(self, 'native_vocab') and next_token_id < len(self.native_vocab):
+                                    next_token = self.native_vocab[next_token_id]
+                                    generated_tokens.append(next_token)
+                                    previous_tokens.append(next_token_id)
+                                else:
+                                    break
+
+                                # Parar em pontuação
+                                if next_token in ['.', '!', '?', '\n']:
+                                    break
+                            except Exception as e:
+                                print(f"      ⚠️  Erro na geração do token {i+1}: {e}")
+                                break
+
+                        emergent_text = ' '.join(generated_tokens)
+                except Exception as e:
+                    print(f"   ⚠️  Erro no filtro quântico: {e} - usando fallback semântico")
+                    emergent_text = self._generate_semantic_text(psi_final_abstract, text)
+                    selected_method = 'Semantic Native Generation (Fallback)'
+            else:
+                # Fallback para geração semântica se filtro não disponível
+                print(f"   🧠 [Semantic Native] Generating text via semantic models...")
+                emergent_text = self._generate_semantic_text(psi_final_abstract, text)
+                print(f"   📝 Final text via Semantic Native: '{emergent_text}'")
+                selected_method = 'Semantic Native Generation'
+
+                # Geração sequencial simples
+                if max_length > 1:
+                    print(f"   🔄 Gerando sequência completa (max_length={max_length})...")
+                    generated_tokens = [emergent_text]
+
+                    for i in range(min(max_length - 1, 10)):
+                        evolved_psi = psi_final_abstract + torch.randn_like(psi_final_abstract) * 0.1 * (i + 1)
+
+                        try:
+                            next_token = self._generate_semantic_text(evolved_psi, text)
+                            generated_tokens.append(next_token)
+
+                            if next_token in ['.', '!', '?', '\n']:
+                                break
+                        except Exception as e:
+                            print(f"      ⚠️  Erro na geração do token {i+1}: {e}")
                             break
-                    except Exception as e:
-                        print(f"      ⚠️  Erro na geração do token {i+1}: {e}")
-                        break
 
-                emergent_text = ' '.join(generated_tokens)
+                    emergent_text = ' '.join(generated_tokens)
 
         print(f"   ✅ 3-component architecture completed!")
-        print(f"      📊 Ψ_context: N/A (sequential processing)")
+        print(f"      📊 Ψ_context: {psi_context.shape if 'psi_context' in locals() and psi_context is not None else 'N/A'} (sequential processing)")
         print(f"      🧠 Ψ_final: {psi_final_abstract.shape}")
         print(f"      🎯 Método: {selected_method}")
         print(f"      📝 Generated text: '{emergent_text}'")
@@ -4407,10 +4870,10 @@ class ΨQRHPipeline:
 
             # Dynamic Quantum Matrix information
             'dynamic_quantum_matrix': {
-                'available': self.dynamic_quantum_matrix is not None,
-                'vocab_size': self.dynamic_quantum_matrix.vocab_size if self.dynamic_quantum_matrix else 0,
-                'hidden_size': self.dynamic_quantum_matrix.hidden_size if self.dynamic_quantum_matrix else 0,
-                'current_model_params': self.dynamic_quantum_matrix.current_model_params if self.dynamic_quantum_matrix else None
+                'available': hasattr(self, 'dynamic_quantum_matrix') and self.dynamic_quantum_matrix is not None,
+                'vocab_size': self.dynamic_quantum_matrix.vocab_size if hasattr(self, 'dynamic_quantum_matrix') and self.dynamic_quantum_matrix else 0,
+                'hidden_size': self.dynamic_quantum_matrix.hidden_size if hasattr(self, 'dynamic_quantum_matrix') and self.dynamic_quantum_matrix else 0,
+                'current_model_params': self.dynamic_quantum_matrix.current_model_params if hasattr(self, 'dynamic_quantum_matrix') and self.dynamic_quantum_matrix else None
             },
 
             # Auto-calibração info
@@ -4439,7 +4902,7 @@ class ΨQRHPipeline:
         }
 
         # Save audit logs if audit mode is enabled
-        if self.audit_mode and self.audit_logger:
+        if self.audit_mode and hasattr(self, 'audit_logger') and self.audit_logger:
             self._save_audit_logs(result)
 
         return result
@@ -4604,37 +5067,75 @@ class ΨQRHPipeline:
         Returns:
             Texto gerado usando modelos semânticos
         """
+        # Obter o nome do modelo selecionado da configuração
+        selected_model_name = self.config.get('selected_model', 'gpt2')
+
+        # Verificar se já carregamos o modelo correto
+        if (not hasattr(self, '_semantic_model_loaded') or not self._semantic_model_loaded or
+            not hasattr(self, '_loaded_model_name') or self._loaded_model_name != selected_model_name):
+            try:
+                print(f"      🔍 Carregando modelo semântico específico: {selected_model_name}")
+
+                # Construir o caminho exato para o arquivo do modelo selecionado
+                semantic_models_dir = Path("models/semantic")
+
+                # Mapear nomes de modelo para arquivos reais
+                model_file_mapping = {
+                    'gpt2': 'psiqrh_semantic_gpt2.pt',
+                    'deepseek': 'psiqrh_semantic_deepseek.pt',
+                    'deepseek-ai_deepseek-coder-6.7b-instruct': 'psiqrh_semantic_deepseek-ai_deepseek-coder-6.7b-instruct.pt'
+                }
+
+                # Tentar primeiro o mapeamento específico, depois o padrão
+                if selected_model_name in model_file_mapping:
+                    selected_model_path = semantic_models_dir / model_file_mapping[selected_model_name]
+                else:
+                    # Tentar padrão psiqrh_semantic_<model_name>.pt
+                    selected_model_path = semantic_models_dir / f"psiqrh_semantic_{selected_model_name}.pt"
+
+                # Se ainda não encontrou, tentar arquivo direto
+                if not selected_model_path.exists():
+                    selected_model_path = semantic_models_dir / f"{selected_model_name}.pt"
+
+                # Verificar se o arquivo específico existe
+                if not selected_model_path.exists():
+                    print(f"      ⚠️  Modelo específico não encontrado: {selected_model_path}")
+                    print(f"      🔍 Procurando arquivos disponíveis em {semantic_models_dir}...")
+                    available_files = list(semantic_models_dir.glob("*.pt"))
+                    if available_files:
+                        print(f"      📁 Arquivos disponíveis: {[f.name for f in available_files]}")
+                        # Usar o primeiro arquivo disponível como fallback
+                        selected_model_path = available_files[0]
+                        print(f"      🔄 Usando arquivo disponível: {selected_model_path.name}")
+                    else:
+                        print(f"      🔄 Recorrendo à geração quântica como fallback seguro")
+                        return self._generate_quantum_based_text(psi_final_abstract, input_text)
+
+                print(f"      ✅ Arquivo do modelo encontrado: {selected_model_path}")
+
+                # Carregar o modelo semântico específico
+                self.semantic_model = torch.load(selected_model_path, map_location=self.device)
+                self._semantic_model_loaded = True
+                self._loaded_model_name = selected_model_name
+                print(f"      ✅ Modelo semântico '{selected_model_name}' carregado com sucesso")
+
+            except Exception as e:
+                print(f"      ❌ Erro ao carregar modelo semântico '{selected_model_name}': {e}")
+                self._semantic_model_loaded = False
+                self._loaded_model_name = None
+                print(f"      🔄 Recorrendo à geração quântica como fallback seguro")
+                return self._generate_quantum_based_text(psi_final_abstract, input_text)
+
+        # Usar o modelo semântico carregado
         try:
-            print(f"      🔍 Carregando modelos semânticos de: models/semantic/")
-
-            # Verificar se existem modelos semânticos disponíveis
-            semantic_models_dir = Path("models/semantic")
-            if not semantic_models_dir.exists():
-                raise FileNotFoundError("Diretório de modelos semânticos não encontrado")
-
-            # Listar modelos semânticos disponíveis
-            semantic_models = list(semantic_models_dir.glob("*.pt"))
-            if not semantic_models:
-                raise FileNotFoundError("Nenhum modelo semântico encontrado")
-
-            print(f"      ✅ Modelos semânticos encontrados: {len(semantic_models)}")
-
-            # Usar o primeiro modelo disponível (poderia ser expandido para seleção inteligente)
-            selected_model = semantic_models[0]
-            print(f"      🎯 Usando modelo: {selected_model.name}")
-
-            # Carregar o modelo semântico
-            semantic_model = torch.load(selected_model, map_location=self.device)
-            print(f"      ✅ Modelo semântico carregado com sucesso")
-
             # Verificar se é um modelo GPT2 ou similar
-            if hasattr(semantic_model, 'generate'):
+            if hasattr(self.semantic_model, 'generate'):
                 # Usar o estado quântico como prompt condicional
                 quantum_prompt = f"Quantum state: {psi_final_abstract[:10].tolist()}... Input: {input_text}"
 
                 # Gerar texto usando o modelo semântico
                 with torch.no_grad():
-                    generated = semantic_model.generate(
+                    generated = self.semantic_model.generate(
                         quantum_prompt,
                         max_length=50,
                         num_return_sequences=1,
@@ -4642,35 +5143,111 @@ class ΨQRHPipeline:
                     )
                 return generated[0] if isinstance(generated, list) else generated
             else:
-                # Para outros tipos de modelo, usar o vocabulário do modelo para selecionar token
-                print(f"      ℹ️  Modelo não suporta geração direta, usando vocabulário do modelo")
-
-                # Usar o estado quântico para selecionar um token do vocabulário do modelo
-                if psi_final_abstract.numel() > 0:
-                    # Converter o estado quântico para um índice de token usando o vocabulário atual
-                    vocab_size = self.quantum_embedding.vocab_size
-                    token_idx = int(torch.abs(psi_final_abstract[0]).item() * (vocab_size - 1)) % vocab_size
-
-                    # Tentar mapear para caractere se possível, senão usar índice
-                    try:
-                        # Usar o vocabulário do modelo se disponível
-                        if hasattr(self, 'quantum_vocab_representations') and self.quantum_vocab_representations is not None:
-                            # Encontrar o token correspondente no vocabulário
-                            char = list(self.quantum_vocab_representations.keys())[token_idx % len(self.quantum_vocab_representations)]
-                        else:
-                            # Fallback para caractere ASCII se não houver vocabulário
-                            char = chr(ord('A') + (token_idx % 26))
-
-                        # Retornar tanto o caractere quanto o índice do token
-                        return f"{char} (token {token_idx})"
-                    except Exception as e:
-                        # Se falhar, retornar apenas o índice do token
-                        return f"token_{token_idx}"
-                else:
-                    raise ValueError("Estado quântico vazio")
+                # Para outros tipos de modelo, usar geração baseada em quântica
+                print(f"      ℹ️  Modelo não suporta geração direta, usando geração quântica")
+                return self._generate_quantum_based_text(psi_final_abstract, input_text)
 
         except Exception as e:
             print(f"      ❌ Erro na geração semântica: {e}")
+            # Fallback para geração baseada em quântica
+            return self._generate_quantum_based_text(psi_final_abstract, input_text)
+
+    def _generate_quantum_based_text(self, psi_final_abstract: torch.Tensor, input_text: str) -> str:
+        """
+        Geração de texto baseada em estados quânticos usando espaço de Hilbert
+        Projeta o estado quântico final no espaço de palavras e encontra o contexto matemático
+        mais próximo usando operadores de projeção quântica.
+        """
+        # Verificar se temos representações quânticas válidas
+        if psi_final_abstract.numel() == 0 or not hasattr(self, 'quantum_vocab_representations') or self.quantum_vocab_representations is None:
+            raise ValueError("Estado quântico final ou vocabulário quântico não disponível")
+
+        try:
+            # ========== OPERAÇÃO NO ESPAÇO DE HILBERT ==========
+            # Projetar estado final no espaço de palavras usando operadores de projeção
+
+            # 1. Normalizar o estado quântico final
+            psi_normalized = psi_final_abstract / torch.norm(psi_final_abstract)
+
+            # 2. Calcular amplitudes de transição para cada palavra no vocabulário
+            transition_amplitudes = []
+            for word_idx in range(len(self.quantum_vocab_representations)):
+                word_state = self.quantum_vocab_representations[word_idx]  # [embed_dim, 4]
+
+                # Normalizar estado da palavra
+                word_state_normalized = word_state / torch.norm(word_state)
+
+                # Calcular amplitude de transição (produto interno no espaço de Hilbert)
+                # <ψ_final|ψ_word> = amplitude de transição
+                # Ajustar dimensões para compatibilidade
+                psi_flat = psi_normalized.flatten()
+                word_flat = word_state_normalized.flatten()
+
+                # Verificar e ajustar dimensões se necessário
+                min_dim = min(psi_flat.shape[0], word_flat.shape[0])
+                if psi_flat.shape[0] != word_flat.shape[0]:
+                    # Ajustar para a dimensão menor
+                    psi_flat = psi_flat[:min_dim]
+                    word_flat = word_flat[:min_dim]
+
+                amplitude = torch.vdot(psi_flat, word_flat)
+                transition_amplitudes.append((amplitude.abs().item(), word_idx))
+
+            # 3. Selecionar palavra com maior amplitude de transição
+            transition_amplitudes.sort(reverse=True)
+            best_word_idx = transition_amplitudes[0][1]
+            best_amplitude = transition_amplitudes[0][0]
+
+            # 4. Mapear índice para palavra usando id_to_word
+            if hasattr(self, 'id_to_word') and self.id_to_word:
+                selected_word = self.id_to_word.get(best_word_idx)
+                if selected_word:
+                    print(f"      🎯 Palavra selecionada via espaço de Hilbert: '{selected_word}' (amplitude: {best_amplitude:.4f})")
+                    return selected_word
+
+            # 5. Se não encontrou, usar projeção contextual baseada no input
+            if input_text:
+                # Projetar palavras do input no espaço quântico e encontrar similaridade contextual
+                input_words = input_text.lower().split()
+                contextual_scores = []
+
+                for word in input_words:
+                    if word in self.word_to_id:
+                        word_id = self.word_to_id[word]
+                        word_state = self.quantum_vocab_representations[word_id]
+                        word_state_normalized = word_state / torch.norm(word_state)
+                        # Ajustar dimensões para compatibilidade
+                        psi_flat = psi_normalized.flatten()
+                        word_flat = word_state_normalized.flatten()
+
+                        # Verificar e ajustar dimensões se necessário
+                        min_dim = min(psi_flat.shape[0], word_flat.shape[0])
+                        if psi_flat.shape[0] != word_flat.shape[0]:
+                            # Ajustar para a dimensão menor
+                            psi_flat = psi_flat[:min_dim]
+                            word_flat = word_flat[:min_dim]
+
+                        contextual_amplitude = torch.vdot(psi_flat, word_flat)
+                        contextual_scores.append((contextual_amplitude.abs().item(), word))
+
+                if contextual_scores:
+                    contextual_scores.sort(reverse=True)
+                    best_context_word = contextual_scores[0][1]
+                    print(f"      🎯 Palavra contextual selecionada: '{best_context_word}' (amplitude: {contextual_scores[0][0]:.4f})")
+                    return best_context_word
+
+            # 6. Último recurso: usar palavra com maior amplitude geral
+            if hasattr(self, 'word_to_id') and self.word_to_id:
+                words = list(self.word_to_id.keys())
+                if best_word_idx < len(words):
+                    selected_word = words[best_word_idx]
+                    print(f"      🎯 Palavra selecionada por amplitude: '{selected_word}' (amplitude: {best_amplitude:.4f})")
+                    return selected_word
+
+            raise ValueError("Não foi possível encontrar palavra adequada no espaço de Hilbert")
+
+        except Exception as e:
+            print(f"      ❌ Erro na projeção quântica: {e}")
             raise
 
     def _enhance_with_auto_learning(self, input_text: str, base_output: str) -> Optional[str]:

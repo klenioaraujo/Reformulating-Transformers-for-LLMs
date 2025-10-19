@@ -281,7 +281,14 @@ class OptimizedQuaternionOperations:
             Rotated quaternion [..., 4]
         """
         # Split angles for left and right rotations
-        theta1, omega1, phi1, theta2, omega2, phi2 = torch.unbind(rotation_angles, dim=-1)
+        # Legacy system uses only 3 parameters for left rotation
+        if rotation_angles.shape[-1] == 3:
+            # Legacy mode: only left rotation
+            theta1, omega1, phi1 = torch.unbind(rotation_angles, dim=-1)
+            theta2, omega2, phi2 = torch.zeros_like(theta1), torch.zeros_like(omega1), torch.zeros_like(phi1)
+        else:
+            # Full mode: both left and right rotations
+            theta1, omega1, phi1, theta2, omega2, phi2 = torch.unbind(rotation_angles, dim=-1)
 
         # Create left rotation quaternion (unit quaternion)
         w_left = torch.cos(theta1/2) * torch.cos(omega1/2) * torch.cos(phi1/2)

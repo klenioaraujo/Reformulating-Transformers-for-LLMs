@@ -1,0 +1,103 @@
+# ΨTWS Configuration File
+# Configuration for Ψ Text-Wave-Spectrum training data
+
+version: "1.0"
+description: "ΨTWS Training Data Configuration"
+
+# File Format Settings
+file_format:
+  magic_header: "ΨTWS_SPECTRAL_DATA"
+  version: "1.0"
+  encoding: "utf-8"
+
+# Spectral Processing
+spectral_processing:
+  spectral_dimension: 256
+  fft_bins: 128
+  window_size: 64
+  hop_length: 32
+  sample_rate: 16000
+  n_fft: 1024
+  n_mels: 80
+  fmin: 80.0
+  fmax: 8000.0
+  compression_method: "log"
+  normalization_type: "per_channel"
+
+# Encryption Settings
+encryption:
+  layers: 7
+  key_size: 32
+  salt_size: 16
+  key_derivation_iterations: 1000000
+  hmac_algorithm: "SHA256"
+
+  layer_configurations:
+    layer_1:
+      algorithm: "AES-256-GCM"
+      mode: "symmetric"
+    layer_2:
+      algorithm: "ChaCha20-Poly1305"
+      mode: "stream"
+    layer_3:
+      algorithm: "Fernet"
+      mode: "authenticated"
+    layer_4:
+      algorithm: "XOR-Custom"
+      mode: "obfuscation"
+    layer_5:
+      algorithm: "Transposition"
+      mode: "permutation"
+    layer_6:
+      algorithm: "HMAC-AES"
+      mode: "authentication_encryption"
+    layer_7:
+      algorithm: "Obfuscation"
+      mode: "final_obfuscation"
+
+# Scientific Mask
+scientific_mask:
+  enabled: true
+  pattern: "fractal_gaussian"
+  entropy_threshold: 0.8
+  min_entropy: 0.7
+  max_entropy: 0.95
+
+# Training Parameters
+training:
+  batch_size: 32
+  learning_rate: 1e-4
+  max_epochs: 100
+  warmup_steps: 1000
+  gradient_clip: 1.0
+  weight_decay: 1e-6
+  optimizer: "AdamW"
+  scheduler: "cosine"
+
+# Validation Settings
+validation:
+  frequency: 1000
+  early_stopping_patience: 10
+  checkpoint_frequency: 5000
+  metrics:
+    - "conversion_accuracy"
+    - "spectral_fidelity"
+    - "encryption_security"
+    - "reconstruction_quality"
+
+# File Structure
+file_structure:
+  training_files:
+    - "training_data_1.Ψtws"
+    - "training_data_2.Ψtws"
+  validation_files:
+    - "validation_data.Ψtws"
+  test_files:
+    - "test_data.Ψtws"
+
+# Security Policies
+security:
+  max_access_attempts: 3
+  violation_threshold: 0.9
+  anti_tampering: true
+  integrity_checks: true

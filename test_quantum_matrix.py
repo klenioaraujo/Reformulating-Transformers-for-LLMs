@@ -13,7 +13,7 @@ import argparse
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE_DIR)
 
-from quantum_character_matrix import QuantumCharacterMatrix
+from quantum_word_matrix import QuantumWordMatrix
 
 def main(seed: int | None = None):
     if seed is not None:

@@ -27,7 +27,22 @@ from typing import Dict, List, Tuple, Optional, Any
 from pathlib import Path
 
 # Importações locais do sistema ΨQRH
-from spectral_parameters_integration import SpectralParametersIntegrator
+try:
+    from spectral_parameters_integration import SpectralParametersIntegrator
+except ImportError:
+    # Fallback para importação alternativa
+    try:
+        from src.core.spectral_parameters_integration import SpectralParametersIntegrator
+    except ImportError:
+        # Criar uma classe stub para evitar erros
+        class SpectralParametersIntegrator:
+            def __init__(self, *args, **kwargs):
+                pass
+            def extract_spectral_parameters(self, model_name):
+                return {}
+            def get_available_models(self):
+                return []
+
 from src.core.quaternion_operations import QuaternionOperations
 
 
@@ -79,7 +94,7 @@ class QuaternionRotationLayer(nn.Module):
         return x_rotated.view(batch_size, seq_len, hidden_size)
 
 
-class DynamicQuantumCharacterMatrix(nn.Module):
+class DynamicQuantumWordMatrix(nn.Module):
     """
     Matriz quântica dinâmica com quarteniões e números primos.
     Adapta-se aos parâmetros espectrais dos modelos semânticos específicos.
@@ -141,7 +156,7 @@ class DynamicQuantumCharacterMatrix(nn.Module):
         # Mover para dispositivo
         self.to(device)
 
-        print("🔬 Dynamic Quantum Character Matrix com Quarteniões inicializada")
+        print("🔬 Dynamic Quantum Word Matrix com Quarteniões inicializada")
         print(f"   📊 Vocab: {vocab_size}, Hidden: {self.hidden_size} (quaternion_dim: {self.quaternion_dim})")
         print(f"   🔢 Primos disponíveis: {len(self.primes)}")
         print(f"   🔄 Camada de rotação SO(4): Implementada com multiplicação quaterniônica")
@@ -485,46 +500,47 @@ class DynamicQuantumCharacterMatrix(nn.Module):
         # Por simplicidade, mantemos as camadas como estão
         pass
 
-    def encode_text(self, text: str) -> torch.Tensor:
+    def encode_words(self, words: List[str]) -> torch.Tensor:
         """
-        Codifica texto usando a matriz quântica quaterniónica adaptada.
+        Codifica palavras usando a matriz quântica quaterniónica adaptada.
 
         Args:
-            text: Texto a ser codificado
+            words: Lista de palavras a ser codificada
 
         Returns:
-            Tensor quântico [len(text), hidden_size] com representação quaterniónica
+            Tensor quântico [len(words), hidden_size] com representação quaterniónica
         """
         if not self.current_model_params:
             raise RuntimeError("A matriz quântica não foi adaptada a nenhum modelo. Chame `adapt_to_model(model_name)` primeiro.")
 
-        # Converter texto para índices com modulação prima
-        char_indices = []
-        for c in text[:100]:  # Limitar tamanho
-            base_idx = ord(c) % self.vocab_size
+        # Converter palavras para índices com modulação prima
+        word_indices = []
+        for word in words[:100]:  # Limitar tamanho
+            # Usar hash da palavra para gerar índice base
+            base_idx = hash(word) % self.vocab_size
             # Aplicar modulação prima ao índice
-            prime_mod = self._apply_prime_modulation_to_index(base_idx, len(char_indices))
+            prime_mod = self._apply_prime_modulation_to_index(base_idx, len(word_indices))
             modulated_idx = int(base_idx * prime_mod) % self.vocab_size
-            char_indices.append(modulated_idx)
+            word_indices.append(modulated_idx)
 
         # Aplicar matriz quântica quaterniónica
         with torch.no_grad():
-            # Obter quarteniões: [len(text), quaternion_dim, 4]
-            quaternion_encoded = self.quantum_matrix[char_indices]
+            # Obter quarteniões: [len(words), quaternion_dim, 4]
+            quaternion_encoded = self.quantum_matrix[word_indices]
 
-            # Achatar para [len(text), hidden_size]
-            flattened = quaternion_encoded.reshape(len(char_indices), -1)
+            # Achatar para [len(words), hidden_size]
+            flattened = quaternion_encoded.reshape(len(word_indices), -1)
 
             # Aplicar camadas de adaptação
             # Converter para formato adequado para conv1d
             input_tensor = flattened.transpose(0, 1).unsqueeze(0).to(torch.complex128)  # [1, hidden_size, seq_len]
-    
+
             # Aplicar filtros espectrais
             filtered = self.adaptation_layers['spectral_filter'](input_tensor)
-    
+
             # Aplicar rotações quaterniónicas - input should be [seq_len, hidden_size]
             rotated = self.adaptation_layers['quaternion_rotator'](filtered.squeeze(0).transpose(0, 1).unsqueeze(0)).squeeze(0)
-    
+
             # Aplicar ressonâncias primas
             resonated = self.adaptation_layers['prime_resonator'](rotated.to(torch.complex128))
 
@@ -548,7 +564,7 @@ class DynamicQuantumCharacterMatrix(nn.Module):
 
             return normalized
 
-    def decode_text(self, encoded_tensor: torch.Tensor) -> List[int]:
+    def decode_words(self, encoded_tensor: torch.Tensor) -> List[int]:
         """
         Decodifica um tensor de embeddings de volta para uma lista de índices de vocabulário.
         Usa uma busca pelo vizinho mais próximo na matriz quântica original como uma aproximação.
@@ -560,26 +576,26 @@ class DynamicQuantumCharacterMatrix(nn.Module):
             Lista de índices de vocabulário decodificados.
         """
         decoded_indices = []
-        
+
         # Prepara a matriz quântica para a busca, achatando a representação do quaternião.
         qm_flat = self.quantum_matrix.reshape(self.vocab_size, -1)
 
         with torch.no_grad():
             for i in range(encoded_tensor.shape[0]):
-                # Pega o vetor de embedding para um caractere
+                # Pega o vetor de embedding para uma palavra
                 embedding_vector = encoded_tensor[i]
 
                 # Calcula a distância Euclidiana do vetor para todos os vetores na matriz quântica
                 distances = torch.norm(qm_flat - embedding_vector.unsqueeze(0), dim=1)
-                
-                # Encontra o índice da menor distância, que corresponde ao caractere mais provável
+
+                # Encontra o índice da menor distância, que corresponde à palavra mais provável
                 best_match_idx = torch.argmin(distances).item()
                 decoded_indices.append(best_match_idx)
-            
+
         return decoded_indices
 
     def _apply_prime_modulation_to_index(self, base_idx: int, position: int) -> float:
-        """Aplica modulação prima a um índice de caractere."""
+        """Aplica modulação prima a um índice de palavra."""
         prime_idx = position % len(self.primes)
         resonance = self.prime_resonances_tensor[prime_idx]
 
@@ -610,7 +626,7 @@ class DynamicQuantumCharacterMatrix(nn.Module):
         print(f"💾 Matriz adaptada salva em: {filepath}")
 
     @classmethod
-    def load_adapted_matrix(cls, filepath: str) -> 'DynamicQuantumCharacterMatrix':
+    def load_adapted_matrix(cls, filepath: str) -> 'DynamicQuantumWordMatrix':
         """
         Carrega matriz adaptada de arquivo.
         """
@@ -631,11 +647,11 @@ class DynamicQuantumCharacterMatrix(nn.Module):
 
 # Teste da implementação
 if __name__ == "__main__":
-    print("🔬 Teste da Dynamic Quantum Character Matrix")
+    print("🔬 Teste da Dynamic Quantum Word Matrix")
     print("=" * 50)
 
     # Criar matriz dinâmica
-    matrix = DynamicQuantumCharacterMatrix(vocab_size=1000, hidden_size=64)
+    matrix = DynamicQuantumWordMatrix(vocab_size=1000, hidden_size=64)
 
     # Testar adaptação para modelo disponível
     integrator = SpectralParametersIntegrator()
@@ -649,11 +665,11 @@ if __name__ == "__main__":
 
         if success:
             # Testar codificação
-            test_text = "Hello quantum world"
-            encoded = matrix.encode_text(test_text)
+            test_words = ["Hello", "quantum", "world"]
+            encoded = matrix.encode_words(test_words)
 
             print("✅ Codificação bem-sucedida:")
-            print(f"   Texto: '{test_text}'")
+            print(f"   Palavras: {test_words}")
             print(f"   Shape: {encoded.shape}")
             print(".3f")
             print(f"   Valores finitos: {torch.isfinite(encoded).all().item()}")

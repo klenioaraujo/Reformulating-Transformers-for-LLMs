@@ -1,0 +1,82 @@
+{
+  "validation_timestamp": "2025-09-25T07:46:24.078762",
+  "system_info": {
+    "python_version": "3.12.7 (main, Jun 18 2025, 13:16:51) [GCC 14.2.0]",
+    "torch_version": "2.8.0+cu128",
+    "cuda_available": false,
+    "device_count": 0
+  },
+  "test_summary": {
+    "total_tests": 4,
+    "passed_tests": 3,
+    "failed_tests": 1,
+    "success_rate_percent": 75.0
+  },
+  "detailed_results": {
+    "Core QRH Layer": {
+      "status": "PASS",
+      "execution_time_s": 0.04178810119628906,
+      "memory_usage": {
+        "start": {
+          "cpu_memory_mb": 484.19140625,
+          "gpu_memory_mb": 0
+        },
+        "end": {
+          "cpu_memory_mb": 505.84765625,
+          "gpu_memory_mb": 0
+        },
+        "peak_increase_mb": 21.65625
+      },
+      "tensor_health": {
+        "has_nan": false,
+        "has_inf": false,
+        "shape": [
+          2,
+          32,
+          256
+        ],
+        "dtype": "torch.float32"
+      },
+      "output_shape": [
+        2,
+        32,
+        256
+      ],
+      "error": null
+    },
+    "Spectral Filter": {
+      "status": "PASS",
+      "execution_time_s": 0.0008606910705566406,
+      "tensor_health": {
+        "has_nan": false,
+        "has_inf": false,
+        "shape": [
+          10,
+          20
+        ],
+        "dtype": "torch.complex64"
+      },
+      "output_shape": [
+        10,
+        20
+      ],
+      "error": null
+    },
+    "\u03a8QRH Integration": {
+      "status": "PASS",
+      "execution_time_s": 0.015604257583618164,
+      "error": null
+    },
+    "System Initialization": {
+      "status": "FAIL",
+      "execution_time_s": 0.008054018020629883,
+      "error": "No module named 'qrh_layer'",
+      "traceback": "Traceback (most recent call last):\n  File \"/home/padilha/trabalhos/Reformulating_Transformers/data/test_logs/comprehensive_validation_runner.py\", line 175, in test_system_initialization\n    block = NegentropyTransformerBlock(\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/padilha/trabalhos/Reformulating_Transformers/src/core/negentropy_transformer_block.py\", line 45, in __init__\n    from qrh_layer import QRHConfig\nModuleNotFoundError: No module named 'qrh_layer'\n"
+    }
+  },
+  "criteria_met": {
+    "min_success_rate_95_percent": false,
+    "no_nan_inf_detected": true,
+    "all_imports_successful": true
+  }
+}

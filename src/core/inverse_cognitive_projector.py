@@ -30,7 +30,7 @@ class InverseCognitiveProjector(nn.Module):
     3. Similaridade com representações quânticas do dicionário
     """
 
-    def __init__(self, embed_dim: int = 256, vocab_size: int = 50257, hidden_dim: int = 512,
+    def __init__(self, embed_dim: int = 64, vocab_size: int = 50257, hidden_dim: int = 128,
                  num_layers: int = 3, dropout: float = 0.1):
         super().__init__()
         self.embed_dim = embed_dim
@@ -40,7 +40,7 @@ class InverseCognitiveProjector(nn.Module):
         # Camadas de processamento quântico (aprendíveis)
         self.quantum_processor = nn.ModuleList([
             nn.Sequential(
-                nn.Linear(embed_dim * 4 if i == 0 else hidden_dim, hidden_dim),
+                nn.Linear(embed_dim if i == 0 else hidden_dim, hidden_dim),
                 nn.LayerNorm(hidden_dim),
                 nn.ReLU(),
                 nn.Dropout(dropout)

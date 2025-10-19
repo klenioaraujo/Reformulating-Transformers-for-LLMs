@@ -16,7 +16,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE_DIR)
 
 from src.core.inverse_cognitive_projector import InverseCognitiveProjector
-from quantum_character_matrix import QuantumCharacterMatrix
+from quantum_word_matrix import QuantumWordMatrix
 
 class ΨQRHPipelineInverseProjector:
     """

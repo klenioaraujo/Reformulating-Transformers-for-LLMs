@@ -33,7 +33,7 @@ install: ## Instala as dependências do projeto.
 setup: install data ## Configuração completa do projeto (instalação + dados).
 
 .PHONY: setup-auto
-setup-auto: ## Configuração automática completa do sistema ΨQRH (recomendado para primeira vez).
+setup-auto: setup-vocab ## Configuração automática completa do sistema ΨQRH (recomendado para primeira vez).
 	@echo "🚀 Iniciando configuração automática do ΨQRH..."
 	$(PYTHON) setup_system.py
 	@echo "✅ Configuração automática concluída!"
@@ -50,6 +50,18 @@ data: ## Gera o dataset de treinamento a partir de textos brutos.
 	@echo "📚 Preparando dados de treinamento..."
 	$(PYTHON) tools/create_training_data.py
 	@echo "✅ Dados de treinamento preparados!"
+
+.PHONY: setup-vocab
+setup-vocab: ## Converte o vocabulário do modelo fonte para o formato nativo ΨQRH. Use: make setup-vocab SOURCE_MODEL=gpt2
+	@if [ -z "$(SOURCE_MODEL)" ]; then \
+		echo "⚠️  SOURCE_MODEL não especificado, usando 'gpt2' como padrão."; \
+		EFFECTIVE_SOURCE_MODEL=gpt2; \
+	else \
+		EFFECTIVE_SOURCE_MODEL=$(SOURCE_MODEL); \
+	fi; \
+	echo "📚 Convertendo vocabulário do modelo '$$EFFECTIVE_SOURCE_MODEL' para formato nativo..."; \
+	$(PYTHON) scripts/create_native_vocab.py --model_name $$EFFECTIVE_SOURCE_MODEL; \
+	echo "✅ Vocabulário nativo criado em data/native_vocab.json"
 
 # Training Workflows
 .PHONY: train
@@ -501,5 +513,138 @@ distill-knowledge: ## Destila conhecimento de um LLM base para o espaço Hilbert
 	$(PYTHON) model_converter_spectral_ultra_simple.py --mode distill --source_model $(SOURCE_MODEL) --output_model_name "psiqrh_distilled_$(SOURCE_MODEL)"
 	@echo "✅ Destilação concluída. Modelo salvo em 'models/distilled/'"
 
+.PHONY: vocab
+vocab: ## Cria o vocabulário nativo GPT-2 necessário para o pipeline ΨQRH.
+	@echo "🔬 Criando vocabulário nativo GPT-2..."
+	$(PYTHON) create_native_vocab.py
+	@echo "✅ Vocabulário nativo criado em data/native_vocab.json"
+
 .PHONY: h
 h: help ## Alias para help
+
+# ΨQRH System Commands - UNIFIED SYSTEM
+.PHONY: psiqrh-cli psiqrh-api psiqrh-interactive psiqrh-test psiqrh-benchmark psiqrh-enhanced
+
+# Multi-Model Management Commands
+.PHONY: list-models download-model convert-to-semantic distill-knowledge set-default-model semantic-workflow
+
+psiqrh-cli: ## Executa CLI do ΨQRH. Use: make psiqrh-cli TEXT="Olá mundo"
+	@echo "🧠 Executando ΨQRH CLI..."
+	@if [ -z "$(TEXT)" ]; then \
+		echo "❌ TEXT não especificado. Use: make psiqrh-cli TEXT=\"Olá mundo\""; \
+		exit 1; \
+	fi
+	cd ΨQRHSystem && $(PYTHON) -c "from interfaces.CLI import ΨQRHCLI; cli = ΨQRHCLI(); cli.process_text('$(TEXT)')"
+
+psiqrh-enhanced: ## Executa Enhanced CLI do ΨQRH Unificado. Use: make psiqrh-enhanced TEXT="Olá mundo"
+	@echo "🚀 Executando ΨQRH Enhanced CLI (Sistema Unificado)..."
+	@if [ -z "$(TEXT)" ]; then \
+		echo "❌ TEXT não especificado. Use: make psiqrh-enhanced TEXT=\"Olá mundo\""; \
+		exit 1; \
+	fi
+	cd ΨQRHSystem && $(PYTHON) -c "from interfaces.EnhancedCLI import EnhancedCLI; cli = EnhancedCLI(); cli.process_text('$(TEXT)')"
+	@echo "✅ Comando psiqrh-enhanced executado com sucesso!"
+
+psiqrh-enhanced-interactive: ## Modo interativo aprimorado do ΨQRH Unificado
+	@echo "🤖 Iniciando modo interativo ΨQRH Unificado..."
+	cd ΨQRHSystem && $(PYTHON) -c "from interfaces.EnhancedCLI import main; main()" --interactive
+
+psiqrh-enhanced-batch: ## Processamento em lote com Enhanced CLI. Use: make psiqrh-enhanced-batch INPUT=input.txt OUTPUT=results.json
+	@echo "📁 Executando processamento em lote ΨQRH Unificado..."
+	@if [ -z "$(INPUT)" ]; then \
+		echo "❌ INPUT não especificado. Use: make psiqrh-enhanced-batch INPUT=input.txt"; \
+		exit 1; \
+	fi
+	cd ΨQRHSystem && $(PYTHON) -c "from interfaces.EnhancedCLI import EnhancedCLI; cli = EnhancedCLI(); cli.run_batch_processing('$(INPUT)', '$(OUTPUT)')"
+
+psiqrh-enhanced-spectral: ## Exporta análise espectral completa. Use: make psiqrh-enhanced-spectral TEXT="teste" OUTPUT=analysis.json
+	@echo "🔬 Exportando análise espectral ΨQRH Unificado..."
+	@if [ -z "$(TEXT)" ] || [ -z "$(OUTPUT)" ]; then \
+		echo "❌ TEXT e OUTPUT são obrigatórios. Use: make psiqrh-enhanced-spectral TEXT=\"teste\" OUTPUT=analysis.json"; \
+		exit 1; \
+	fi
+	cd ΨQRHSystem && $(PYTHON) -c "from interfaces.EnhancedCLI import EnhancedCLI; cli = EnhancedCLI(); cli.export_spectral_analysis('$(TEXT)', '$(OUTPUT)')"
+
+psiqrh-enhanced-benchmark: ## Benchmark aprimorado do ΨQRH Unificado. Use: make psiqrh-enhanced-benchmark RUNS=100
+	@echo "📊 Executando benchmark ΨQRH Unificado..."
+	@RUNS=$$(if [ -z "$(RUNS)" ]; then echo 100; else echo $(RUNS); fi); \
+	cd ΨQRHSystem && $(PYTHON) -c "from interfaces.EnhancedCLI import EnhancedCLI; cli = EnhancedCLI(); cli.benchmark_system($$RUNS)"
+
+psiqrh-enhanced-status: ## Status completo do sistema ΨQRH Unificado
+	@echo "🔬 Verificando status ΨQRH Unificado..."
+	cd ΨQRHSystem && $(PYTHON) -c "from interfaces.EnhancedCLI import EnhancedCLI; cli = EnhancedCLI(); cli.show_system_status()"
+
+psiqrh-enhanced-legacy-test: ## Testa compatibilidade com sistema legado
+	@echo "🧪 Executando teste de compatibilidade legado ΨQRH Unificado..."
+	cd ΨQRHSystem && $(PYTHON) -c "from interfaces.EnhancedCLI import EnhancedCLI; cli = EnhancedCLI(); cli.run_legacy_compatibility_test()"
+
+psiqrh-interactive: ## Modo interativo do ΨQRH (legacy)
+	@echo "🤖 Iniciando modo interativo ΨQRH (legacy)..."
+	cd ΨQRHSystem && $(PYTHON) -c "from interfaces.CLI import main; main()" --interactive
+
+psiqrh-api: ## Inicia API REST do ΨQRH
+	@echo "🌐 Iniciando API REST ΨQRH..."
+	cd ΨQRHSystem && $(PYTHON) -c "from interfaces.API import main; main()" --host 0.0.0.0 --port 5000
+
+psiqrh-test: ## Executa testes do sistema ΨQRH
+	@echo "🧪 Executando testes ΨQRH..."
+	cd ΨQRHSystem && $(PYTHON) -m pytest tests/ -v --tb=short
+
+psiqrh-benchmark: ## Benchmark de performance do ΨQRH (legacy)
+	@echo "📊 Executando benchmark ΨQRH (legacy)..."
+	cd ΨQRHSystem && $(PYTHON) -c "from ΨQRHSystem.core.PipelineManager import PipelineManager; from ΨQRHSystem.config.SystemConfig import SystemConfig; import time; config = SystemConfig.default(); pipeline = PipelineManager(config); print('🔬 Benchmark ΨQRH - 100 execuções...'); start_time = time.time(); [pipeline.process('Benchmark test') for i in range(100)]; end_time = time.time(); avg_time = (end_time - start_time) / 100; print(f'✅ Benchmark concluído: {avg_time:.3f}s por execução')"
+	@echo "✅ Comando psiqrh-benchmark executado com sucesso!"
+
+# Multi-Model Management Commands
+list-models: ## Lista todos os modelos disponíveis (fonte, destilados, semânticos)
+	@echo "📚 Listando modelos disponíveis..."
+	cd ΨQRHSystem && $(PYTHON) -c "from interfaces.ModelManagementCLI import ModelManagementCLI; cli = ModelManagementCLI(); cli.run(['list'])"
+	@echo "✅ Comando list-models executado com sucesso!"
+
+download-model: ## Baixa um modelo do Hugging Face. Use: make download-model SOURCE_MODEL=gpt2
+	@echo "📥 Baixando modelo..."
+	@if [ -z "$(SOURCE_MODEL)" ]; then \
+		echo "❌ SOURCE_MODEL não especificado. Use: make download-model SOURCE_MODEL=gpt2"; \
+		exit 1; \
+	fi
+	cd ΨQRHSystem && $(PYTHON) -c "from interfaces.ModelManagementCLI import ModelManagementCLI; cli = ModelManagementCLI(); cli.run(['download', '$(SOURCE_MODEL)'])"
+
+convert-to-semantic: ## Converte um modelo para formato semântico. Use: make convert-to-semantic SOURCE_MODEL=gpt2
+	@echo "🔮 Convertendo modelo para formato semântico..."
+	@if [ -z "$(SOURCE_MODEL)" ]; then \
+		echo "❌ SOURCE_MODEL não especificado. Use: make convert-to-semantic SOURCE_MODEL=gpt2"; \
+		exit 1; \
+	fi
+	cd ΨQRHSystem && $(PYTHON) -c "from interfaces.ModelManagementCLI import ModelManagementCLI; cli = ModelManagementCLI(); cli.run(['convert', '$(SOURCE_MODEL)'])"
+
+distill-knowledge: ## Destila conhecimento de um modelo. Use: make distill-knowledge SOURCE_MODEL=gpt2
+	@echo "🧠 Destilando conhecimento..."
+	@if [ -z "$(SOURCE_MODEL)" ]; then \
+		echo "❌ SOURCE_MODEL não especificado. Use: make distill-knowledge SOURCE_MODEL=gpt2"; \
+		exit 1; \
+	fi
+	cd ΨQRHSystem && $(PYTHON) -c "from interfaces.ModelManagementCLI import ModelManagementCLI; cli = ModelManagementCLI(); cli.run(['distill', '$(SOURCE_MODEL)'])"
+
+set-default-model: ## Define o modelo padrão do sistema. Use: make set-default-model MODEL=gpt2
+	@echo "🎯 Definindo modelo padrão..."
+	@if [ -z "$(MODEL)" ]; then \
+		echo "❌ MODEL não especificado. Use: make set-default-model MODEL=gpt2"; \
+		exit 1; \
+	fi
+	cd ΨQRHSystem && $(PYTHON) -c "from interfaces.ModelManagementCLI import ModelManagementCLI; cli = ModelManagementCLI(); cli.run(['set-default', '$(MODEL)'])"
+
+semantic-workflow: ## Workflow completo: baixar, destilar e converter. Use: make semantic-workflow SOURCE_MODEL=gpt2
+	@echo "🚀 Executando workflow semântico completo..."
+	@if [ -z "$(SOURCE_MODEL)" ]; then \
+		echo "❌ SOURCE_MODEL não especificado. Use: make semantic-workflow SOURCE_MODEL=gpt2"; \
+		exit 1; \
+	fi
+	@echo "   📥 Passo 1: Baixando modelo..."
+	make download-model SOURCE_MODEL=$(SOURCE_MODEL)
+	@echo "   🧠 Passo 2: Destilando conhecimento..."
+	make distill-knowledge SOURCE_MODEL=$(SOURCE_MODEL)
+	@echo "   🔮 Passo 3: Convertendo para formato semântico..."
+	make convert-to-semantic SOURCE_MODEL=$(SOURCE_MODEL)
+	@echo "   📊 Passo 4: Verificando status..."
+	make list-models
+	@echo "✅ Workflow semântico completo concluído!"

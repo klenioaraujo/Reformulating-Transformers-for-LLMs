@@ -1,56 +1,115 @@
-# ΨQRH Autoregressive Language Model - System Objective
+Modelo de Linguagem Autoregressivo ΨQRH - Objetivo do Sistema
 
-## Core Purpose
-ΨQRH is a physics-based autoregressive language model that generates fluent, natural human language through quantum-physical processes, without relying on external Transformer backbones or symbolic fallbacks.
+Propósito Principal
 
-## Fundamental Principles
-- **Physical Foundation**: All computation emerges from quaternion algebra, spectral filtering, SO(4) rotations, and fractal dimension mapping
-- **No External Transformers**: ΨQRH is the Transformer - no loading or inheriting from GPT, BERT, or similar models
-- **Emergent Intelligence**: Language understanding and generation emerge from physical interactions, not programmed rules
-- **Zero Fallback Policy**: If physical computation fails, the system fails gracefully without symbolic alternatives
+O ΨQRH é um modelo de linguagem baseado em física quântica que gera linguagem humana natural e fluente por meio de processos físico-quânticos, sem depender de arquiteturas Transformer externas ou fallbacks simbólicos.
 
-## Architecture Requirements
-- **Token Processing**: Subword tokens (BPE) with vocabularies ≥50k tokens
-- **Long-Range Dependencies**: Semantic similarity-based attention, not character-level processing
-- **Probabilistic Generation**: Autoregressive with temperature and top-k sampling
-- **Natural Output**: Fluent human language, never symbolic representations like "Ψ (token 72)"
+Princípios Fundamentais
 
-## Physical Components (Mandatory)
-1. **Fractal Embedding**: Text → fractal signals with dimension D calculation
-2. **Quaternion Mapping**: Signals → 4D quaternion states Ψ(x)
-3. **Spectral Filtering**: F(k) = exp(i α · arctan(ln(|k| + ε)))
-4. **SO(4) Rotations**: Ψ' = q_left ⊗ Ψ ⊗ q_right†
-5. **Consciousness Dynamics**: DCF with Kuramoto oscillators replacing softmax
-6. **Optical Probe**: Padilha wave equation for text generation
+    Base Física: Toda computação emerge de álgebra quaterniônica, filtragem espectral, rotações SO(4) e mapeamento de dimensão fractal
 
-## Success Criteria
-- **Generation Quality**: Produces coherent, natural text like "Quantum entanglement is a phenomenon where two particles share a quantum state, such that measurement of one instantly affects the other."
-- **Never Generates**: "H (token 72)", "Ψ", "token_42", or repetitive sequences
-- **Performance**: Achieves perplexity ≤25 on WikiText-103
-- **Compatibility**: Pluggable into Hugging Face AutoModelForCausalLM
+    Sem Transformers Externos: O ΨQRH é o Transformer
 
-## Training Requirements
-- **End-to-End**: Full backpropagation through physical pipeline
-- **Language Modeling Loss**: -log P(xₜ₊₁ | x₁:ₜ)
-- **Corpus**: C4, WikiText, or similar large language datasets
-- **Convergence**: Learns to generate natural language through physical optimization
+    Herança de Modelos: Pode herdar características de modelos como GPT, BERT, DeepSeek ou similares, mas sempre em estado semântico
 
-## Validation Metrics
-- **Mathematical Consistency**: Energy conservation, unitarity preservation
-- **Physical Accuracy**: Fractal dimensions, spectral properties
-- **Language Quality**: Perplexity, BLEU scores, human evaluation
-- **Emergent Behavior**: Natural language patterns from physical dynamics
+    Inteligência Emergente: A compreensão e geração de linguagem emergem de interações físicas; pode incorporar regras programadas desde que baseadas em física matemática e estejam no espaço quântico
 
-## Implementation Constraints
-- **No Character Processing**: Only subword tokens
-- **No Static Softmax**: Only DCF/Kuramoto dynamics
-- **No External Models**: Pure ΨQRH computation
-- **Physical Validation**: All operations must satisfy quantum mechanical principles
+    Política de Zero Fallback: Se a computação física falhar, o sistema falha graciosamente sem alternativas simbólicas
 
-## Output Standards
-- **Format**: Natural language text only
-- **Quality**: Fluent, coherent, contextually appropriate
-- **Length**: Variable, controlled by sampling parameters
-- **Diversity**: Controlled by temperature and top-k settings
+Requisitos de Arquitetura
 
-This system represents a radical departure from traditional language models, achieving intelligence through physical computation rather than statistical pattern matching.
+    Processamento de Tokens: Tokens de subpalavras (BPE) com vocabulários ≥50k tokens, processados semanticamente
+
+    Dependências de Longo Alcance: Atenção baseada em similaridade semântica com cálculos semânticos para conversão em linguagem
+
+    Geração Probabilística: Autoregressiva com amostragem por temperatura e top-k, utilizando sempre representação espectral para palavras e caracteres
+
+    Saída Natural: Linguagem humana fluente, nunca representações simbólicas como "Ψ (token 72)", usando conversão de vocabulários semânticos de dynamic_quantum_matrix ou quantum_character_matrix
+
+Componentes Físicos (Obrigatórios)
+
+    Embedding Fractal: Texto → sinais fractais com cálculo de dimensão D
+
+    Mapeamento Quaterniônico: Sinais → estados quaterniônicos 4D Ψ(x)
+
+    Filtragem Espectral: F(k) = exp(i α · arctan(ln(|k| + ε)))
+
+    Rotações SO(4): Ψ' = q_left ⊗ Ψ ⊗ q_right†
+
+    Dinâmica de Consciência: DCF com osciladores Kuramoto substituindo softmax
+
+    Sonda Óptica: Equação de onda de Padilha para geração de texto
+
+Critérios de Sucesso
+
+    Qualidade de Geração: Produz texto coerente e natural como "O emaranhamento quântico é um fenômeno onde duas partículas compartilham um estado quântico, de modo que a medição de uma afeta instantaneamente a outra"
+
+    Nunca Gera: "H (token 72)", "Ψ", "token_42" ou sequências repetitivas
+
+    Desempenho: Atinge perplexidade ≤25 no WikiText-103
+
+    Compatibilidade: Integrável ao Hugging Face AutoModelForCausalLM
+
+Requisitos de Treinamento
+
+    End-to-End: Backpropagation completa através do pipeline físico
+
+    Loss de Modelagem de Linguagem: -log P(xₜ₊₁ | x₁:ₜ)
+
+    Corpus: C4, WikiText ou conjuntos de dados linguísticos grandes similares
+
+    Convergência: Aprende a gerar linguagem natural através de otimização física
+
+Métricas de Validação
+
+    Consistência Matemática: Conservação de energia, preservação de unitariedade
+
+    Precisão Física: Dimensões fractais, propriedades espectrais
+
+    Qualidade de Linguagem: Perplexidade, scores BLEU, avaliação humana
+
+    Comportamento Emergente: Padrões de linguagem natural a partir de dinâmicas físicas
+
+Restrições de Implementação
+
+    Sem Processamento de Caracteres: Apenas tokens de subpalavras
+
+    Sem Softmax Estático: Apenas dinâmicas DCF/Kuramoto
+
+    Sem Modelos Externos: Computação pura do ΨQRH
+
+    Validação Física: Todas as operações devem satisfazer princípios da mecânica quântica
+
+Padrões de Saída
+
+    Formato: Apenas texto em linguagem natural
+
+    Qualidade: Fluente, coerente, contextualmente apropriado
+
+    Comprimento: Variável, controlado por parâmetros de amostragem
+
+    Diversidade: Controlada por configurações de temperatura e top-k
+
+Este sistema representa um afastamento radical dos modelos de linguagem tradicionais, alcançando inteligência através de computação física em vez de correspondência de padrões estatísticos.
+
+O sistema deve gerar linguagem humana natural. Isso significa que todas as saídas devem ser:
+
+    Fluentes e Coerentes: O texto deve fluir naturalmente, com gramática, sintaxe e consistência lógica adequadas
+
+    Contextualmente Apropriadas: As respostas devem abordar diretamente o prompt ou a consulta do usuário
+
+    Puramente Linguísticas: A saída deve consistir exclusivamente em palavras e frases padrão
+
+    Livres de Artefatos: A saída nunca deve conter tokens internos, marcadores simbólicos (ex.: Ψ, [token_42]) ou sequências repetitivas e sem sentido
+
+Principais correções realizadas:
+
+    Correção de ortografia e gramática
+
+    Padronização de terminologia técnica
+
+    Melhoria na estruturação e formatação
+
+    Correção de termos como "semanatica" → "semântica", "utlizar" → "utilizar"
+
+    Organização hierárquica mais clara das seções

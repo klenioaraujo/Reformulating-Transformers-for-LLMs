@@ -1,0 +1,157 @@
+# Configuração da Memória de Trabalho Consciente com Equação de Padilha
+# ======================================================================
+#
+# Memória baseada em dinâmica quaterniônica-fractal que mantém um campo
+# de estado persistente evoluindo com:
+#
+# Equação de Padilha:
+#   f(λ,t) = I₀·sin(ωt + αλ)·e^(i(ωt - kλ + βλ²))
+#
+# Mapeamentos Fractais:
+#   α(D) = α₀(1 + λ·(D - D_euclid)/D_euclid)
+#   β(D) = (2n + 1) - 2D
+
+working_memory:
+  # ===== Dimensões da Memória =====
+  memory:
+    size: 1024                    # Número de estados de memória
+    embed_dim: 64                 # Dimensão base (quaternion: ×4)
+    persistence_decay: 0.95       # Fator de decaimento temporal
+
+  # ===== Equação de Padilha =====
+  padilha_wave:
+    # Parâmetros fixos
+    I0: 1.0                       # Intensidade máxima
+    omega: 6.283185307            # ω = 2π (frequência angular)
+    k: 6.283185307                # k = 2π (número de onda)
+
+    # Parâmetros adaptativos (mapeados de D)
+    alpha_base: 1.5               # α₀ - base para α(D)
+    lambda_coupling: 0.8          # λ - fator de acoplamento
+    euclidean_dim: 2.0            # D_euclid - dimensão euclidiana de referência
+
+    # Chirp quadrático β(D)
+    chirp_order: 1                # n para β = (2n+1) - 2D
+
+    # Limites de α
+    alpha_min: 0.1
+    alpha_max: 3.0
+
+  # ===== Dinâmica Temporal (Equação de Onda) =====
+  wave_dynamics:
+    use_wave_equation: true       # Habilitar equação de onda
+    amplitude_base: 0.1           # Amplitude das oscilações
+    phase_offset: 0.5236          # φ₀ = π/6
+    decay_factor: 0.95            # Amortecimento temporal
+
+  # ===== Modulação Caótica (Mapa Logístico) =====
+  chaotic_modulation:
+    enable: true                  # Habilitar modulação caótica
+    r_parameter: 3.9              # r para x_{n+1} = r·x_n·(1-x_n)
+    modulation_strength: 0.3      # Força da modulação caótica
+    num_iterations: 10            # Iterações do mapa logístico
+
+  # ===== Neurotransmissores Sintéticos =====
+  neurotransmitters:
+    enable: true                  # Habilitar sistema de neurotransmissores
+
+    # Dopamina (recompensa/motivação)
+    dopamine:
+      baseline: 0.5
+      sensitivity: 1.0
+      decay_rate: 0.1
+
+    # Serotonina (estabilidade/humor)
+    serotonin:
+      baseline: 0.6
+      sensitivity: 0.8
+      decay_rate: 0.15
+
+    # Norepinefrina (atenção/alerta)
+    norepinephrine:
+      baseline: 0.4
+      sensitivity: 1.2
+      decay_rate: 0.2
+
+  # ===== Sistema de Atenção para Recuperação =====
+  attention_retrieval:
+    use_quaternionic_attention: true  # Atenção quaterniônica
+    num_heads: 8                      # Cabeças de atenção
+    dropout: 0.1                      # Dropout rate
+
+  # ===== Integração com Consciência =====
+  consciousness_integration:
+    use_fractal_dimension: true       # Usar dimensão fractal D
+    use_entropy: true                 # Usar entropia do estado
+    use_fci: true                     # Usar FCI (Fractal Consciousness Index)
+
+    # Thresholds para estados
+    fci_threshold_high: 0.8           # FCI alto = memória estável
+    fci_threshold_low: 0.2            # FCI baixo = memória instável
+
+  # ===== Integração com Kuramoto =====
+  kuramoto_coupling:
+    enable: true                      # Habilitar acoplamento com Kuramoto
+    coupling_strength: 0.5            # Força do acoplamento
+    sync_threshold: 0.9               # Threshold de sincronização
+
+  # ===== Persistência e Evolução =====
+  evolution:
+    continuous_evolution: true        # Evolução contínua do campo
+    evolution_rate: 0.01              # Taxa de evolução temporal
+    max_memory_age: 1000              # Idade máxima de memórias (passos)
+
+  # ===== Performance =====
+  performance:
+    device: 'cpu'                     # 'cpu', 'cuda', ou 'mps'
+    use_checkpointing: false          # Gradient checkpointing
+    memory_efficient: true            # Modo eficiente em memória
+
+  # ===== Debug =====
+  debug:
+    log_memory_stats: false
+    log_wave_dynamics: false
+    log_neurotransmitters: false
+    validate_energy: true
+    energy_tolerance: 0.15
+
+# ===== Integração no Transformer =====
+transformer_integration:
+  # Posição no pipeline
+  position: 'after_kuramoto'          # 'after_attention', 'after_kuramoto', 'after_ffn'
+
+  # Modo de operação
+  mode: 'persistent'                  # 'persistent' (estado mantido) ou 'stateless'
+
+  # Atualização
+  update_frequency: 'every_forward'   # 'every_forward', 'every_n_steps', 'on_demand'
+  update_steps: 1                     # Se 'every_n_steps'
+
+  # Retrieval
+  retrieval_mode: 'attention'         # 'attention', 'similarity', ou 'hybrid'
+
+  # Influência
+  memory_influence_weight: 0.3        # Peso da memória na saída [0, 1]
+
+# ======================================================================
+# 🔬 INSTRUÇÕES DE VALIDAÇÃO DO NÚCLEO
+# ======================================================================
+# Para garantir que qualquer alteração nesta configuração não quebre as
+# propriedades matemáticas fundamentais do sistema ΨQRH (como a
+# conservação de energia), execute o teste de validação do núcleo.
+#
+# Este teste verifica:
+#   1. Conservação de Energia
+#   2. Teorema de Parseval (Corretude da FFT)
+#   3. Eficiência de Memória e Parâmetros
+#   4. Propriedades do Quaternion Rotacional
+#
+# COMO EXECUTAR:
+# No diretório raiz do projeto, execute o seguinte comando:
+#
+# make validate-core
+#
+# Se o teste falhar, revise suas configurações ou o código modificado.
+# A normalização de energia agora é obrigatória para garantir a
+# estabilidade do sistema.
+# ======================================================================

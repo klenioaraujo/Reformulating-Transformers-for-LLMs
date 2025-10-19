@@ -1,0 +1,25 @@
+{
+  "test_timestamp": "2025-09-25T07:48:18.843579",
+  "test_results": {
+    "Production System": {
+      "status": "IMPORT_FAIL",
+      "error": "attempted relative import beyond top-level package",
+      "traceback": "Traceback (most recent call last):\n  File \"/home/padilha/trabalhos/Reformulating_Transformers/data/test_logs/system_initialization_test.py\", line 23, in test_production_system_init\n    from src.core.production_system import ProductionSemanticQRH, ProductionConfig, ProductionMode\n  File \"/home/padilha/trabalhos/Reformulating_Transformers/src/core/production_system.py\", line 26, in <module>\n    from ...experiments.real_world_scenarios import RealWorldScenarioManager, RealWorldConfig, ScenarioType\nImportError: attempted relative import beyond top-level package\n"
+    },
+    "Conceptual Engine": {
+      "status": "IMPORT_FAIL",
+      "error": "No module named 'needle_fractal_dimension'"
+    },
+    "Example Script": {
+      "status": "SUCCESS",
+      "stdout": "SUCCESS: Example script components working\n",
+      "stderr": "",
+      "return_code": 0
+    }
+  },
+  "summary": {
+    "total_tests": 3,
+    "successful_tests": 1,
+    "overall_status": "PARTIAL"
+  }
+}

@@ -1,0 +1,41 @@
+model:
+  embed_dim: 64
+  max_history: 10
+  vocab_size: 256
+  num_heads: 4
+  hidden_dim: 128
+  num_layers: 3
+
+physics:
+  I0: 1.0
+  alpha: 1.0
+  beta: 0.5
+  k: 2.0
+  omega: 1.0
+
+system:
+  device: auto
+  enable_components:
+    - quantum_memory
+    - auto_calibration
+    - physical_harmonics
+    - semantic_model_loader
+    - spectral_output_generator
+  validation:
+    energy_conservation: true
+    unitarity: true
+    numerical_stability: true
+    fractal_consistency: true
+  semantic_model:
+    auto_load: true
+    vocab_size: 50257      # GPT-2 full vocabulary
+    max_tokens: 10000      # Maximum tokens to load
+    auto_detect: true      # Auto-detect GPT-2 models
+    vocab_type: gpt2_native # Type of vocabulary
+    preferred_types: ["semantic_converted_gpt2", "gpt2_base", "distilled_gpt2", "semantic_converted", "distilled_psiqrh"]
+    fallback_to_simulated: true
+  spectral_analysis:
+    enable_complete_analysis: true
+    detect_resonances: true
+    quantum_coherence_tracking: true
+    consciousness_correlation: true

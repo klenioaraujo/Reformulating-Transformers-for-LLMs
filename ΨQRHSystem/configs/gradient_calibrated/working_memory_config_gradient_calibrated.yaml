@@ -1,0 +1,74 @@
+working_memory:
+  memory:
+    size: 1024
+    embed_dim: 64
+    persistence_decay: 0.95
+  padilha_wave:
+    I0: 1.0
+    omega: 6.283185307
+    k: 6.283185307
+    alpha_base: 1.5
+    lambda_coupling: 0.8
+    euclidean_dim: 2.0
+    chirp_order: 1
+    alpha_min: 0.1
+    alpha_max: 3.0
+  wave_dynamics:
+    use_wave_equation: true
+    amplitude_base: 0.1
+    phase_offset: 0.5236
+    decay_factor: 0.95
+  chaotic_modulation:
+    enable: true
+    r_parameter: 3.9
+    modulation_strength: 0.3
+    num_iterations: 10
+  neurotransmitters:
+    enable: true
+    dopamine:
+      baseline: 0.5
+      sensitivity: 1.0
+      decay_rate: 0.1
+    serotonin:
+      baseline: 0.6
+      sensitivity: 0.8
+      decay_rate: 0.15
+    norepinephrine:
+      baseline: 0.4
+      sensitivity: 1.2
+      decay_rate: 0.2
+  attention_retrieval:
+    use_quaternionic_attention: true
+    num_heads: 8
+    dropout: 0.1
+  consciousness_integration:
+    use_fractal_dimension: true
+    use_entropy: true
+    use_fci: true
+    fci_threshold_high: 0.8
+    fci_threshold_low: 0.2
+  kuramoto_coupling:
+    enable: true
+    coupling_strength: 0.5
+    sync_threshold: 0.9
+  evolution:
+    continuous_evolution: true
+    evolution_rate: 0.01
+    max_memory_age: 1000
+  performance:
+    device: cpu
+    use_checkpointing: false
+    memory_efficient: true
+  debug:
+    log_memory_stats: false
+    log_wave_dynamics: false
+    log_neurotransmitters: false
+    validate_energy: true
+    energy_tolerance: 0.15
+transformer_integration:
+  position: after_kuramoto
+  mode: persistent
+  update_frequency: every_forward
+  update_steps: 1
+  retrieval_mode: attention
+  memory_influence_weight: 0.3

@@ -26,7 +26,7 @@ from typing import Dict, List, Tuple, Optional, Any
 from pathlib import Path
 import json
 
-from quantum_character_matrix import QuantumCharacterMatrix, create_enhanced_quantum_matrix
+from quantum_word_matrix import QuantumWordMatrix
 
 
 class EnhancedQuantumIntegration(nn.Module):

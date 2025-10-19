@@ -267,10 +267,18 @@ class ΨQRHSetup:
         return True
 
     def initialize_vocabulary(self) -> bool:
-        """Inicializa vocabulário básico"""
+        """Inicializa vocabulário básico apenas se não existir"""
         self.print_step("Inicializando vocabulário básico")
 
-        # Vocabulário ASCII básico
+        vocab_path = self.root_dir / 'data' / 'native_vocab.json'
+
+        # CORREÇÃO: Não sobrescrever o vocabulário se ele já foi criado pelo make setup-vocab
+        if vocab_path.exists():
+            print(f"   📚 Vocabulário nativo já existe em: {vocab_path}")
+            self.print_success("Inicialização do vocabulário pulada (já existe)")
+            return True
+
+        # Vocabulário ASCII básico (apenas como fallback absoluto)
         basic_vocab = {
             "vocab_size": 95,
             "characters": [chr(i) for i in range(32, 127)],
@@ -280,14 +288,13 @@ class ΨQRHSetup:
                 "<BOS>": 2,
                 "<EOS>": 3
             },
-            "description": "Vocabulário ASCII básico criado automaticamente"
+            "description": "Vocabulário ASCII básico criado automaticamente como fallback."
         }
 
-        vocab_path = self.root_dir / 'data' / 'native_vocab.json'
         with open(vocab_path, 'w', encoding='utf-8') as f:
             json.dump(basic_vocab, f, indent=2, ensure_ascii=False)
 
-        print(f"   📚 Vocabulário básico criado: {vocab_path}")
+        print(f"   📚 Vocabulário básico de fallback criado: {vocab_path}")
         self.print_success("Vocabulário inicializado")
         return True
 

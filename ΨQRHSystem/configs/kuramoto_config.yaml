@@ -1,0 +1,141 @@
+# Configuração do Sistema de Kuramoto com Localização Espacial de Neurônios Espectrais
+# ======================================================================================
+#
+# Sistema de osciladores acoplados com equações de reação-difusão:
+#   ∂θ/∂t - Δθ = ω + g(θ-φ)
+#   ∂φ/∂t - Δφ = ω - g(θ-φ)
+#
+# Modelo de Kuramoto estendido:
+#   dθ/dt = ω₁ + K·∑ sin(θⱼ - θᵢ)
+#   dφ/dt = ω₂ - K·∑ sin(θⱼ - θᵢ)
+
+kuramoto_spectral_layer:
+  # ===== Dimensões do Grid Espacial =====
+  spatial_grid:
+    height: 32              # Altura do grid de neurônios
+    width: 32               # Largura do grid de neurônios
+    depth: 1                # Profundidade (1=2D, >1=3D)
+    topology: 'grid_2d'     # Opções: 'grid_2d', 'grid_3d', 'hexagonal', 'random'
+    periodic_boundary: true # Condições de contorno periódicas
+
+  # ===== Parâmetros do Modelo de Kuramoto =====
+  oscillator_dynamics:
+    coupling_strength: 3.0           # K - força de acoplamento entre osciladores
+    natural_frequency_mean: 1.0      # ω - frequência natural média (Hz)
+    natural_frequency_std: 0.1       # σ_ω - dispersão das frequências
+    phase_coupling_mode: 'symmetric' # 'symmetric' ou 'asymmetric'
+
+  # ===== Parâmetros de Difusão Espacial =====
+  reaction_diffusion:
+    diffusion_coefficient: 0.1  # D - coeficiente de difusão espacial
+    time_step: 0.01             # dt - passo de integração temporal
+    num_integration_steps: 20   # Número de passos de integração por forward pass
+    integration_method: 'euler' # 'euler', 'rk4', ou 'adaptive'
+
+  # ===== Sincronização =====
+  synchronization:
+    threshold: 0.9                      # Threshold para considerar sincronizado (r > threshold)
+    enable_adaptive_coupling: true      # Ajustar K baseado em r
+    adaptive_coupling_rate: 0.05        # Taxa de adaptação de K
+    target_synchronization: 0.85        # Alvo de sincronização para controle adaptativo
+
+  # ===== Integração com ΨQRH =====
+  qrh_integration:
+    embed_dim: 64                  # Dimensão base de embedding (será multiplicado por 4)
+    quaternion_multiplier: 4       # Multiplicador quaterniônico
+    use_residual_connection: true  # Conexão residual com input
+    residual_weight: 0.1           # Peso da conexão residual
+    use_layer_norm: true           # Normalização de camada
+
+  # ===== Conectividade Espacial =====
+  connectivity:
+    connection_type: 'distance_based'  # 'distance_based', 'k_nearest', ou 'full'
+    influence_radius: 4.0              # Raio de influência (em células do grid)
+    decay_function: 'gaussian'         # 'gaussian', 'exponential', ou 'linear'
+    sigma_connectivity: null           # σ para Gaussiana (None = auto: max(H,W)/4)
+    normalize_connections: true        # Normalizar pesos de conexão por linha
+
+  # ===== Métricas e Monitoramento =====
+  monitoring:
+    track_synchronization_history: true  # Rastrear histórico de sincronização
+    history_window: 100                  # Tamanho da janela de histórico
+    compute_spatial_coherence: true      # Computar coerência espacial
+    log_phase_evolution: false           # Log detalhado da evolução de fases
+
+  # ===== Otimizações =====
+  performance:
+    use_sparse_connectivity: false  # Usar matriz esparsa para conectividade
+    enable_caching: true            # Cache de matrizes computadas
+    batch_processing: true          # Processar múltiplos tokens em paralelo
+    device: 'cpu'                   # 'cpu', 'cuda', ou 'mps'
+
+  # ===== Inicialização =====
+  initialization:
+    phase_init_method: 'random'     # 'random', 'uniform', ou 'learned'
+    phase_init_scale: 3.14159       # Escala para inicialização (π para [-π, π])
+    frequency_init_method: 'normal' # 'normal', 'uniform', ou 'learned'
+    seed: null                      # Seed para reprodutibilidade (None = aleatório)
+
+  # ===== Debug e Validação =====
+  debug:
+    enable_warnings: true
+    validate_energy_conservation: true
+    energy_tolerance: 0.1
+    check_synchronization: true
+    verbose_logging: false
+
+# ===== Configurações Específicas para Integração no Transformer =====
+transformer_integration:
+  # Posição no transformer
+  layer_position: 'after_attention'  # 'after_attention', 'before_ffn', ou 'replace_ffn'
+
+  # Uso em conjunto com outras camadas
+  use_with_qrh_layer: true           # Usar em paralelo com QRHLayer
+  use_with_cognitive_filters: true   # Usar após filtros cognitivos
+
+  # Controle de ativação
+  activation_schedule:
+    warmup_steps: 1000               # Passos de warmup antes de ativar
+    activation_probability: 1.0      # Probabilidade de ativar a camada (para dropout)
+    adaptive_activation: false       # Ativar baseado em métricas de sincronização
+
+# ===== Configurações Avançadas =====
+advanced:
+  # Kuramoto de ordem superior
+  higher_order_interactions: false   # Habilitar interações de ordem superior
+  interaction_order: 2               # Ordem das interações (padrão: 2)
+
+  # Ruído e perturbações
+  add_noise: false                   # Adicionar ruído às fases
+  noise_amplitude: 0.01              # Amplitude do ruído
+
+  # Memória de estados
+  enable_phase_memory: true          # Manter memória de estados de fase
+  memory_decay: 0.95                 # Fator de decaimento da memória
+
+  # Análise espectral
+  compute_fft_spectrum: false        # Computar espectro FFT das fases
+  spectrum_frequency_bins: 64        # Número de bins de frequência
+
+# ======================================================================
+# 🔬 INSTRUÇÕES DE VALIDAÇÃO DO NÚCLEO
+# ======================================================================
+# Para garantir que qualquer alteração nesta configuração não quebre as
+# propriedades matemáticas fundamentais do sistema ΨQRH (como a
+# conservação de energia), execute o teste de validação do núcleo.
+#
+# Este teste verifica:
+#   1. Conservação de Energia
+#   2. Teorema de Parseval (Corretude da FFT)
+#   3. Eficiência de Memória e Parâmetros
+#   4. Propriedades do Quaternion Rotacional
+#
+# COMO EXECUTAR:
+# No diretório raiz do projeto, execute o seguinte comando:
+#
+# make validate-core
+#
+# Se o teste falhar, revise suas configurações ou o código modificado.
+# A normalização de energia agora é obrigatória para garantir a
+# estabilidade do sistema.
+# ======================================================================

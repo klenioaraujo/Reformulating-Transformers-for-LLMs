@@ -1,0 +1,27 @@
+# Configuração padrão para os Filtros Cognitivos Adaptativos
+
+# Configurações do filtro semântico principal
+semantic_filter:
+  embed_dim: 64
+  num_heads: 8
+  learning_rate: 0.0001
+  temperature: 0.5
+  epsilon: 0.00000001
+
+# Configurações do detector de contradições
+contradiction_detector:
+  contradiction_threshold: 0.3
+  contradiction_sensitivity: 2.0
+  phase_rotation_strength: 0.5
+
+# Configurações do filtro de irrelevância
+irrelevance_filter:
+  irrelevance_threshold: 0.4
+
+# Configurações do filtro de viés (bias)
+bias_filter:
+  bias_threshold: 0.6
+
+# Configurações da coordenação entre os filtros
+filter_coordination:
+  residual_weight: 0.1

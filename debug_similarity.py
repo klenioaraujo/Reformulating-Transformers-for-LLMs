@@ -14,14 +14,14 @@ import os
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE_DIR)
 
-from quantum_character_matrix import QuantumCharacterMatrix
+from quantum_word_matrix import QuantumWordMatrix
 
 def debug_similarity():
     """Debug detalhado da similaridade quântica"""
     print("🔍 DEBUG DA SIMILARIDADE QUÂNTICA")
     print("="*60)
 
-    matrix = QuantumCharacterMatrix(vocabulary=list("ABCDE "))
+    matrix = QuantumWordMatrix(vocabulary=list("ABCDE "))
 
     # Codificar caracteres
     char_a = matrix.encode_character('A', position=0)
@@ -68,7 +68,7 @@ def debug_decoding():
     print(f"\n\n🔍 DEBUG DA DECODIFICAÇÃO")
     print("="*60)
 
-    matrix = QuantumCharacterMatrix(vocabulary=list("ABCDE "))
+    matrix = QuantumWordMatrix(vocabulary=list("ABCDE "))
 
     # Testar decodificação de caracteres individuais
     for char in "ABCDE":
@@ -83,7 +83,7 @@ def debug_vocabulary():
     print(f"\n\n🔍 DEBUG DO VOCABULÁRIO")
     print("="*60)
 
-    matrix = QuantumCharacterMatrix(vocabulary=list("ABCDE "))
+    matrix = QuantumWordMatrix(vocabulary=list("ABCDE "))
 
     print(f"Vocabulário: {matrix.vocabulary}")
     print(f"Tamanho do vocabulário: {len(matrix.vocabulary)}")

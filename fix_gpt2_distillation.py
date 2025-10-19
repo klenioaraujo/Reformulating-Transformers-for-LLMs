@@ -27,7 +27,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE_DIR)
 
 # Import ΨQRH components
-from quantum_character_matrix import QuantumCharacterMatrix
+from quantum_word_matrix import QuantumWordMatrix
 from src.core.dynamic_quantum_matrix import DynamicQuantumCharacterMatrix
 
 # Import GPT-2 components

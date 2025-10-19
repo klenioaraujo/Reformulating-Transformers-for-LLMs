@@ -1,64 +1,25 @@
-# Configuração Padronizada ΨQRH - Prompt Engine
-# Schema validado para validação crítica e benchmark
-
-qrh_config:
-  # Dimensões do modelo
+model:
   embed_dim: 64
+  max_history: 10
+  num_heads: 8
+  num_layers: 3
+  vocab_size: 256
+physics:
+  I0: 1.0
   alpha: 1.0
-
-  # Parâmetros de rotação quaterniônica
-  theta_left: 0.1
-  omega_left: 0.05
-  phi_left: 0.02
-  theta_right: 0.08
-  omega_right: 0.03
-  phi_right: 0.015
-
-  # Configurações de aprendizado
-  use_learned_rotation: true
-  spatial_dims: [64, 64]
-
-  # Configurações espectrais
-  use_windowing: true
-  window_type: 'hann'
-  fft_cache_size: 10
-
-  # Hardware
-  device: 'cpu'
-
-validation_config:
-  # Limites de conservação de energia: ||output|| / ||input|| ∈ [min, max]
-  energy_conservation_threshold: [0.95, 1.05]
-
-  # Limite de unitariedade do filtro espectral: |F(k)| ≈ 1.0
-  unitarity_threshold: 0.95
-
-  # Limite de estabilidade da norma quaterniônica
-  quaternion_norm_stability_threshold: 0.05
-
-  # Parâmetros de teste
-  test_batch_size: 32
-  test_sequence_length: 128
-  test_embed_dim: 64
-  num_test_iterations: 100
-
-benchmark_config:
-  # Configuração para comparação justa
-  model_size: 82000000  # ~82M parâmetros
-
-  # Dataset e tokenização padronizados
-  dataset: "OpenWebText"
-  tokenizer: "GPT-2"
-
-  # Hardware padronizado
-  hardware: "4×A100"
-
-  # Métricas de avaliação
-  metrics:
-    - "perplexity"
-    - "tokens_per_second"
-    - "gpu_memory"
-
-  # Configurações de treinamento
-  training_steps: 10000
-  validation_frequency: 100
+  beta: 0.5
+  k: 2.0
+  omega: 1.0
+system:
+  device: auto
+  enable_auto_calibration: true
+  enable_cognitive_priming: true
+  enable_noncommutative: true
+  name: "\u03A8QRH Pipeline"
+  version: 2.0.0
+  selected_model: "psiqrh_semantic_gpt2"
+training:
+  batch_size: 1
+  learning_rate: 0.0001
+  max_epochs: 100
+  patience: 10

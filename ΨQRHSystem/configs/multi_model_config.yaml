@@ -1,0 +1,90 @@
+model_management:
+  default_model: "gpt2"
+  auto_detect: true
+  model_registry_path: "models/model_registry.json"
+
+  supported_models:
+    gpt2:
+      type: "transformer"
+      vocab_size: 50257
+      embed_dim: 768
+      num_layers: 12
+      num_heads: 12
+      description: "GPT-2 Base Model"
+
+    deepseek-coder:
+      type: "coder_transformer"
+      vocab_size: 51200
+      embed_dim: 4096
+      num_layers: 32
+      num_heads: 32
+      description: "DeepSeek Coder 6.7B Instruct"
+
+    wiki:
+      type: "transformer"
+      vocab_size: 50257
+      embed_dim: 768
+      num_layers: 12
+      num_heads: 12
+      description: "WikiText Transformer"
+
+    gpt2_simulated:
+      type: "simulated_transformer"
+      vocab_size: 50257
+      embed_dim: 768
+      num_layers: 12
+      num_heads: 12
+      description: "GPT-2 Simulated Fallback"
+
+  model_paths:
+    source: "models/source/"
+    distilled: "models/distilled/"
+    semantic: "models/semantic/"
+    checkpoints: "models/checkpoints/"
+
+  loading_priority:
+    - "semantic_converted"
+    - "distilled"
+    - "source"
+    - "simulated"
+
+  auto_calibration:
+    enabled: true
+    per_model_calibration: true
+    physical_parameter_tuning: true
+
+# Model Registry Structure
+model_registry:
+  format_version: "1.0"
+  last_updated: "2025-10-18"
+  models: {}
+
+# Physical Parameters per Model
+physical_calibration:
+  gpt2:
+    alpha: 1.0
+    beta: 0.5
+    I0: 1.0
+    omega: 1.0
+    k: 2.0
+
+  deepseek-coder:
+    alpha: 1.2
+    beta: 0.7
+    I0: 1.5
+    omega: 1.3
+    k: 2.5
+
+  wiki:
+    alpha: 0.8
+    beta: 0.3
+    I0: 0.8
+    omega: 0.9
+    k: 1.8
+
+  gpt2_simulated:
+    alpha: 1.0
+    beta: 0.5
+    I0: 1.0
+    omega: 1.0
+    k: 2.0

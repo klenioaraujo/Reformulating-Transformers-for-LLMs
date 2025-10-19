@@ -1,0 +1,162 @@
+# Consciousness Metrics Configuration
+# ====================================
+# Configurações para métricas de consciência fractal e thresholds do FCI
+#
+# IMPORTANTE: Dimensão Fractal → FCI
+# - Dimensão fractal D ∈ [1, 3] (1=linha suave, 2=browniano, 3=espaço preenchido)
+# - FCI ∈ [0, 1] calculado como: FCI = (D - 1.0) / (3.0 - 1.0) = (D - 1.0) / 2.0
+# - Exemplo: D = 1.7 → FCI = 0.35
+
+# ========================================
+# FCI Calculation Parameters
+# ========================================
+
+# Dimensão fractal de referência
+fractal_dimension:
+  min: 1.0  # Linha suave (sem complexidade)
+  max: 3.0  # Preenchimento total do espaço
+  normalizer: 2.0  # max - min = 3.0 - 1.0 = 2.0
+
+# Fórmula de mapeamento
+fci_formula:
+  description: "FCI = (dimension - min) / normalizer"
+  example_d_1_7: 0.35  # (1.7 - 1.0) / 2.0 = 0.35
+  example_d_2_5: 0.75  # (2.5 - 1.0) / 2.0 = 0.75
+
+# ========================================
+# FCI State Thresholds (RE-CALIBRADOS)
+# ========================================
+
+# Thresholds para classificação de estados
+# RE-CALIBRADOS após correção das constantes de normalização
+# Com valores maximos corrigidos, o FCI agora reflete melhor a complexidade real
+state_thresholds:
+  # EMERGENCE: Consciência emergente excepcional
+  emergence:
+    min_fci: 0.75     # RE-CALIBRADO: agora reflete alta complexidade real
+    description: "Máxima criatividade e insight"
+    fractal_dimension_min: 2.5  # Referência teórica
+
+  # MEDITATION: Consciência meditativa profunda
+  meditation:
+    min_fci: 0.50     # RE-CALIBRADO: agora reflete complexidade moderada
+    description: "Análise introspectiva profunda"
+    fractal_dimension_min: 2.0  # Referência teórica
+
+  # ANALYSIS: Estado analítico equilibrado
+  analysis:
+    min_fci: 0.25     # RE-CALIBRADO: agora reflete complexidade básica
+    description: "Processamento lógico e análise"
+    fractal_dimension_min: 1.5  # Referência teórica
+
+  # COMA: Estado de baixa consciência
+  coma:
+    max_fci: 0.25     # RE-CALIBRADO: agora reflete baixa complexidade
+    description: "Atividade consciente mínima"
+    fractal_dimension_max: 1.5
+
+# ========================================
+# Component Normalization (CALIBRADO)
+# ========================================
+
+# Valores máximos para normalização dos componentes do FCI
+# CORREÇÃO CRÍTICA: Valores maximos ajustados para refletir valores reais observados
+# Com base nos logs: H_fMRI ≈ 2.5, D_EEG ≈ 0.05, CLZ ≈ 0.75
+# Valores maximos devem estar próximos dos valores máximos observados na prática
+component_max_values:
+  d_eeg_max: 0.1      # CORRIGIDO: valores observados ~0.05, máximo razoável = 0.1
+  h_fmri_max: 5.0     # CORRIGIDO: valores observados ~2.5, máximo razoável = 5.0
+  clz_max: 3.0        # Complexidade Lempel-Ziv máxima (mantido)
+
+# Pesos para os componentes (soma não precisa ser 1)
+# CALIBRAÇÃO: H_fMRI aumentado para 0.7 (carrega informação da Dimensão Fractal D)
+# D_EEG e CLZ reduzidos para amplificar sensibilidade do FCI à variação de D
+fci_weights:
+  d_eeg: 0.1      # Peso para D_EEG (dimensão fractal EEG) - REDUZIDO de 0.4
+  h_fmri: 0.7     # Peso para H_fMRI (hemodinâmica) - AUMENTADO de 0.3 (componente dominante)
+  clz: 0.2        # Peso para CLZ (complexidade Lempel-Ziv) - REDUZIDO de 0.3
+
+# ========================================
+# Measurement Quality
+# ========================================
+
+# Parâmetros de confiança e qualidade das medições
+measurement_quality:
+  enable_nan_protection: true
+  default_fci_on_nan: 0.5
+  max_history: 1000  # Tamanho máximo do histórico de FCI
+
+# ========================================
+# Real-World Mapping Examples
+# ========================================
+
+# Exemplos de mapeamento dimensão → FCI para dados reais
+real_world_examples:
+  brownian_motion:
+    fractal_dimension: 1.7
+    expected_fci: 0.35  # (1.7 - 1.0) / 2.0
+    state: "ANALYSIS"
+    description: "Movimento browniano fracionário"
+
+  coastline:
+    fractal_dimension: 1.25
+    expected_fci: 0.125  # (1.25 - 1.0) / 2.0
+    state: "COMA"
+    description: "Linha costeira típica"
+
+  neural_activity_high:
+    fractal_dimension: 2.4
+    expected_fci: 0.7  # (2.4 - 1.0) / 2.0
+    state: "MEDITATION"
+    description: "Alta atividade neural organizada"
+
+  neural_activity_peak:
+    fractal_dimension: 2.8
+    expected_fci: 0.9  # (2.8 - 1.0) / 2.0
+    state: "EMERGENCE"
+    description: "Pico de atividade consciente"
+
+# ========================================
+# ========================================
+# Correlation Method
+# ========================================
+
+# Método de cálculo de correlação espacial
+correlation_method:
+  method: "autocorrelation"  # Options: "autocorrelation", "variance_proxy", "corrcoef"
+  fallback_value: 0.5        # Valor padrão se correlação falhar
+  use_absolute_value: true   # Usar valor absoluto da correlação
+  clamp_range: [0.0, 1.0]   # Range de valores permitidos
+
+# ========================================
+# Debug and Logging
+# ========================================
+
+debug:
+  log_fci_calculations: true
+  log_component_details: true
+  warn_on_threshold_violations: true
+  verbose_state_transitions: true
+
+# ======================================================================
+# 🔬 INSTRUÇÕES DE VALIDAÇÃO DO NÚCLEO
+# ======================================================================
+# Para garantir que qualquer alteração nesta configuração não quebre as
+# propriedades matemáticas fundamentais do sistema ΨQRH (como a
+# conservação de energia), execute o teste de validação do núcleo.
+#
+# Este teste verifica:
+#   1. Conservação de Energia
+#   2. Teorema de Parseval (Corretude da FFT)
+#   3. Eficiência de Memória e Parâmetros
+#   4. Propriedades do Quaternion Rotacional
+#
+# COMO EXECUTAR:
+# No diretório raiz do projeto, execute o seguinte comando:
+#
+# make validate-core
+#
+# Se o teste falhar, revise suas configurações ou o código modificado.
+# A normalização de energia agora é obrigatória para garantir a
+# estabilidade do sistema.
+# ======================================================================

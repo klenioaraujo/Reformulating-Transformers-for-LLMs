@@ -1,0 +1,24 @@
+model:
+  embed_dim: 64
+  max_history: 10
+  vocab_size: 256
+  num_heads: 4
+  hidden_dim: 128
+
+physics:
+  I0: 1.0
+  alpha: 1.0
+  beta: 0.5
+  k: 2.0
+  omega: 1.0
+
+system:
+  device: auto
+  enable_components:
+    - quantum_memory
+    - auto_calibration
+    - physical_harmonics
+  validation:
+    energy_conservation: true
+    unitarity: true
+    numerical_stability: true

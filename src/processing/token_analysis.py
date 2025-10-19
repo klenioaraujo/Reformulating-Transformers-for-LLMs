@@ -257,7 +257,7 @@ class DCFTokenAnalysis:
 
     def __init__(self, config_path: Optional[str] = None, device: str = "cpu",
                  enable_cognitive_priming: bool = True, quantum_vocab_representations: Optional[torch.Tensor] = None,
-                 char_to_idx: Optional[Dict[str, int]] = None):
+                 word_to_id: Optional[Dict[str, int]] = None):
         """
         Inicializa sistema DCF com componentes necessários.
 
@@ -266,14 +266,14 @@ class DCFTokenAnalysis:
             device: Dispositivo para computação ('cpu', 'cuda', etc.)
             enable_cognitive_priming: Habilita priming contextual para simulação de vieses cognitivos
             quantum_vocab_representations: Tensor de representações quânticas [vocab_size, embed_dim, 4] (opcional)
-            char_to_idx: Mapeamento caractere -> índice no vocabulário quântico (opcional)
+            word_to_id: Mapeamento palavra -> índice no vocabulário quântico (opcional)
         """
         self.device = device
         self.enable_cognitive_priming = enable_cognitive_priming
 
         # Quantum vocabulary for semantic connectivity
         self.quantum_vocab_representations = quantum_vocab_representations
-        self.char_to_idx = char_to_idx if char_to_idx is not None else {}
+        self.word_to_id = word_to_id if word_to_id is not None else {}
 
         # Usar ConfigManager centralizado
         self.config_manager = get_config_manager()
@@ -300,6 +300,7 @@ class DCFTokenAnalysis:
         print(f"   ⚡ Diffusion: {self.diffusion_engine is not None}")
         print(f"   🧠 Cognitive Priming: {self.priming_modulator is not None}")
         print(f"   📚 Quantum Dictionary: {self.quantum_vocab_representations is not None}")
+        print(f"   📖 Word-to-ID Mapping: {len(self.word_to_id)} entries")
 
     def _load_config(self, config_path: Optional[str]) -> DCFConfig:
         """Carrega configuração DCF usando ConfigManager centralizado"""
@@ -341,12 +342,16 @@ class DCFTokenAnalysis:
             # 2. Consciousness Metrics
             from src.conscience.consciousness_metrics import ConsciousnessMetrics
             consciousness_config = {'device': self.device}
-            metrics_config_path = "configs/consciousness_metrics.yaml"
+            # Usar caminho relativo correto para configs
+            import os
+            base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            metrics_config_path = os.path.join(base_dir, "configs", "consciousness_metrics.yaml")
             if Path(metrics_config_path).exists():
                 import yaml
                 with open(metrics_config_path, 'r') as f:
                     metrics_config = yaml.safe_load(f)
             else:
+                print(f"⚠️  Erro ao carregar configurações YAML: [Errno 2] No such file or directory: '{metrics_config_path}'. Usando configuração fornecida.")
                 metrics_config = {}
             self.consciousness_metrics = ConsciousnessMetrics(consciousness_config, metrics_config)
             self.consciousness_metrics.to(self.device)
@@ -398,6 +403,10 @@ class DCFTokenAnalysis:
 
         # Para simplificar, processar apenas primeiro batch
         logits = logits[0]  # [vocab_size]
+
+        # Garantir que logits é um tensor 1D
+        if logits.dim() > 1:
+            logits = logits.squeeze()
 
         # ========== PASSO 1: CONSTRUÇÃO DA MATRIZ DE CONECTIVIDADE SEMÂNTICA ==========
         print("   🧠 Passo 1: Construindo conectividade semântica...")
@@ -501,11 +510,24 @@ class DCFTokenAnalysis:
 
         # Usar dicionário quântico para conectividade semântica
         if self.quantum_vocab_representations is not None:
+            # Verificar se temos índices válidos para o vocabulário quântico
+            valid_indices = []
+            for idx in top_indices:
+                if idx < self.quantum_vocab_representations.shape[0]:
+                    valid_indices.append(idx)
+                else:
+                    print(f"⚠️  Índice {idx} fora do range do vocabulário quântico (size={self.quantum_vocab_representations.shape[0]})")
+
+            if not valid_indices:
+                raise RuntimeError("Nenhum índice válido encontrado no vocabulário quântico")
+
+            valid_indices = torch.tensor(valid_indices, device=self.device)
+
             # Extrair representações quânticas dos tokens candidatos
-            candidate_quantum = self.quantum_vocab_representations[top_indices]  # [n_candidates, embed_dim, 4]
+            candidate_quantum = self.quantum_vocab_representations[valid_indices]  # [n_candidates, embed_dim, 4]
 
             # Achatar para [n_candidates, embed_dim * 4] para cálculo de similaridade
-            candidate_flattened = candidate_quantum.view(n_candidates, -1)  # [n_candidates, embed_dim * 4]
+            candidate_flattened = candidate_quantum.view(len(valid_indices), -1)  # [n_candidates, embed_dim * 4]
 
             # Calcular similaridade de cosseno entre todos os pares
             normalized_quantum = torch.nn.functional.normalize(candidate_flattened, p=2, dim=-1)
@@ -557,6 +579,18 @@ class DCFTokenAnalysis:
         else:
             # Usar candidatos fornecidos
             top_indices = candidate_indices[:n_candidates]
+            # Verificar se os índices estão dentro do range dos logits
+            valid_indices = []
+            for idx in top_indices:
+                if idx < logits.shape[0]:
+                    valid_indices.append(idx)
+                else:
+                    print(f"⚠️  Índice {idx} fora do range dos logits (size={logits.shape[0]})")
+
+            if not valid_indices:
+                raise RuntimeError("Nenhum índice válido encontrado nos logits")
+
+            top_indices = torch.tensor(valid_indices, device=self.device)
             top_logits = logits[top_indices]
 
         candidate_tokens = top_indices
@@ -574,7 +608,8 @@ class DCFTokenAnalysis:
         kuramoto_input = torch.randn(n_candidates, 1, embed_dim, device=self.device)
 
         # Modificar baseado nas frequências naturais
-        for i in range(n_candidates):
+        actual_n_candidates = len(candidate_tokens)
+        for i in range(actual_n_candidates):
             frequency_factor = natural_frequencies[i].item()
             kuramoto_input[i, 0] *= frequency_factor
 
@@ -703,7 +738,7 @@ class DCFTokenAnalysis:
         phases = torch.angle(kuramoto_output.mean(dim=-1))  # [n_candidates] - fase média por oscilador
 
         # Clustering baseado em proximidade de fase
-        n_candidates = len(phases)
+        n_candidates = min(len(phases), len(candidate_logits))  # Correção para evitar out-of-bounds
         phase_threshold = np.pi / 4  # 45 graus - threshold para considerar "sincronizado"
 
         # Encontrar clusters usando diferença de fase
@@ -733,30 +768,41 @@ class DCFTokenAnalysis:
         # Calcular parâmetros de ordem para cada cluster
         cluster_analysis = []
         for cluster_indices in clusters:
-            cluster_phases = phases[cluster_indices]
+            # Verificar se os índices do cluster são válidos
+            valid_cluster_indices = []
+            for idx in cluster_indices:
+                if idx < len(candidate_logits):
+                    valid_cluster_indices.append(idx)
+                else:
+                    print(f"⚠️  Índice {idx} fora do range dos candidatos (size={len(candidate_logits)})")
+
+            if not valid_cluster_indices:
+                continue
+
+            cluster_phases = phases[valid_cluster_indices]
 
             # Parâmetro de ordem r = |1/N ∑ exp(iθ_j)|
             order_parameter = torch.abs(torch.mean(torch.exp(1j * cluster_phases)))
 
             # Energia média do cluster
-            cluster_logits = candidate_logits[cluster_indices]
-            cluster_amplitudes = torch.norm(kuramoto_output[cluster_indices], dim=-1)
+            cluster_logits = candidate_logits[valid_cluster_indices]
+            cluster_amplitudes = torch.norm(kuramoto_output[valid_cluster_indices], dim=-1)
             mean_energy = cluster_amplitudes.mean()
 
             # Token "líder" do cluster (maior logit)
             leader_idx = torch.argmax(cluster_logits).item()
-            leader_token = candidate_tokens[cluster_indices[leader_idx]].item()
+            leader_token = candidate_tokens[valid_cluster_indices[leader_idx]].item()
             leader_logit = cluster_logits[leader_idx].item()
 
             cluster_info = {
                 'cluster_id': len(cluster_analysis),
-                'size': len(cluster_indices),
+                'size': len(valid_cluster_indices),
                 'order_parameter': order_parameter.item(),
                 'mean_energy': mean_energy.item(),
                 'leader_token': leader_token,
                 'leader_logit': leader_logit,
-                'member_indices': cluster_indices,
-                'member_tokens': candidate_tokens[cluster_indices].tolist(),
+                'member_indices': valid_cluster_indices,
+                'member_tokens': candidate_tokens[valid_cluster_indices].tolist(),
                 'phase_coherence': order_parameter.item()
             }
             cluster_analysis.append(cluster_info)
@@ -843,7 +889,12 @@ class DCFTokenAnalysis:
             print(f"   ⚠️  best_in_cluster ({best_in_cluster}) >= len(cluster_indices) ({len(cluster_indices)}), using 0")
             best_in_cluster = 0
 
-        selected_cluster_idx = cluster_indices[best_in_cluster]
+        # Additional safety check
+        if len(cluster_indices) == 0:
+            print(f"   ⚠️  cluster_indices is empty, using first candidate token")
+            selected_cluster_idx = 0
+        else:
+            selected_cluster_idx = cluster_indices[best_in_cluster]
         selected_token_id = candidate_tokens[selected_cluster_idx].item() if hasattr(candidate_tokens[selected_cluster_idx], 'item') else candidate_tokens[selected_cluster_idx]
 
         # Calcular probabilidade final baseada no score do cluster
@@ -1001,7 +1052,32 @@ def analyze_tokens_dcf(logits: torch.Tensor, config_path: Optional[str] = None,
     Returns:
         Resultado da análise DCF com raciocínio semântico
     """
-    analyzer = DCFTokenAnalysis(config_path=config_path, device=device)
+    # Criar dicionário quântico básico se embeddings forem fornecidos
+    quantum_vocab = None
+    if embeddings is not None:
+        # Verificar se embeddings é um tensor ou um módulo
+        if hasattr(embeddings, 'shape'):
+            # É um tensor
+            vocab_size, embed_dim = embeddings.shape
+            quantum_vocab = torch.zeros(vocab_size, embed_dim, 4, device=device)
+            quantum_vocab[:, :, 0] = embeddings  # Parte real
+            quantum_vocab[:, :, 1] = torch.sin(embeddings)  # Parte imaginária i
+            quantum_vocab[:, :, 2] = torch.cos(embeddings)  # Parte imaginária j
+            quantum_vocab[:, :, 3] = torch.tanh(embeddings)  # Parte imaginária k
+        else:
+            # É um módulo (DynamicQuantumWordMatrix) - criar embeddings básicos
+            print("⚠️  DynamicQuantumWordMatrix detectado - criando embeddings básicos")
+            vocab_size = 50257  # GPT-2 padrão
+            embed_dim = 64  # Dimensão padrão
+            basic_embeddings = torch.randn(vocab_size, embed_dim, device=device)
+            quantum_vocab = torch.zeros(vocab_size, embed_dim, 4, device=device)
+            quantum_vocab[:, :, 0] = basic_embeddings  # Parte real
+            quantum_vocab[:, :, 1] = torch.sin(basic_embeddings)  # Parte imaginária i
+            quantum_vocab[:, :, 2] = torch.cos(basic_embeddings)  # Parte imaginária j
+            quantum_vocab[:, :, 3] = torch.tanh(basic_embeddings)  # Parte imaginária k
+
+    analyzer = DCFTokenAnalysis(config_path=config_path, device=device,
+                               quantum_vocab_representations=quantum_vocab)
     return analyzer.analyze_tokens(logits, embeddings=embeddings)
 
 

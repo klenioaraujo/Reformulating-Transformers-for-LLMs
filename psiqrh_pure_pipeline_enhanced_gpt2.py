@@ -27,7 +27,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE_DIR)
 
 # Import ΨQRH components
-from quantum_character_matrix import QuantumCharacterMatrix
+from quantum_word_matrix import QuantumWordMatrix
 from src.core.dynamic_quantum_matrix import DynamicQuantumMatrix
 from src.core.prime_resonant_filter import PrimeResonantFilter
 
@@ -108,7 +108,7 @@ class EnhancedHilbertSpaceProcessor:
         self.device = device
 
         # Initialize quantum matrix
-        self.quantum_matrix = QuantumCharacterMatrix(
+        self.quantum_matrix = QuantumWordMatrix(
             embed_dim=embed_dim,
             alpha=alpha,
             beta=beta,

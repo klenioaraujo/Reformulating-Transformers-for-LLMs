@@ -1,0 +1,45 @@
+ΨTWS_FILE_FORMAT_v1.0
+MAGIC_HEADER: ΨTWS_SPECTRAL_DATA
+VERSION: 1.0
+CREATION_DATE: 2025-09-30
+ENCRYPTION_LAYERS: 7
+SPECTRAL_DIMENSION: 256
+
+# Training Data Sample 2
+# Advanced Spectral Processing Example
+
+INPUT_TEXT: "Advanced spectral processing with 7-layer encryption ensures secure and efficient text-to-spectrum conversion in the ΨCWS system."
+
+SPECTRAL_DATA:
+  - DIMENSIONS: [256, 128]
+  - COMPRESSION: log
+  - NORMALIZATION: per_channel
+  - ENCODING: utf-8
+  - FFT_BINS: 128
+  - WINDOW_SIZE: 64
+  - HOP_LENGTH: 32
+
+ENCRYPTION_INFO:
+  - LAYER_1: AES-256-GCM
+  - LAYER_2: ChaCha20-Poly1305
+  - LAYER_3: Fernet
+  - LAYER_4: XOR-Custom
+  - LAYER_5: Transposition
+  - LAYER_6: HMAC-AES
+  - LAYER_7: Obfuscation
+
+SCIENTIFIC_MASK:
+  - PATTERN: fractal_gaussian
+  - ENTROPY_THRESHOLD: 0.8
+  - APPLIED: true
+  - MASK_ENTROPY: 0.85
+
+TRAINING_PARAMETERS:
+  - BATCH_SIZE: 32
+  - LEARNING_RATE: 1e-4
+  - MAX_EPOCHS: 100
+  - OPTIMIZER: AdamW
+  - SCHEDULER: cosine
+
+VALIDATION_HASH: b2c3d4e5f67890a1
+END_OF_FILE

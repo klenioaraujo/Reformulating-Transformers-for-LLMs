@@ -1,0 +1,72 @@
+kuramoto_spectral_layer:
+  spatial_grid:
+    height: 32
+    width: 32
+    depth: 1
+    topology: grid_2d
+    periodic_boundary: true
+  oscillator_dynamics:
+    coupling_strength: 1.0
+    natural_frequency_mean: 1.0
+    natural_frequency_std: 0.1
+    phase_coupling_mode: symmetric
+  reaction_diffusion:
+    diffusion_coefficient: 0.1
+    time_step: 0.01
+    num_integration_steps: 10
+    integration_method: euler
+  synchronization:
+    threshold: 0.9
+    enable_adaptive_coupling: true
+    adaptive_coupling_rate: 0.01
+    target_synchronization: 0.85
+  qrh_integration:
+    embed_dim: 64
+    quaternion_multiplier: 4
+    use_residual_connection: true
+    residual_weight: 0.1
+    use_layer_norm: true
+  connectivity:
+    connection_type: distance_based
+    influence_radius: 4.0
+    decay_function: gaussian
+    sigma_connectivity: null
+    normalize_connections: true
+  monitoring:
+    track_synchronization_history: true
+    history_window: 100
+    compute_spatial_coherence: true
+    log_phase_evolution: false
+  performance:
+    use_sparse_connectivity: false
+    enable_caching: true
+    batch_processing: true
+    device: cpu
+  initialization:
+    phase_init_method: random
+    phase_init_scale: 3.14159
+    frequency_init_method: normal
+    seed: null
+  debug:
+    enable_warnings: true
+    validate_energy_conservation: true
+    energy_tolerance: 0.1
+    check_synchronization: true
+    verbose_logging: false
+transformer_integration:
+  layer_position: after_attention
+  use_with_qrh_layer: true
+  use_with_cognitive_filters: true
+  activation_schedule:
+    warmup_steps: 1000
+    activation_probability: 1.0
+    adaptive_activation: false
+advanced:
+  higher_order_interactions: false
+  interaction_order: 2
+  add_noise: false
+  noise_amplitude: 0.01
+  enable_phase_memory: true
+  memory_decay: 0.95
+  compute_fft_spectrum: false
+  spectrum_frequency_bins: 64
