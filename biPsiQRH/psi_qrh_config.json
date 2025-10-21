@@ -1,0 +1,40 @@
+{
+  "model_dim": 512,
+  "num_layers": 6,
+  "num_heads": 8,
+  "max_seq_length": 1024,
+  "vocab_size": 50257,
+  "dropout": 0.1,
+  "learning_rate": 1e-4,
+  "batch_size": 16,
+  "epochs": 10,
+  "semantic_config": {
+    "embedding_dim": 128,
+    "confidence_threshold": 0.7,
+    "context_window": 2
+  },
+  "datasets": {
+    "ag_news": {
+      "classes": 4,
+      "samples": 1000
+    },
+    "imdb": {
+      "classes": 2,
+      "samples": 1000
+    },
+    "rte": {
+      "classes": 2,
+      "samples": 1000
+    },
+    "wnli": {
+      "classes": 2,
+      "samples": 1000
+    }
+  },
+  "baseline_results": {
+    "ag_news": {"accuracy": 0.85},
+    "imdb": {"accuracy": 0.82},
+    "rte": {"accuracy": 0.65},
+    "wnli": {"accuracy": 0.70}
+  }
+}
