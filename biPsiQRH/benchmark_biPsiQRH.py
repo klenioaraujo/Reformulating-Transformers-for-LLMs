@@ -41,9 +41,9 @@ def main():
     print("\nAnálise Comparativa:")
     total_improvement = 0
     for dataset, stats in comparison.items():
-        improvement_pct = stats['improvement'] * 100
+        improvement_pct = stats['improvement']
         semantic_rate_pct = stats['semantic_usage_rate'] * 100
-        print(f"{dataset}: {improvement_pct:.2%} de melhoria")
+        print(f"{dataset}: {improvement_pct:.2f}% de melhoria")
         print(".2f")
         total_improvement += improvement_pct
 

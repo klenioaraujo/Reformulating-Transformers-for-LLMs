@@ -54,7 +54,7 @@ class PsiQRHEvaluator:
             comparison[dataset] = {
                 'old_accuracy': old_accuracy,
                 'new_accuracy': new_results['accuracy'],
-                'improvement': new_results['accuracy'] - old_accuracy,
+                'improvement': ((new_results['accuracy'] - old_accuracy) / old_accuracy) * 100 if old_accuracy > 0 else 0,
                 'semantic_usage_rate': new_results['semantic_usage']
             }
 
