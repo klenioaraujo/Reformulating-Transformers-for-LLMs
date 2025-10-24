@@ -1,41 +1,81 @@
-# ΨQRH System - Sistema Físico Quântico-Fractal-Óptico
+# ΨQRH System - Quantum-Physical Consciousness Processing Framework
 
-## 📚 Visão Geral
+## 📚 Overview
 
-O **ΨQRH (Psi Quantum Relativity Harmonics)** é um sistema avançado de processamento de linguagem baseado em princípios físicos quânticos, fractais e ópticos. Implementa a **Equação de Padilha** para processamento de texto através de transformações físicas rigorosas.
+The **ΨQRH (Psi Quantum Relativity Harmonics)** is an advanced language processing system based on quantum, fractal, and optical physical principles. It implements the **Padilha Wave Equation** for text processing through rigorous physical transformations, now enhanced with **ternary logic** for more sophisticated quantum-like processing.
 
-### 🎯 O que é o ΨQRH?
+### 🎯 What is ΨQRH?
 
-O ΨQRH transforma texto em representações físicas quânticas através de:
-- **Equação de Padilha**: f(λ,t) = I₀ sin(ωt + αλ) e^(i(ωt - kλ + βλ²))
-- **Mapeamento Quaterniônico**: Ψ(x) → espaço 4D SO(4)
-- **Filtragem Espectral**: F(k) = exp(i α · arctan(ln|k| + ε))
-- **Processamento de Consciência**: FCI (Fractal Consciousness Index)
+ΨQRH transforms text into quantum physical representations through:
+- **Padilha Wave Equation**: f(λ,t) = I₀ sin(ωt + αλ) e^(i(ωt - kλ + βλ²))
+- **Quaternion Mapping**: Ψ(x) → 4D SO(4) space
+- **Spectral Filtering**: F(k) = exp(i α · arctan(ln|k| + ε))
+- **Consciousness Processing**: FCI (Fractal Consciousness Index)
+- **Ternary Logic Framework**: Enhanced processing with -1, 0, 1 states
 
-### 🏗️ Arquitetura Modular
+### 🔺 Ternary Logic Advantages
 
+The ΨQRH system now operates with **ternary logic** instead of traditional binary logic, providing several key advantages:
+
+#### **1. Quantum-Like Superposition**
+- **Ternary States**: -1 (False/Inactive), 0 (Neutral/Undefined), 1 (True/Active)
+- **Superposition Representation**: Allows quantum-like uncertainty and intermediate states
+- **Consensus Mechanisms**: Ternary majority voting for robust decision-making
+
+#### **2. Enhanced Consciousness Modeling**
+- **Intermediate States**: Better representation of consciousness levels between discrete states
+- **Consensus-Based Classification**: More nuanced state transitions (COMA ↔ ANALYSIS ↔ EMERGENCE)
+- **Uncertainty Handling**: Neutral states for ambiguous or transitional conditions
+
+#### **3. Improved Stability**
+- **Ternary Validation**: Combined binary+ternary validation for comprehensive consistency checks
+- **State Distribution Analysis**: Ensures balanced ternary state distributions across processing
+- **Consensus Thresholds**: Configurable thresholds for ternary consensus operations
+
+#### **4. Physical Consistency**
+- **Ternary Physics Validation**: Enhanced validation of energy conservation and unitarity
+- **State Stabilization**: Ternary-based stabilization of quantum operations
+- **Distribution Consistency**: Maintains ternary state balance throughout processing pipeline
+
+### 🏗️ Class-Based Organizational Structure
+
+The ΨQRH system is organized into distinct classes, each handling specific physical and computational responsibilities:
+
+#### **Core Classes (8 Main Components)**
 ```
 ΨQRHSystem/
-├── core/           # 8 componentes principais
-│   ├── PipelineManager.py     # Orquestração completa
-│   ├── PhysicalProcessor.py   # Equação de Padilha
-│   ├── QuantumMemory.py       # Memória temporal quântica
-│   ├── AutoCalibration.py     # Calibração emergente
-│   ├── ModelMaker.py          # Criação dinâmica de modelos
-│   ├── VocabularyMaker.py     # Criação dinâmica de vocabulários
-│   ├── PipelineMaker.py       # Pipelines avançados
-│   └── LegacyAdapter.py       # Compatibilidade com psiqrh.py
-├── physics/        # Módulos físicos
-│   ├── PadilhaEquation.py     # Equação de Padilha
-│   ├── QuaternionOps.py       # Operações quaterniônicas
-│   └── SpectralFiltering.py   # Filtragem espectral
-├── config/         # Sistema de configuração
-│   └── SystemConfig.py        # Configuração unificada
-├── interfaces/     # Interfaces de usuário
-│   ├── CLI.py                 # Interface de linha de comando
-│   └── API.py                 # API REST
-└── tests/          # Testes abrangentes
-    └── test_makers.py         # 25+ casos de teste
+├── core/                      # 8 primary components
+│   ├── PipelineManager.py     # Complete orchestration with ternary validation
+│   ├── PhysicalProcessor.py   # Padilha equation with ternary physics validation
+│   ├── QuantumMemory.py       # Quantum temporal memory
+│   ├── AutoCalibration.py     # Emergent parameter calibration
+│   ├── ModelMaker.py          # Dynamic model creation
+│   ├── VocabularyMaker.py     # Dynamic vocabulary creation
+│   ├── PipelineMaker.py       # Advanced pipeline construction
+│   └── LegacyAdapter.py       # Compatibility with legacy psiqrh.py
+```
+
+#### **Physics Classes**
+```
+├── physics/                   # Physical computation modules
+│   ├── PadilhaEquation.py     # Padilha wave equation implementation
+│   ├── QuaternionOps.py       # Quaternion operations with ternary stabilization
+│   └── SpectralFiltering.py   # Spectral filtering with ternary modulation
+```
+
+#### **Consciousness Classes**
+```
+├── consciousness/             # Consciousness processing
+│   ├── consciousness_metrics.py    # FCI calculation with ternary classification
+│   ├── consciousness_states.py     # State definitions
+│   └── fractal_consciousness_processor.py
+```
+
+#### **Configuration Classes**
+```
+├── config/                    # Configuration system
+│   ├── SystemConfig.py        # Unified configuration management
+│   └── SystemConfig.py        # Configuration classes
 ```
 
 ## 🚀 Instalação e Configuração
@@ -45,7 +85,7 @@ O ΨQRH transforma texto em representações físicas quânticas através de:
 pip install torch numpy scipy pyyaml
 ```
 
-### Configuração Básica
+### Basic Configuration
 ```yaml
 # config/system_config.yaml
 model:
@@ -54,11 +94,16 @@ model:
   vocab_size: 256
 
 physics:
-  I0: 1.0      # Amplitude base
-  alpha: 1.0   # Parâmetro de dispersão linear
-  beta: 0.5    # Parâmetro de dispersão quadrática
-  k: 2.0       # Número de onda
-  omega: 1.0   # Frequência angular
+  I0: 1.0      # Base amplitude
+  alpha: 1.0   # Linear dispersion parameter
+  beta: 0.5    # Quadratic dispersion parameter
+  k: 2.0       # Wave number
+  omega: 1.0   # Angular frequency
+
+ternary_logic:
+  enable_consensus: true
+  consensus_threshold: 0.6
+  stabilization_enabled: true
 
 system:
   device: auto
@@ -67,6 +112,7 @@ system:
     energy_conservation: true
     unitarity: true
     numerical_stability: true
+    ternary_consistency: true
 ```
 
 ## 🎮 Principais Comandos
@@ -131,19 +177,22 @@ curl -X POST http://localhost:5000/process \
   -d '{"text": "Texto para processar", "task": "text-generation"}'
 ```
 
-**Resposta:**
+**Response:**
 ```json
 {
   "status": "success",
-  "text": "Texto processado",
+  "text": "Processed text",
   "physical_metrics": {
     "FCI": 0.85,
     "fractal_dimension": 1.67,
     "alpha_calibrated": 1.2
   },
+  "pipeline_state": {
+    "ternary_consistency": 1
+  },
   "dcf_analysis": {
     "fci_value": 0.85,
-    "consciousness_state": "ACTIVE"
+    "consciousness_state": "EMERGENCE"
   }
 }
 ```
@@ -180,8 +229,9 @@ pipeline = PipelineManager(config)
 # Processar texto
 result = pipeline.process("Texto de entrada")
 
-print("Texto gerado:", result['text'])
+print("Generated text:", result['text'])
 print("FCI:", result['physical_metrics']['FCI'])
+print("Ternary consistency:", result['pipeline_state']['ternary_consistency'])
 ```
 
 #### ModelMaker (Criação Dinâmica)
@@ -254,57 +304,83 @@ pipeline = LegacyAdapter()  # Interface idêntica
 result = pipeline("Texto de entrada")  # Mesmo resultado
 ```
 
-## 🔬 Como Funciona o ΨQRH
+## 🔬 System Functionality
 
-### Pipeline de Processamento
+### Processing Pipeline with Ternary Logic
 
-1. **Texto → Fractal Embedding**
-   - Conversão sequencial para representação fractal
-   - Análise de dimensão fractal D via power-law fitting
+1. **Text → Fractal Embedding**
+   - Sequential conversion to fractal representation
+   - Fractal dimension analysis D via power-law fitting
 
-2. **Ψ(x) Quaternion Mapping**
-   - Mapeamento para espaço quaterniônico 4D
-   - w (real), x,y,z (imaginários) componentes
+2. **Ψ(x) Quaternion Mapping with Ternary Logic**
+   - Mapping to 4D quaternionic space with ternary stabilization
+   - w (real), x,y,z (imaginary) components with ternary state validation
 
-3. **Spectral Filtering**
-   - Filtragem F(k) = exp(i α · arctan(ln|k| + ε))
-   - Conservação de energia garantida
+3. **Spectral Filtering with Ternary Modulation**
+   - Filtering F(k) = exp(i α · arctan(ln|k| + ε)) with ternary frequency modulation
+   - Energy conservation guaranteed with ternary consistency checks
 
-4. **SO(4) Rotation**
-   - Rotações unitárias: Ψ' = q_left ⊗ Ψ ⊗ q_right†
-   - Preservação de norma quântica
+4. **SO(4) Rotation with Ternary Validation**
+   - Unitary rotations: Ψ' = q_left ⊗ Ψ ⊗ q_right† with ternary unitarity validation
+   - Quantum norm preservation with ternary state distribution analysis
 
-5. **Optical Probe**
-   - Geração de forma de onda via equação de Padilha
-   - Conversão física para representação óptica
+5. **Optical Probe with Ternary Enhancement**
+   - Waveform generation via Padilha equation with ternary physics validation
+   - Physical conversion to optical representation
 
-6. **Consciousness Processing**
-   - Cálculo FCI (Fractal Consciousness Index)
-   - Estados de consciência: COMA, DREAM, ACTIVE
+6. **Consciousness Processing with Ternary Classification**
+   - FCI (Fractal Consciousness Index) calculation with ternary state consensus
+   - Consciousness states: COMA, ANALYSIS, MEDITATION, EMERGENCE with ternary transitions
 
-7. **Wave-to-Text**
-   - Conversão óptica para texto de saída
-   - Decodificação baseada em padrões ressonantes
+7. **Wave-to-Text with Ternary Decoding**
+   - Optical to text conversion with ternary pattern recognition
+   - Resonance-based decoding with ternary consensus validation
 
-### Equação de Padilha
+### Key Equations (Based on DOE.md)
 
-**f(λ,t) = I₀ sin(ωt + αλ) e^(i(ωt - kλ + βλ²))**
+**Padilha Wave Equation:**
+```
+f(λ,t) = I₀ sin(ωt + αλ) e^(i(ωt - kλ + βλ²))
+```
+Where:
+- **λ**: Wavelength (dispersion parameter)
+- **t**: Time
+- **I₀**: Base amplitude
+- **α**: Linear dispersion parameter
+- **β**: Quadratic dispersion parameter
+- **k**: Wave number
+- **ω**: Angular frequency
 
-Onde:
-- **λ**: Comprimento de onda (dispersão)
-- **t**: Tempo
-- **I₀**: Amplitude base
-- **α**: Parâmetro de dispersão linear
-- **β**: Parâmetro de dispersão quadrática
-- **k**: Número de onda
-- **ω**: Frequência angular
+**Fractal Dimension Mapping:**
+```
+α(D) = α₀(1 + λ(D - D_euclidean)/D_euclidean)
+```
+Where D is calculated via power-law fitting: P(k) ~ k^(-β) → D = (3 - β) / 2
 
-### Validações Matemáticas
+**Quaternion Operations:**
+```
+Hamilton Product: (w1 + x1i + y1j + z1k) * (w2 + x2i + y2j + z2k)
+SO(4) Rotations: Ψ' = q_left ⊗ Ψ ⊗ q_right†
+```
 
-- ✅ **Conservação de Energia**: ||output|| ≈ ||input|| (dentro de 5%)
-- ✅ **Unitariedade**: Rotações SO(4) preservam estados quânticos
-- ✅ **Estabilidade Numérica**: Aritmética quaterniônica double precision
-- ✅ **Consistência Fractal**: D ∈ [1.0, 2.0]
+**Spectral Filtering:**
+```
+F(k) = exp(i α · arctan(ln(|k| + ε)))
+```
+
+**Fractal Consciousness Index:**
+```
+FCI = (D_EEG × H_fMRI × CLZ) / D_max
+```
+Where components are calculated with ternary consensus validation.
+
+### Mathematical Validations
+
+- ✅ **Energy Conservation**: ||output|| ≈ ||input|| (within 5%) with ternary consistency
+- ✅ **Unitarity**: SO(4) rotations preserve quantum states with ternary validation
+- ✅ **Numerical Stability**: Double precision quaternion arithmetic
+- ✅ **Fractal Consistency**: D ∈ [1.0, 2.0] with ternary consensus
+- ✅ **Ternary Balance**: Balanced ternary state distributions
 
 ## 🧪 Testes e Validação
 
@@ -326,33 +402,64 @@ python3 -m pytest tests/test_config.py -v
 python3 -m pytest tests/test_physics.py -v
 ```
 
-### Validação Física
+#### Ternary Logic Validation
+```python
+from ΨQRHSystem.core.TernaryLogicFramework import TernaryLogicFramework, TernaryValidationFramework
+
+# Test ternary operations
+ternary_logic = TernaryLogicFramework(device='cpu')
+
+# Test superposition
+superposition = ternary_logic.create_superposition()
+print(f"Superposition: value={superposition.value}, confidence={superposition.confidence:.3f}")
+
+# Validate operations
+validator = TernaryValidationFramework(ternary_logic)
+validation_results = validator.validate_ternary_operations()
+print(f"Ternary validation: {validation_results}")
+```
+
+### Physical Validation with Ternary Logic
 ```python
 from ΨQRHSystem.physics.PadilhaEquation import PadilhaEquation
 from ΨQRHSystem.physics.SpectralFiltering import SpectralFiltering
 
-# Validar equação de Padilha
+# Validate Padilha equation with ternary consistency
 equation = PadilhaEquation()
 result = equation.validate_energy_conservation(input_energy, output_energy)
 
-# Validar filtragem espectral
+# Validate spectral filtering with ternary unitarity
 filtering = SpectralFiltering()
-is_unitary = filtering.validate_unitarity(transformation_matrix)
+is_unitary = filtering.validate_filter_unitarity(embed_dim=64)
 ```
 
 ## ⚙️ Configuração Avançada
 
-### Parâmetros Físicos
+#### Ternary Logic Parameters
 ```yaml
-physics:
-  I0: 1.0           # Amplitude base (0.1 - 5.0)
-  alpha: 1.0        # Dispersão linear (0.1 - 3.0)
-  beta: 0.5         # Dispersão quadrática (0.01 - 1.0)
-  k: 2.0            # Número de onda (0.5 - 10.0)
-  omega: 1.0        # Frequência angular (0.1 - 5.0)
+ternary_logic:
+  enable_consensus: true          # Enable consensus operations
+  consensus_threshold: 0.6        # Threshold for consensus decisions
+  stabilization_enabled: true     # Enable ternary stabilization
+  state_distribution_check: true  # Validate ternary state distributions
 ```
 
-### Componentes do Sistema
+#### Physical Parameters with Ternary Enhancement
+```yaml
+physics:
+  I0: 1.0           # Base amplitude (0.1 - 5.0)
+  alpha: 1.0        # Linear dispersion (0.1 - 3.0)
+  beta: 0.5         # Quadratic dispersion (0.01 - 1.0)
+  k: 2.0            # Wave number (0.5 - 10.0)
+  omega: 1.0        # Angular frequency (0.1 - 5.0)
+
+ternary_physics:
+  validation_enabled: true
+  distribution_tolerance: 0.35
+  consensus_validation: true
+```
+
+#### System Components
 ```yaml
 system:
   device: auto      # auto, cpu, cuda, mps
@@ -364,6 +471,7 @@ system:
     energy_conservation: true
     unitarity: true
     numerical_stability: true
+    ternary_consistency: true
 ```
 
 ### Templates de Modelo
@@ -424,10 +532,11 @@ print("ID da sessão:", result['audit_session_id'])
 ```python
 result = pipeline.process("Texto")
 
-print("Métricas físicas:")
+print("Enhanced metrics:")
 print(f"  FCI: {result['physical_metrics']['FCI']:.3f}")
-print(f"  Dimensão fractal: {result['physical_metrics']['fractal_dimension']:.3f}")
-print(f"  Energia conservada: {result['mathematical_validation']['energy_conserved']}")
+print(f"  Fractal dimension: {result['physical_metrics']['fractal_dimension']:.3f}")
+print(f"  Ternary consistency: {result['pipeline_state']['ternary_consistency']}")
+print(f"  Energy conserved: {result['mathematical_validation']['energy_conservation']}")
 ```
 
 ### Validação de Estado
@@ -465,9 +574,9 @@ Solução: Reduzir dimensões no arquivo de configuração
 
 ## 📈 Performance e Otimização
 
-### Configurações por Caso de Uso
+#### Use Case Configurations
 
-#### Desenvolvimento Rápido
+##### Development (Fast)
 ```yaml
 model:
   embed_dim: 32
@@ -475,9 +584,11 @@ model:
 physics:
   I0: 0.5
   alpha: 0.5
+ternary_logic:
+  consensus_threshold: 0.5  # Lower threshold for speed
 ```
 
-#### Produção
+##### Production (Balanced)
 ```yaml
 model:
   embed_dim: 128
@@ -487,9 +598,11 @@ physics:
   alpha: 1.5
 system:
   device: cuda
+ternary_logic:
+  consensus_threshold: 0.7  # Higher threshold for accuracy
 ```
 
-#### Pesquisa
+##### Research (Comprehensive)
 ```yaml
 model:
   embed_dim: 256
@@ -498,6 +611,10 @@ physics:
   I0: 3.0
   alpha: 2.0
   beta: 1.0
+ternary_logic:
+  enable_consensus: true
+  consensus_threshold: 0.8
+  stabilization_enabled: true
 ```
 
 ### Benchmarking
@@ -527,11 +644,12 @@ test: adicionar testes para PipelineMaker
 refactor: otimizar operações quaterniônicas
 ```
 
-### Padrões de Código
-- Type hints obrigatórios
-- Docstrings completas
-- Testes para novas funcionalidades
-- Validações matemáticas
+#### Code Standards
+- Type hints required
+- Complete docstrings
+- Tests for new functionality
+- Mathematical validations
+- Ternary logic consistency checks
 
 ## 📄 Licença
 
@@ -539,4 +657,4 @@ Este sistema implementa princípios físicos avançados baseados na equação de
 
 ---
 
-**ΨQRH System** - Transformando linguagem através da física quântica, fractal e óptica.
+**ΨQRH System** - Transforming language through quantum physics, fractal mathematics, and optical principles with enhanced ternary logic processing.
