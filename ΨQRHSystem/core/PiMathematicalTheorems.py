@@ -1,9 +1,9 @@
 import torch
 import numpy as np
 from typing import Dict, Any, Optional, List, Tuple
-from core.EnergyConservation import EnergyConservation
-from core.PiAutoCalibration import PiAutoCalibration
-from core.TernaryLogicFramework import TernaryLogicFramework
+from ΨQRHSystem.core.EnergyConservation import EnergyConservation
+from ΨQRHSystem.core.PiAutoCalibration import PiAutoCalibration
+from ΨQRHSystem.core.TernaryLogicFramework import TernaryLogicFramework
 
 
 class PiMathematicalTheorems:

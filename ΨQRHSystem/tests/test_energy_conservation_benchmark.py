@@ -1,10 +1,10 @@
 import torch
 import numpy as np
 import unittest
-from core.EnergyConservation import EnergyConservation
-from core.PiAutoCalibration import PiAutoCalibration
-from core.EnergyPreservingLayer import EnergyPreservingLayer, EnergyPreservingNetwork
-from core.PiMathematicalTheorems import PiMathematicalTheorems
+from ΨQRHSystem.core.EnergyConservation import EnergyConservation
+from ΨQRHSystem.core.PiAutoCalibration import PiAutoCalibration
+from ΨQRHSystem.core.EnergyPreservingLayer import EnergyPreservingLayer, EnergyPreservingNetwork
+from ΨQRHSystem.core.PiMathematicalTheorems import PiMathematicalTheorems
 
 
 class TestEnergyConservationBenchmark(unittest.TestCase):

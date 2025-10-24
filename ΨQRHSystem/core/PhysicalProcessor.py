@@ -2,21 +2,11 @@ import torch
 import numpy as np
 import math
 from typing import Dict, Any, Optional, Tuple
-from configs.SystemConfig import SystemConfig
-from core.TernaryLogicFramework import TernaryLogicFramework
+from ΨQRHSystem.configs.SystemConfig import SystemConfig
+from ΨQRHSystem.core.TernaryLogicFramework import TernaryLogicFramework
 
-# Importar QuantumWordMatrix para decodificação semântica
-try:
-    from quantum_word_matrix import QuantumWordMatrix
-    HAS_QUANTUM_WORD_MATRIX = True
-except ImportError:
-    try:
-        from src.core.dynamic_quantum_matrix import DynamicQuantumWordMatrix
-        HAS_QUANTUM_WORD_MATRIX = True
-        QuantumWordMatrix = DynamicQuantumWordMatrix
-    except ImportError:
-        HAS_QUANTUM_WORD_MATRIX = False
-        QuantumWordMatrix = None
+# Importar QuantumWordMatrix para decodificação semântica obrigatória
+from quantum_word_matrix import QuantumWordMatrix
 
 
 class PhysicalProcessor:
@@ -51,37 +41,31 @@ class PhysicalProcessor:
         # Inicializar lógica ternária
         self.ternary_logic = TernaryLogicFramework(device=self.device)
 
-        # Inicializar QuantumWordMatrix para decodificação semântica
-        self.quantum_word_matrix = None
-        if HAS_QUANTUM_WORD_MATRIX:
-            try:
-                # Carregar vocabulário GPT-2 (padrão do sistema)
-                vocab_path = "data/native_vocab.json"
-                import json
-                with open(vocab_path, 'r') as f:
-                    vocab_data = json.load(f)
+        # Inicializar QuantumWordMatrix obrigatória para decodificação semântica
+        try:
+            # Carregar vocabulário GPT-2 (padrão do sistema)
+            vocab_path = "data/native_vocab.json"
+            import json
+            with open(vocab_path, 'r') as f:
+                vocab_data = json.load(f)
 
-                word_to_id = vocab_data.get('token_to_id', {})
-                id_to_word = vocab_data.get('id_to_token', {})
+            word_to_id = vocab_data.get('token_to_id', {})
+            id_to_word = vocab_data.get('id_to_token', {})
 
-                if word_to_id and id_to_word:
-                    self.quantum_word_matrix = QuantumWordMatrix(
-                        embed_dim=config.model.embed_dim,
-                        device=self.device,
-                        word_to_id=word_to_id,
-                        id_to_word=id_to_word
-                    )
-                    print("✅ QuantumWordMatrix inicializada com vocabulário GPT-2 (50.257 tokens)")
-                else:
-                    print("❌ ERRO: Vocabulário GPT-2 não encontrado. Sistema requer vocabulário GPT-2 para operação.")
-                    raise RuntimeError("Vocabulário GPT-2 obrigatório não encontrado")
-            except Exception as e:
-                print(f"❌ ERRO: Falha na inicialização do QuantumWordMatrix: {e}")
-                print("   Sistema requer QuantumWordMatrix com vocabulário GPT-2 para operação.")
-                raise RuntimeError("QuantumWordMatrix com vocabulário GPT-2 obrigatório falhou")
-        else:
-            print("❌ ERRO: QuantumWordMatrix não disponível. Sistema requer QuantumWordMatrix para operação.")
-            raise RuntimeError("QuantumWordMatrix obrigatório não disponível")
+            if word_to_id and id_to_word:
+                self.quantum_word_matrix = QuantumWordMatrix(
+                    embed_dim=config.model.embed_dim,
+                    device=str(self.device),
+                    word_to_id=word_to_id,
+                    id_to_word=id_to_word
+                )
+                print("✅ QuantumWordMatrix inicializada com vocabulário GPT-2 (50.257 tokens)")
+            else:
+                raise RuntimeError("Vocabulário GPT-2 obrigatório não encontrado")
+        except Exception as e:
+            print(f"❌ ERRO: Falha na inicialização do QuantumWordMatrix: {e}")
+            print("   Sistema requer QuantumWordMatrix com vocabulário GPT-2 para operação.")
+            raise RuntimeError("QuantumWordMatrix com vocabulário GPT-2 obrigatório falhou")
 
         print(f"🔬 Physical Processor inicializado com equação de Padilha e lógica ternária")
         print(f"   f(λ,t) = {self.I0} sin({self.omega}t + {self.alpha}λ) e^(i({self.omega}t - {self.k}λ + {self.beta}λ²))")

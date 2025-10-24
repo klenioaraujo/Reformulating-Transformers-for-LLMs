@@ -12,8 +12,8 @@ from typing import Dict, Any, Optional, List
 import os
 import sys
 
-from configs.SystemConfig import SystemConfig
-from core.UnifiedPipelineManager import UnifiedPipelineManager
+from ΨQRHSystem.configs.SystemConfig import SystemConfig
+from ΨQRHSystem.core.UnifiedPipelineManager import UnifiedPipelineManager
 
 
 class LegacyAdapter:

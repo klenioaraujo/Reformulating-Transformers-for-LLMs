@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 from typing import Dict, Any, Optional, List, Tuple
-from configs.SystemConfig import SystemConfig
+from ΨQRHSystem.configs.SystemConfig import SystemConfig
 
 
 class AutoCalibration:

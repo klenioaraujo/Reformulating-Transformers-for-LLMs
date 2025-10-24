@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 from typing import Dict, Any, Optional, List, Tuple
-from core.TernaryLogicFramework import TernaryLogicFramework
+from ΨQRHSystem.core.TernaryLogicFramework import TernaryLogicFramework
 
 
 class EnergyConservation:

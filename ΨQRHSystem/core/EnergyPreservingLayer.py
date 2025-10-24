@@ -1,9 +1,9 @@
 import torch
 import torch.nn as nn
 from typing import Dict, Any, Optional, List, Tuple
-from core.PiAutoCalibration import PiAutoCalibration
-from core.EnergyConservation import EnergyConservation
-from core.TernaryLogicFramework import TernaryLogicFramework
+from ΨQRHSystem.core.PiAutoCalibration import PiAutoCalibration
+from ΨQRHSystem.core.EnergyConservation import EnergyConservation
+from ΨQRHSystem.core.TernaryLogicFramework import TernaryLogicFramework
 
 
 class EnergyPreservingLayer(nn.Module):

@@ -10,7 +10,7 @@ from pathlib import Path
 # Adicionar o diretório pai ao sys.path para permitir importações relativas
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from core.Orchestrator import Orchestrator
+from ΨQRHSystem.core.Orchestrator import Orchestrator
 
 class EnhancedCLI:
     """

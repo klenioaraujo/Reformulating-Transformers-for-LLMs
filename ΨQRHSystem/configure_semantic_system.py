@@ -22,8 +22,8 @@ PROJECT_ROOT = os.path.dirname(BASE_DIR)
 sys.path.insert(0, PROJECT_ROOT)
 
 try:
-    from configs.SystemConfig import SystemConfig
-    from core.PipelineManager import PipelineManager
+    from ΨQRHSystem.configs.SystemConfig import SystemConfig
+    from ΨQRHSystem.core.PipelineManager import PipelineManager
     from interfaces.CLI import ΨQRHCLI
     from quantum_word_matrix import QuantumWordMatrix
 except ImportError as e:
@@ -142,37 +142,18 @@ class SemanticSystemConfigurator:
             self.token_count = vocab_size
 
         else:
-            # Fallback: Vocabulário padrão semântico
-            print("📚 Usando vocabulário semântico padrão (fallback)")
-            word_to_id = {
-                'quantum': 0, 'consciousness': 1, 'fractal': 2, 'energy': 3,
-                'harmonic': 4, 'resonance': 5, 'coherence': 6, 'entanglement': 7,
-                'dimension': 8, 'field': 9, 'wave': 10, 'particle': 11,
-                'probability': 12, 'state': 13, 'transformation': 14,
-                'optical': 15, 'spectral': 16, 'temporal': 17, 'spatial': 18,
-                'geometric': 19, 'processing': 20, 'completed': 21, 'result': 22
-            }
-            id_to_word = {v: k for k, v in word_to_id.items()}
-
-            self.quantum_word_matrix = QuantumWordMatrix(
-                embed_dim=64,
-                device='cpu',
-                word_to_id=word_to_id,
-                id_to_word=id_to_word
+            # ZERO FALLBACK POLICY: Não usar vocabulário hardcoded
+            # O sistema deve falhar claramente se não conseguir carregar vocabulário GPT-2
+            raise RuntimeError(
+                "❌ ZERO FALLBACK POLICY VIOLATION: Não foi possível carregar vocabulário GPT-2.\n"
+                "O sistema ΨQRH requer vocabulário GPT-2 selecionado para geração de texto rica em semântica.\n"
+                "Certifique-se de que existe um arquivo de vocabulário GPT-2 válido em:\n"
+                "  - data/native_vocab.json\n"
+                "  - ../data/native_vocab.json\n"
+                "  - dynamic_quantum_vocabulary.json\n"
+                "  - ../dynamic_quantum_vocabulary.json\n"
+                "Ou especifique o caminho via --vocab ou variável SEMANTIC_VOCAB_PATH"
             )
-
-            self.semantic_vocab = {
-                'word_to_id': word_to_id,
-                'id_to_word': id_to_word,
-                'vocab_size': len(word_to_id),
-                'model_name': 'semantic_fallback',
-                'metadata': {
-                    'type': 'semantic_fallback',
-                    'size': len(word_to_id),
-                    'description': 'Vocabulário semântico de fallback'
-                }
-            }
-            self.token_count = len(word_to_id)
 
         return self.semantic_vocab
 

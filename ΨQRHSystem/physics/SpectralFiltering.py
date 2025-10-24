@@ -2,7 +2,7 @@ import torch
 import numpy as np
 import math
 from typing import Dict, Any, Optional, Tuple, List
-from core.TernaryLogicFramework import TernaryLogicFramework
+from ΨQRHSystem.core.TernaryLogicFramework import TernaryLogicFramework
 
 
 class SpectralFiltering:

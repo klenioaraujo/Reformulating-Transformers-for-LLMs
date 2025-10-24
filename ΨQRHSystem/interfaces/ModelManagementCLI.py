@@ -32,8 +32,8 @@ except ImportError:
     except ImportError:
         # Último fallback - importar diretamente
         sys.path.insert(0, os.path.join(project_root, 'ΨQRHSystem'))
-        from core.MultiModelManager import MultiModelManager
-        from core.ModelRegistry import ModelRegistry
+        from ΨQRHSystem.core.MultiModelManager import MultiModelManager
+        from ΨQRHSystem.core.ModelRegistry import ModelRegistry
 
 class ModelManagementCLI:
     """

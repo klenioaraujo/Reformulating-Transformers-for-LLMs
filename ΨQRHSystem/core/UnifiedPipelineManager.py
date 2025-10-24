@@ -14,12 +14,12 @@ import json
 import yaml
 from datetime import datetime
 
-from configs.SystemConfig import SystemConfig
-from core.PhysicalProcessor import PhysicalProcessor
-from core.QuantumMemory import QuantumMemory
-from core.AutoCalibration import AutoCalibration
-from core.SemanticModelLoader import EnhancedSemanticModelLoader
-from core.SpectralOutputGenerator import SpectralOutputGenerator
+from ΨQRHSystem.configs.SystemConfig import SystemConfig
+from ΨQRHSystem.core.PhysicalProcessor import PhysicalProcessor
+from ΨQRHSystem.core.QuantumMemory import QuantumMemory
+from ΨQRHSystem.core.AutoCalibration import AutoCalibration
+from ΨQRHSystem.core.SemanticModelLoader import EnhancedSemanticModelLoader
+from ΨQRHSystem.core.SpectralOutputGenerator import SpectralOutputGenerator
 
 
 class UnifiedPipelineManager:

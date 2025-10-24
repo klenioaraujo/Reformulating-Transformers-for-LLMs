@@ -12,7 +12,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from ΨQRHSystem.core.ModelMaker import ModelMaker
 from ΨQRHSystem.core.VocabularyMaker import VocabularyMaker
 from ΨQRHSystem.core.PipelineMaker import PipelineMaker
-from configs.SystemConfig import SystemConfig
+from ΨQRHSystem.configs.SystemConfig import SystemConfig
 
 
 class TestModelMaker(unittest.TestCase):

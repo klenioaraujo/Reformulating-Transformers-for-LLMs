@@ -18,7 +18,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE_DIR)
 sys.path.insert(0, os.path.dirname(BASE_DIR))
 
-from configs.SystemConfig import SystemConfig
+from ΨQRHSystem.configs.SystemConfig import SystemConfig
 from ..core.PipelineManager import PipelineManager
 
 

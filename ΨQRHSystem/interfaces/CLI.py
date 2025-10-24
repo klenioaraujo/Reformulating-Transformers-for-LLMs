@@ -20,8 +20,8 @@ sys.path.insert(0, BASE_DIR)
 sys.path.insert(0, project_root)
 
 try:
-    from configs.SystemConfig import SystemConfig
-    from core.PipelineManager import PipelineManager
+    from ΨQRHSystem.configs.SystemConfig import SystemConfig
+    from ΨQRHSystem.core.PipelineManager import PipelineManager
 except ImportError:
     # Fallback para imports relativos
     try:
@@ -30,8 +30,8 @@ except ImportError:
     except ImportError:
         # Último fallback - adicionar caminho absoluto
         sys.path.insert(0, os.path.dirname(project_root))
-        from configs.SystemConfig import SystemConfig
-        from core.PipelineManager import PipelineManager
+        from ΨQRHSystem.configs.SystemConfig import SystemConfig
+        from ΨQRHSystem.core.PipelineManager import PipelineManager
 
 
 class ΨQRHCLI:
@@ -92,19 +92,20 @@ class ΨQRHCLI:
 
     def process_text(self, text: str, **kwargs) -> Dict[str, Any]:
         """
-        Processa texto através do pipeline
+        Processa texto através do pipeline usando Sistema DCF com vocabulário GPT-2
 
         Args:
             text: Texto para processar
             **kwargs: Parâmetros adicionais
 
         Returns:
-            Resultado do processamento
+            Resultado do processamento com vocabulário GPT-2 selecionado
         """
         if self.pipeline is None:
             self.initialize_pipeline()
 
         print(f"🧠 Processando: '{text[:50]}...'")
+        print("🎯 Usando Sistema DCF com vocabulário GPT-2 selecionado (regra arquitetural)")
 
         result = self.pipeline.process(text)
 

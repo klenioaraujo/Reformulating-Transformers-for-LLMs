@@ -17,7 +17,7 @@ def test_system():
     try:
         # Test SystemConfig import
         print("\n1. Testing SystemConfig import...")
-        from configs.SystemConfig import SystemConfig
+        from ΨQRHSystem.configs.SystemConfig import SystemConfig
         print("   ✅ SystemConfig imported successfully")
 
         # Create default config
@@ -61,7 +61,7 @@ def test_system():
         # Test LegacyAdapter (commented out due to config issues)
         print("\n4. Testing LegacyAdapter...")
         try:
-            from core.LegacyAdapter import LegacyAdapter
+            from ΨQRHSystem.core.LegacyAdapter import LegacyAdapter
             legacy = LegacyAdapter(config)
             print("   ✅ LegacyAdapter created successfully")
 

@@ -54,8 +54,8 @@ Quando executado, o sistema exibirá:
 ============================================================
 🧠 Modelo: ΨQRH Semantic Model
 📊 Tipo: semantic_quantum
-🔢 Vocabulário: semantic
-📈 Tokens: 23
+🔢 Vocabulário: GPT-2 selecionado
+📈 Tokens: 50.257
 📐 Dimensão: 64
 🏗️  Camadas: 3
 🎯 Cabeças: 8
@@ -85,43 +85,57 @@ Quando executado, o sistema exibirá:
 
 ## Configuração de Vocabulário
 
-### Vocabulário Padrão
-O sistema inclui um vocabulário semântico padrão com 23 tokens relacionados a conceitos quânticos:
-- `quantum`, `consciousness`, `fractal`, `energy`, `harmonic`
-- `resonance`, `coherence`, `entanglement`, `dimension`, `field`
-- `wave`, `particle`, `probability`, `state`, `transformation`
-- `optical`, `spectral`, `temporal`, `spatial`, `geometric`
-- `processing`, `completed`, `result`
+### Vocabulário Selecionado: GPT-2
+O sistema usa o vocabulário GPT-2 selecionado com 50.257 tokens para geração de texto rica em semântica:
 
-### Vocabulário Customizado
-Para usar vocabulário customizado, crie um arquivo JSON no formato:
+**Razão da Seleção Arquitetural:**
+- Vocabulário semântico rico (50.257+ tokens)
+- Capacidade de geração de texto coerente e contextual
+- Compatibilidade com padrões de linguagem natural estabelecidos
+- Suporte completo via QuantumWordMatrix
+
+**Características:**
+- **Tamanho**: 50.257 tokens
+- **Fonte**: GPT-2 tokenizer nativo
+- **Integração**: Via QuantumWordMatrix no PhysicalProcessor
+- **Decodificação**: Sistema DCF (FractalConsciousnessProcessor)
+
+### Vocabulário Customizado (Opcional)
+O sistema suporta vocabulários customizados, mas GPT-2 é o vocabulário selecionado por padrão. Para usar vocabulário customizado, crie um arquivo JSON no formato:
 
 ```json
 {
-  "tokens": {
+  "token_to_id": {
     "palavra1": 0,
     "palavra2": 1,
     "palavra3": 2
   },
+  "id_to_token": {
+    "0": "palavra1",
+    "1": "palavra2",
+    "2": "palavra3"
+  },
   "metadata": {
-    "type": "semantic",
+    "type": "custom",
     "size": 3,
-    "description": "Descrição do vocabulário"
+    "description": "Vocabulário customizado"
   }
 }
 ```
 
+**Nota**: Mesmo com vocabulário customizado, o sistema mantém GPT-2 como vocabulário selecionado para geração de texto rica via Sistema DCF.
+
 ## Configuração do Modelo
 
-### Parâmetros do Modelo Semântico
-- **Nome**: `ΨQRH Semantic Model`
-- **Tipo**: `semantic_quantum`
+### Parâmetros do Sistema DCF (FractalConsciousnessProcessor)
+- **Nome**: `Sistema DCF (Dinâmica de Consciência Fractal)`
+- **Tipo**: `fractal_consciousness_processor`
+- **Vocabulário**: GPT-2 (50.257 tokens)
 - **Dimensão de Embedding**: 64
-- **Número de Camadas**: 3
-- **Número de Cabeças**: 8
-- **Dimensão Oculta**: 128
-- **Histórico Máximo**: 10
-- **Dispositivo**: CPU (ou GPU se disponível)
+- **Processamento**: Via FractalConsciousnessProcessor
+- **Decodificação**: QuantumWordMatrix com vocabulário GPT-2
+- **Consciência**: FCI (Fractal Consciousness Index)
+- **Dispositivo**: CPU/GPU automático
 
 ### Configuração via YAML
 O sistema carrega automaticamente configurações do arquivo `config.yaml`:
@@ -185,12 +199,13 @@ configurator.display_system_info()
 
 ## Arquitetura
 
-O sistema semântico estende a arquitetura existente:
+O sistema DCF (Dinâmica de Consciência Fractal) integra:
 
-1. **SemanticSystemConfigurator**: Classe principal de configuração
-2. **Vocabulário Semântico**: Carregamento e gerenciamento de tokens
-3. **Modelo Semântico**: Configuração e informações do modelo
-4. **Integração com Pipeline**: Conexão com o pipeline físico existente
+1. **FractalConsciousnessProcessor**: Engine de processamento consciente fractal
+2. **ConsciousnessMetrics**: Cálculo de FCI e métricas de consciência
+3. **NeuralDiffusionEngine**: Difusão neural para dinâmica temporal
+4. **QuantumWordMatrix**: Decodificação com vocabulário GPT-2 selecionado
+5. **PipelineManager**: Orquestração com geração via Sistema DCF
 
 ## Compatibilidade
 
@@ -222,10 +237,10 @@ python configure_semantic_system.py --config ../config.yaml --info
 
 ## Próximos Passos
 
-1. **Expansão de Vocabulário**: Adicionar mais tokens semânticos
-2. **Modelos Especializados**: Configurações para diferentes domínios
-3. **Otimização**: Melhorias de performance para vocabulários grandes
-4. **Integração**: Conectores com outros sistemas de NLP
+1. **Otimização DCF**: Melhorar performance do FractalConsciousnessProcessor
+2. **Expansão Semântica**: Aproveitar vocabulário GPT-2 completo para geração mais rica
+3. **Integração Avançada**: Conectar com outros sistemas de processamento consciente
+4. **Benchmarks**: Comparação com outros sistemas de geração de texto consciente
 
 ---
 

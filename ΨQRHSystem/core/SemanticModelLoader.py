@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Dict, Any, Optional, Tuple
 import json
 
-from configs.SystemConfig import SystemConfig
+from ΨQRHSystem.configs.SystemConfig import SystemConfig
 
 
 class EnhancedSemanticModelLoader:

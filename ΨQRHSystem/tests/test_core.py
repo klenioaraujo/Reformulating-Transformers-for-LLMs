@@ -10,7 +10,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from configs.SystemConfig import SystemConfig
+from ΨQRHSystem.configs.SystemConfig import SystemConfig
 from ΨQRHSystem.core.PipelineManager import PipelineManager
 from ΨQRHSystem.core.PhysicalProcessor import PhysicalProcessor
 from ΨQRHSystem.core.QuantumMemory import QuantumMemory

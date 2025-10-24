@@ -11,7 +11,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from configs.SystemConfig import SystemConfig, ModelConfig, PhysicsConfig
+from ΨQRHSystem.configs.SystemConfig import SystemConfig, ModelConfig, PhysicsConfig
 
 
 class TestSystemConfig(unittest.TestCase):

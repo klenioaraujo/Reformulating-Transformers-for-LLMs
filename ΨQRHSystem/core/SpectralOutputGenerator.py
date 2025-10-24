@@ -11,7 +11,7 @@ import numpy as np
 from typing import Dict, Any, Optional, List, Tuple
 import json
 
-from configs.SystemConfig import SystemConfig
+from ΨQRHSystem.configs.SystemConfig import SystemConfig
 
 
 class SpectralOutputGenerator:

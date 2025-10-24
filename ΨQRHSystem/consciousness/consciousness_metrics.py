@@ -15,7 +15,7 @@ import torch.nn as nn
 import numpy as np
 from typing import Dict, Any, Optional, Tuple, List
 from dataclasses import dataclass
-from core.TernaryLogicFramework import TernaryLogicFramework
+from ΨQRHSystem.core.TernaryLogicFramework import TernaryLogicFramework
 
 
 @dataclass
