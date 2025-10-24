@@ -37,6 +37,75 @@ The ΨQRH system now operates with **ternary logic** instead of traditional bina
 - **State Stabilization**: Ternary-based stabilization of quantum operations
 - **Distribution Consistency**: Maintains ternary state balance throughout processing pipeline
 
+### Multi-Vocabulary Semantic System
+
+The ΨQRH system now supports **multi-vocabulary operation** instead of the limited 23-token semantic vocabulary. The system can work with **any vocabulary** from any model, providing true semantic flexibility.
+
+#### **Enhanced Semantic Mode**
+The semantic mode (`configure_semantic_system.py`) has been enhanced to support:
+
+- **Large Vocabularies**: Support for GPT-2, GPT-Neo, and other large language model vocabularies
+- **Dynamic Vocabulary Loading**: Automatic vocabulary detection and loading from model files
+- **Quantum Word Matrix Integration**: Uses `quantum_word_matrix.py` for advanced semantic encoding/decoding
+- **Multi-Model Compatibility**: Works with any vocabulary exposed through the Makefile system
+
+#### **Quantum Word Matrix Architecture**
+The system uses `QuantumWordMatrix` class for semantic processing:
+
+```python
+from quantum_word_matrix import QuantumWordMatrix
+
+# Initialize with any vocabulary
+word_matrix = QuantumWordMatrix(
+    embed_dim=64,
+    device='cuda',
+    word_to_id=vocab_dict,  # Any vocabulary mapping
+    id_to_word=reverse_vocab_dict
+)
+
+# Encode/decode with cosine similarity
+quantum_state = word_matrix.encode_word("quantum")
+decoded_words = word_matrix.decode_quantum_state(quantum_state, top_k=5)
+```
+
+#### **Makefile Multi-Vocabulary Support**
+The Makefile now supports setting any vocabulary through environment variables:
+
+```bash
+# Set custom vocabulary for semantic operations
+export VOCAB_PATH=/path/to/vocab.json
+export VOCAB_SIZE=50257
+export SOURCE_MODEL=gpt2
+
+# Run semantic operations with custom vocab
+make convert-to-semantic SOURCE_MODEL=gpt2
+make semantic-workflow SOURCE_MODEL=gpt2
+```
+
+#### **Vocabulary Sources Supported**
+- **Native Vocabulary**: `data/native_vocab.json` (GPT-2 compatible)
+- **Dynamic Vocabulary**: `dynamic_quantum_vocabulary.json`
+- **Model-Specific Vocabularies**: Any Hugging Face model vocabulary
+- **Custom Vocabularies**: User-defined vocabulary files
+
+#### **Semantic Processing Pipeline**
+1. **Vocabulary Loading**: Automatic detection and loading of vocabulary files
+2. **Quantum Word Matrix**: Embedding-based semantic representation
+3. **Cosine Similarity Decoding**: Top-k semantic token retrieval
+4. **Multi-Vocab Compatibility**: Seamless switching between different vocabularies
+
+#### **Configuration for Multi-Vocabulary**
+```yaml
+semantic_system:
+  vocab_path: "data/native_vocab.json"  # Default GPT-2 vocab
+  vocab_size: 50257                     # GPT-2 vocabulary size
+  embed_dim: 64                        # Embedding dimension
+  multi_vocab_enabled: true            # Enable multi-vocab support
+  quantum_matrix_enabled: true         # Use QuantumWordMatrix
+```
+
+The semantic system now provides true vocabulary flexibility, supporting large vocabularies and advanced semantic processing through the Quantum Word Matrix architecture.
+
 ### 🏗️ Class-Based Organizational Structure
 
 The ΨQRH system is organized into distinct classes, each handling specific physical and computational responsibilities:
