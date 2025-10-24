@@ -5,26 +5,254 @@ from typing import Dict, Any, Optional, Tuple, List
 from core.TernaryLogicFramework import TernaryLogicFramework
 
 
+class QuantumMasterEquation:
+    """
+    Equação Mestra Quântica: dρ/dt = -i[H,ρ] + 𝓛_fractal(ρ) + 𝓛_dissipative(ρ)
+
+    Implementa a evolução temporal completa do estado quântico incluindo:
+    - Evolução unitária: -i[H,ρ]
+    - Decoerência fractal: 𝓛_fractal(ρ)
+    - Dissipação: 𝓛_dissipative(ρ)
+    """
+
+    def __init__(self, device: str = "cpu", hbar: float = 1.0):
+        self.device = device
+        self.hbar = hbar
+        self.ternary_logic = TernaryLogicFramework(device=device)
+
+        # Parâmetros da equação mestra
+        self.fractal_dimension = 1.26  # Dimensão fractal típica
+        self.dissipation_rate = 0.1    # Taxa de dissipação
+        self.fractal_coupling = 0.05   # Acoplamento fractal
+
+        print(f"🔬 Quantum Master Equation inicializada: dρ/dt = -i[H,ρ] + 𝓛_fractal(ρ) + 𝓛_dissipative(ρ)")
+
+    def evolve_quantum_state(self, rho: torch.Tensor, H: torch.Tensor,
+                            dt: float, fractal_noise: torch.Tensor = None) -> torch.Tensor:
+        """
+        Evolui estado quântico usando equação mestra completa
+
+        Args:
+            rho: Matriz densidade [..., n, n]
+            H: Hamiltoniano [..., n, n]
+            dt: Passo temporal
+            fractal_noise: Ruído fractal opcional
+
+        Returns:
+            Estado evoluído ρ(t+dt)
+        """
+        # 1. Evolução unitária: -i[H,ρ]
+        unitary_evolution = self._unitary_evolution(rho, H, dt)
+
+        # 2. Decoerência fractal: 𝓛_fractal(ρ)
+        fractal_decoherence = self._fractal_lindblad(rho, fractal_noise)
+
+        # 3. Dissipação: 𝓛_dissipative(ρ)
+        dissipation = self._dissipative_lindblad(rho)
+
+        # Evolução total
+        drho_dt = unitary_evolution + fractal_decoherence + dissipation
+        rho_evolved = rho + dt * drho_dt
+
+        # Normalização e estabilização com lógica ternária
+        rho_evolved = self._normalize_density_matrix(rho_evolved)
+
+        return rho_evolved
+
+    def _unitary_evolution(self, rho: torch.Tensor, H: torch.Tensor, dt: float) -> torch.Tensor:
+        """Evolução unitária: -i[H,ρ]"""
+        # Comutador: [H,ρ] = Hρ - ρH
+        commutator = torch.matmul(H, rho) - torch.matmul(rho, H)
+
+        # Evolução: -i/ℏ [H,ρ]
+        return -1j / self.hbar * commutator
+
+    def _fractal_lindblad(self, rho: torch.Tensor, fractal_noise: torch.Tensor = None) -> torch.Tensor:
+        """
+        Superoperador Lindblad fractal: 𝓛_fractal(ρ)
+
+        Modelo decoerência fractal baseada na dimensão fractal D
+        """
+        if rho.dim() < 2:
+            return torch.zeros_like(rho)
+
+        n = rho.shape[-1]
+
+        # Gerar operadores Lindblad fractais
+        if fractal_noise is None:
+            # Ruído fractal baseado na dimensão D
+            fractal_noise = self._generate_fractal_noise(n)
+
+        # Aplicar decoerência fractal
+        lindblad_term = torch.zeros_like(rho)
+
+        for i in range(min(3, n//2)):  # Limitar para eficiência
+            # Operador Lindblad fractal
+            L_i = self._create_fractal_lindblad_operator(n, i, fractal_noise)
+
+            # Termo Lindblad: LρL† - (1/2){L†L,ρ}
+            L_rho = torch.matmul(L_i, rho)
+            L_rho_L_dagger = torch.matmul(L_rho, L_i.conj().t())
+
+            L_dagger_L = torch.matmul(L_i.conj().t(), L_i)
+            anticommutator = torch.matmul(L_dagger_L, rho) + torch.matmul(rho, L_dagger_L)
+
+            lindblad_term += self.fractal_coupling * (L_rho_L_dagger - 0.5 * anticommutator)
+
+        return lindblad_term
+
+    def _dissipative_lindblad(self, rho: torch.Tensor) -> torch.Tensor:
+        """
+        Superoperador Lindblad dissipativo: 𝓛_dissipative(ρ)
+
+        Modelo dissipação baseada em amplitude damping
+        """
+        if rho.dim() < 2:
+            return torch.zeros_like(rho)
+
+        n = rho.shape[-1]
+
+        # Amplitude damping operators
+        lindblad_term = torch.zeros_like(rho)
+
+        for i in range(min(2, n-1)):  # Limitar para eficiência
+            # Operador de dissipação
+            gamma = self.dissipation_rate * (i + 1) / n  # Taxa dependente da dimensão
+
+            # Amplitude damping: σ- = |0⟩⟨1|
+            sigma_minus = torch.zeros((n, n), dtype=torch.complex64, device=self.device)
+            if i+1 < n:
+                sigma_minus[i, i+1] = 1.0
+
+            # Aplicar termo Lindblad
+            sigma_rho = torch.matmul(sigma_minus, rho)
+            sigma_rho_sigma_dagger = torch.matmul(sigma_rho, sigma_minus.conj().t())
+
+            sigma_dagger_sigma = torch.matmul(sigma_minus.conj().t(), sigma_minus)
+            anticommutator = torch.matmul(sigma_dagger_sigma, rho) + torch.matmul(rho, sigma_dagger_sigma)
+
+            lindblad_term += gamma * (sigma_rho_sigma_dagger - 0.5 * anticommutator)
+
+        return lindblad_term
+
+    def _generate_fractal_noise(self, n: int) -> torch.Tensor:
+        """Gera ruído fractal baseado na dimensão D"""
+        # Ruído 1/f baseado na dimensão fractal
+        frequencies = torch.arange(1, n+1, dtype=torch.float32, device=self.device)
+        fractal_spectrum = 1.0 / (frequencies ** self.fractal_dimension)
+
+        # Normalizar e adicionar fase aleatória
+        fractal_spectrum = fractal_spectrum / torch.sum(fractal_spectrum)
+        phases = torch.rand(n, device=self.device) * 2 * math.pi
+
+        return fractal_spectrum * torch.exp(1j * phases)
+
+    def _create_fractal_lindblad_operator(self, n: int, index: int,
+                                        fractal_noise: torch.Tensor) -> torch.Tensor:
+        """Cria operador Lindblad fractal"""
+        # Operador baseado no ruído fractal
+        L = torch.zeros((n, n), dtype=torch.complex64, device=self.device)
+
+        # Diagonal com ruído fractal
+        for i in range(n):
+            phase = torch.angle(fractal_noise[i])
+            L[i, i] = torch.exp(1j * phase * (index + 1))
+
+        # Off-diagonal limitado
+        for i in range(min(2, n-1)):
+            if i + index + 1 < n:
+                L[i, i + index + 1] = 0.1 * fractal_noise[i]
+
+        return L
+
+    def _normalize_density_matrix(self, rho: torch.Tensor) -> torch.Tensor:
+        """Normaliza matriz densidade com estabilização ternária"""
+        # Traço = 1
+        trace = torch.trace(rho)
+        if trace != 0:
+            rho = rho / trace
+
+        # Hermitiana
+        rho = (rho + rho.conj().t()) / 2
+
+        # Semi-definida positiva (eigenvalues >= 0)
+        eigenvalues, eigenvectors = torch.linalg.eigh(rho)
+        eigenvalues = torch.clamp(eigenvalues, min=0.0)  # Remover valores negativos pequenos
+
+        # Reconstruir
+        rho_normalized = torch.matmul(
+            torch.matmul(eigenvectors, torch.diag(eigenvalues)),
+            eigenvectors.conj().t()
+        )
+
+        # Estabilização ternária
+        rho_normalized = self._apply_ternary_stabilization(rho_normalized)
+
+        return rho_normalized
+
+    def _apply_ternary_stabilization(self, rho: torch.Tensor) -> torch.Tensor:
+        """Aplica estabilização ternária à matriz densidade"""
+        # Converter para representação ternária e voltar
+        ternary_real = self._tensor_to_ternary_states(rho.real)
+        ternary_imag = self._tensor_to_ternary_states(rho.imag)
+
+        # Aplicar consenso ternário
+        stabilized_real = self._apply_ternary_consensus(rho.real, ternary_real)
+        stabilized_imag = self._apply_ternary_consensus(rho.imag, ternary_imag)
+
+        return stabilized_real + 1j * stabilized_imag
+
+    def _tensor_to_ternary_states(self, tensor: torch.Tensor) -> torch.Tensor:
+        """Converte tensor para estados ternários"""
+        abs_tensor = torch.abs(tensor)
+        max_val = torch.max(abs_tensor)
+
+        if max_val == 0:
+            return torch.zeros_like(tensor, dtype=torch.long)
+
+        normalized = tensor / (max_val + 1e-10)
+        ternary_states = torch.zeros_like(tensor, dtype=torch.long)
+        ternary_states[normalized > 0.33] = 1
+        ternary_states[normalized < -0.33] = -1
+
+        return ternary_states
+
+    def _apply_ternary_consensus(self, original: torch.Tensor, ternary_states: torch.Tensor) -> torch.Tensor:
+        """Aplica consenso ternário para estabilização"""
+        # Para valores próximos de zero, usar consenso
+        near_zero = torch.abs(original) < 0.1
+        if near_zero.any():
+            # Consenso baseado na vizinhança
+            consensus_value = self.ternary_logic.ternary_majority_vote(
+                ternary_states.flatten().tolist()[:10]  # Amostra pequena
+            )
+            original = torch.where(near_zero, consensus_value * 0.05, original)
+
+        return original
+
+
 class QuaternionOps:
     """
-    Quaternion Operations - Operações quaterniônicas otimizadas
+    Quaternion Operations - Operações quaterniônicas otimizadas com Equação Mestra
 
     Implementa operações fundamentais de quaternions para física ΨQRH:
     - Produto de Hamilton
     - Rotações SO(4)
     - Operações unitárias
+    - Evolução temporal via Equação Mestra Quântica
     """
 
     def __init__(self, device: str = "cpu"):
         """
-        Inicializa operações quaterniônicas com lógica ternária
+        Inicializa operações quaterniônicas com lógica ternária e equação mestra
 
         Args:
             device: Dispositivo de computação
         """
         self.device = device
         self.ternary_logic = TernaryLogicFramework(device=device)
-        print(f"🔄 Quaternion Operations inicializadas no dispositivo: {device} com lógica ternária")
+        self.master_equation = QuantumMasterEquation(device=device)
+        print(f"🔄 Quaternion Operations inicializadas no dispositivo: {device} com lógica ternária e equação mestra")
 
     def hamilton_product(self, q1: torch.Tensor, q2: torch.Tensor) -> torch.Tensor:
         """
@@ -102,16 +330,20 @@ class QuaternionOps:
         norm = self.quaternion_norm(q)
         return q / (norm + 1e-10)
 
-    def so4_rotation(self, q: torch.Tensor, rotation_angles: torch.Tensor) -> torch.Tensor:
+    def so4_rotation(self, q: torch.Tensor, rotation_angles: torch.Tensor,
+                    time_step: float = 0.01, hamiltonian: torch.Tensor = None) -> torch.Tensor:
         """
-        Aplica rotações SO(4) unitárias: Ψ' = q_left ⊗ Ψ ⊗ q_right†
+        Aplica rotações SO(4) unitárias com evolução temporal via equação mestra:
+        Ψ' = q_left ⊗ Ψ ⊗ q_right† + evolução temporal
 
         Args:
             q: Estado quântico quaterniônico [..., seq_len, embed_dim, 4]
             rotation_angles: Ângulos de rotação [..., 3] (theta, omega, phi)
+            time_step: Passo temporal para evolução
+            hamiltonian: Hamiltoniano opcional para evolução unitária
 
         Returns:
-            Estado rotacionado [..., seq_len, embed_dim, 4]
+            Estado rotacionado e evoluído [..., seq_len, embed_dim, 4]
         """
         # Criar quaternions de rotação
         q_left, q_right = self._create_rotation_quaternions(rotation_angles)
@@ -123,9 +355,20 @@ class QuaternionOps:
         temp = self.hamilton_product(q_left, q)
 
         # Produto direito com conjugado
-        result = self.hamilton_product(temp, q_right_conj)
+        rotated_state = self.hamilton_product(temp, q_right_conj)
 
-        return result
+        # Aplicar evolução temporal via equação mestra se Hamiltoniano fornecido
+        if hamiltonian is not None:
+            # Converter quaternion para matriz densidade aproximada
+            rho = self._quaternion_to_density_matrix(rotated_state)
+
+            # Aplicar evolução temporal
+            rho_evolved = self.master_equation.evolve_quantum_state(rho, hamiltonian, time_step)
+
+            # Converter de volta para quaternion
+            rotated_state = self._density_matrix_to_quaternion(rho_evolved)
+
+        return rotated_state
 
     def _create_rotation_quaternions(self, angles: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         """
@@ -417,3 +660,65 @@ class QuaternionOps:
             stabilized[near_zero_mask] = consensus_result * 0.05  # Pequeno viés baseado no consenso
 
         return stabilized
+
+    def _quaternion_to_density_matrix(self, q: torch.Tensor) -> torch.Tensor:
+        """
+        Converte quaternion para matriz densidade aproximada
+
+        Args:
+            q: Quaternion [..., 4]
+
+        Returns:
+            Matriz densidade [..., 2, 2] (aproximação para 2-level system)
+        """
+        # Para simplificar, mapear quaternion para estado puro 2x2
+        # w + xi + yj + zk → |ψ⟩⟨ψ| onde |ψ⟩ = [w + xi, y + zk]
+
+        if q.dim() == 1:
+            q = q.unsqueeze(0)
+
+        batch_shape = q.shape[:-1]
+        w, x, y, z = q.unbind(-1)
+
+        # Construir estado puro aproximado
+        psi = torch.stack([w + 1j * x, y + 1j * z], dim=-1)  # [..., 2]
+
+        # Normalizar
+        psi = psi / (torch.norm(psi, dim=-1, keepdim=True) + 1e-10)
+
+        # Matriz densidade |ψ⟩⟨ψ|
+        rho = torch.matmul(psi.unsqueeze(-1), psi.conj().unsqueeze(-2))  # [..., 2, 2]
+
+        return rho
+
+    def _density_matrix_to_quaternion(self, rho: torch.Tensor) -> torch.Tensor:
+        """
+        Converte matriz densidade de volta para quaternion aproximado
+
+        Args:
+            rho: Matriz densidade [..., 2, 2]
+
+        Returns:
+            Quaternion [..., 4]
+        """
+        # Extrair componentes do estado puro aproximado
+        # Assumir estado puro: ρ = |ψ⟩⟨ψ|
+
+        # Eigenvalores e eigenvectors
+        eigenvalues, eigenvectors = torch.linalg.eigh(rho)
+
+        # Usar eigenvector com maior eigenvalue
+        max_eigenval_idx = torch.argmax(eigenvalues, dim=-1)
+        psi = eigenvectors[..., max_eigenval_idx]  # [..., 2]
+
+        # Mapear de volta para quaternion
+        # |ψ⟩ = [α, β] → w + xi + yj + zk onde α = w + xi, β = y + zk
+        alpha_real, alpha_imag = psi[..., 0].real, psi[..., 0].imag
+        beta_real, beta_imag = psi[..., 1].real, psi[..., 1].imag
+
+        w = alpha_real
+        x = alpha_imag
+        y = beta_real
+        z = beta_imag
+
+        return torch.stack([w, x, y, z], dim=-1)

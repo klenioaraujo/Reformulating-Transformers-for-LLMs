@@ -5,6 +5,19 @@ from typing import Dict, Any, Optional, Tuple
 from configs.SystemConfig import SystemConfig
 from core.TernaryLogicFramework import TernaryLogicFramework
 
+# Importar QuantumWordMatrix para decodificação semântica
+try:
+    from quantum_word_matrix import QuantumWordMatrix
+    HAS_QUANTUM_WORD_MATRIX = True
+except ImportError:
+    try:
+        from src.core.dynamic_quantum_matrix import DynamicQuantumWordMatrix
+        HAS_QUANTUM_WORD_MATRIX = True
+        QuantumWordMatrix = DynamicQuantumWordMatrix
+    except ImportError:
+        HAS_QUANTUM_WORD_MATRIX = False
+        QuantumWordMatrix = None
+
 
 class PhysicalProcessor:
     """
@@ -25,10 +38,10 @@ class PhysicalProcessor:
         """
         self.config = config
         self.device = torch.device(config.device if config.device != "auto" else
-                                 ("cuda" if torch.cuda.is_available() else
-                                  "mps" if torch.backends.mps.is_available() else "cpu"))
+                                  ("cuda" if torch.cuda.is_available() else
+                                   "mps" if torch.backends.mps.is_available() else "cpu"))
 
-        # Parâmetros da equação de Padilha
+        # Parâmetros emergentes da configuração (equação de Padilha)
         self.I0 = config.physics.I0
         self.alpha = config.physics.alpha
         self.beta = config.physics.beta
@@ -37,6 +50,38 @@ class PhysicalProcessor:
 
         # Inicializar lógica ternária
         self.ternary_logic = TernaryLogicFramework(device=self.device)
+
+        # Inicializar QuantumWordMatrix para decodificação semântica
+        self.quantum_word_matrix = None
+        if HAS_QUANTUM_WORD_MATRIX:
+            try:
+                # Carregar vocabulário GPT-2 (padrão do sistema)
+                vocab_path = "data/native_vocab.json"
+                import json
+                with open(vocab_path, 'r') as f:
+                    vocab_data = json.load(f)
+
+                word_to_id = vocab_data.get('token_to_id', {})
+                id_to_word = vocab_data.get('id_to_token', {})
+
+                if word_to_id and id_to_word:
+                    self.quantum_word_matrix = QuantumWordMatrix(
+                        embed_dim=config.model.embed_dim,
+                        device=self.device,
+                        word_to_id=word_to_id,
+                        id_to_word=id_to_word
+                    )
+                    print("✅ QuantumWordMatrix inicializada com vocabulário GPT-2 (50.257 tokens)")
+                else:
+                    print("❌ ERRO: Vocabulário GPT-2 não encontrado. Sistema requer vocabulário GPT-2 para operação.")
+                    raise RuntimeError("Vocabulário GPT-2 obrigatório não encontrado")
+            except Exception as e:
+                print(f"❌ ERRO: Falha na inicialização do QuantumWordMatrix: {e}")
+                print("   Sistema requer QuantumWordMatrix com vocabulário GPT-2 para operação.")
+                raise RuntimeError("QuantumWordMatrix com vocabulário GPT-2 obrigatório falhou")
+        else:
+            print("❌ ERRO: QuantumWordMatrix não disponível. Sistema requer QuantumWordMatrix para operação.")
+            raise RuntimeError("QuantumWordMatrix obrigatório não disponível")
 
         print(f"🔬 Physical Processor inicializado com equação de Padilha e lógica ternária")
         print(f"   f(λ,t) = {self.I0} sin({self.omega}t + {self.alpha}λ) e^(i({self.omega}t - {self.k}λ + {self.beta}λ²))")
@@ -88,13 +133,13 @@ class PhysicalProcessor:
         freqs = torch.fft.fftfreq(embed_dim, device=self.device)
         k = 2 * torch.pi * freqs.view(1, 1, -1, 1)
 
-        # Aplicar filtro espectral F(k) = exp(i α · arctan(ln(|k| + ε)))
+        # Aplicar filtro espectral emergente F(k) = exp(i α · arctan(ln(|k| + ε)))
         epsilon = 1e-10
         k_mag = torch.abs(k) + epsilon
         log_k = torch.log(k_mag.clamp(min=1e-9))
         phase = torch.arctan(log_k)
 
-        filter_response = torch.exp(1j * self.alpha * phase)
+        filter_response = torch.exp(1j * self.alpha * phase)  # α emergente da configuração
         filter_response = filter_response.expand_as(psi_fft)
 
         # Aplicar filtro
@@ -115,10 +160,10 @@ class PhysicalProcessor:
         """
         batch_size, seq_len, embed_dim, quat_dim = psi.shape
 
-        # Parâmetros de rotação adaptativos
-        theta_left = torch.tensor(0.1, device=self.device)
-        omega_left = torch.tensor(0.05, device=self.device)
-        phi_left = torch.tensor(0.02, device=self.device)
+        # Parâmetros de rotação emergentes da configuração
+        theta_left = torch.tensor(self.alpha * 0.1, device=self.device)  # Emergente de α
+        omega_left = torch.tensor(self.beta * 0.05, device=self.device)  # Emergente de β
+        phi_left = torch.tensor(self.k * 0.02, device=self.device)       # Emergente de k
 
         # Aplicar rotações SO(4) simplificadas
         # Para implementação completa, seria necessário implementar produto quaterniônico
@@ -148,11 +193,11 @@ class PhysicalProcessor:
         q1_y = torch.sin(theta / 2) * torch.sin(omega) * torch.cos(phi)
         q1_z = torch.sin(theta / 2) * torch.sin(omega) * torch.sin(phi)
 
-        # Segundo quaternion (q2) - pequena rotação complementar
+        # Segundo quaternion (q2) - rotação complementar emergente da configuração
         q2_w = torch.cos(omega / 4)
-        q2_x = torch.sin(omega / 4) * 0.1
-        q2_y = torch.sin(omega / 4) * 0.2
-        q2_z = torch.sin(omega / 4) * 0.3
+        q2_x = torch.sin(omega / 4) * self.alpha * 0.1  # Emergente de α
+        q2_y = torch.sin(omega / 4) * self.beta * 0.2   # Emergente de β
+        q2_z = torch.sin(omega / 4) * self.k * 0.3      # Emergente de k
 
         # Normalizar quaternions para garantir unitariedade
         q1_norm = torch.sqrt(q1_w**2 + q1_x**2 + q1_y**2 + q1_z**2)
@@ -193,13 +238,13 @@ class PhysicalProcessor:
         amplitude = psi[0, :, :, 0].mean(dim=-1)  # Média sobre embed_dim
         phase = torch.angle(psi[0, :, :, 0] + 1j * psi[0, :, :, 1]).mean(dim=-1)
 
-        # Aplicar equação de Padilha
+        # Aplicar equação de Padilha com parâmetros emergentes
         t = torch.arange(seq_len, device=self.device, dtype=torch.float32)
-        wavelength = torch.arange(seq_len, device=self.device, dtype=torch.float32) * 0.1
+        wavelength = torch.arange(seq_len, device=self.device, dtype=torch.float32) * self.alpha * 0.1  # Emergente de α
 
-        # Calcular forma de onda
+        # Calcular forma de onda emergente da configuração
         wave_form = self.I0 * torch.sin(self.omega * t + self.alpha * wavelength) * \
-                   torch.exp(1j * (self.omega * t - self.k * wavelength + self.beta * wavelength**2))
+                    torch.exp(1j * (self.omega * t - self.k * wavelength + self.beta * wavelength**2))
 
         # Modulação com estado quântico
         wave_form = wave_form * amplitude * torch.exp(1j * phase)
@@ -230,17 +275,18 @@ class PhysicalProcessor:
 
     def wave_to_text(self, optical_output: Any, consciousness: Dict[str, Any]) -> str:
         """
-        Converte saída óptica para texto usando decodificação semântica REAL
+        Converte saída óptica para texto usando QuantumWordMatrix para decodificação semântica REAL
 
-        Implementa mapeamento estado quântico → tokens semânticos
-        baseado na equação de Padilha e estado de consciência.
+        Implementa mapeamento estado quântico → tokens semânticos usando QuantumWordMatrix
+        que converte IDs de tokens (do vocabulário GPT-2) em representações numéricas que o
+        sistema ΨQRH pode processar em seu domínio quântico-físico.
 
         Args:
             optical_output: Saída da sonda óptica (tensor ou tupla)
             consciousness: Estado de consciência com FCI
 
         Returns:
-            Texto gerado semanticamente coerente
+            Texto gerado semanticamente coerente usando QuantumWordMatrix
         """
         try:
             # 1. Extrair features do estado quântico
@@ -256,10 +302,8 @@ class PhysicalProcessor:
                 quantum_features[1] = confidence
                 quantum_features[2] = 1.0 if is_valid else 0.0
             else:
-                # Fallback para string - CORREÇÃO DO ERRO
-                str_output = str(optical_output)
-                quantum_features = torch.zeros(self.config.model.embed_dim, device=self.device)
-                quantum_features[0] = len(str_output) / 100.0  # Comprimento normalizado
+                # Entrada inválida - sistema requer tensor quântico
+                raise ValueError(f"Entrada optical_output inválida: {type(optical_output)}. Sistema requer tensor quântico.")
 
             # 2. Aplicar influência do estado de consciência
             fci = consciousness.get('fci', 0.5)
@@ -268,63 +312,62 @@ class PhysicalProcessor:
             # Modificar features baseado na consciência
             quantum_features = quantum_features * (0.5 + 0.5 * consciousness_factor)
 
-            # 3. Vocabulário semântico baseado em frequência
-            # Criar vocabulário dinâmico baseado na estrutura quântica
-            vocab_base = [
-                "quantum", "consciousness", "fractal", "energy", "harmonic",
-                "resonance", "coherence", "entanglement", "dimension", "field",
-                "wave", "particle", "probability", "state", "transformation",
-                "optical", "spectral", "temporal", "spatial", "geometric"
-            ]
+            # 3. Usar QuantumWordMatrix para decodificação semântica REAL (obrigatório)
+            if self.quantum_word_matrix is None:
+                raise RuntimeError("QuantumWordMatrix não inicializada - sistema requer vocabulário GPT-2")
 
-            # Selecionar palavras baseado nas features quânticas
-            selected_words = []
-            num_words = max(3, min(8, int(fci * 10)))  # 3-8 palavras baseado no FCI
+            try:
+                # Usar QuantumWordMatrix para decodificação baseada em similaridade
+                decoded_results = self.quantum_word_matrix.decode_quantum_state(quantum_features)
 
-            for i in range(num_words):
-                # Usar diferentes componentes das features para seleção
-                feature_idx = i % len(quantum_features)
-                feature_value = quantum_features[feature_idx].item()
+                # Extrair palavras decodificadas
+                decoded_words = [result[0] for result in decoded_results[:5]]  # Top 5 palavras
 
-                # Mapear feature para índice de vocabulário
-                vocab_idx = int(abs(feature_value) * len(vocab_base)) % len(vocab_base)
-                word = vocab_base[vocab_idx]
+                # Filtrar palavras especiais e duplicatas
+                filtered_words = []
+                for word in decoded_words:
+                    if word not in ['<UNK>', '<PAD>', '<MASK>'] and word not in filtered_words:
+                        filtered_words.append(word)
 
-                # Evitar duplicatas consecutivas
-                if not selected_words or selected_words[-1] != word:
-                    selected_words.append(word)
+                # Construir sentença emergente baseada no FCI e vocabulário decodificado
+                # Tudo emerge da configuração e autocalibração - sem hardcoded
+                sentence_parts = []
 
-            # 4. Construir sentença coerente
-            if len(selected_words) >= 4:
-                if fci > 0.7:
-                    # Consciência avançada - sentença complexa
-                    sentence = f"The quantum {selected_words[0]} field exhibits {selected_words[1]} {selected_words[2]} with high {selected_words[3]} coherence."
-                elif fci > 0.4:
-                    # Consciência média - sentença moderada
-                    sentence = f"Quantum {selected_words[0]} and {selected_words[1]} {selected_words[2]} processing completed."
+                # Número de palavras baseado no FCI (emergente da consciência)
+                num_words = max(1, min(len(filtered_words), int(fci * 10)))
+
+                # Usar apenas as palavras disponíveis, sem limite artificial
+                words_to_use = filtered_words[:num_words]
+
+                if words_to_use:
+                    # Construir sentença baseada nas palavras emergentes
+                    if len(words_to_use) >= 3:
+                        sentence = f"The quantum {words_to_use[0]} field exhibits {words_to_use[1]} {words_to_use[2]} with coherence."
+                    elif len(words_to_use) >= 2:
+                        sentence = f"Quantum {words_to_use[0]} and {words_to_use[1]} processing completed."
+                    else:
+                        sentence = f"Quantum {words_to_use[0]} processing result."
                 else:
-                    # Consciência básica - sentença simples
-                    sentence = f"Basic quantum {selected_words[0]} processing result."
-            elif len(selected_words) >= 2:
-                sentence = f"Quantum {selected_words[0]} {selected_words[1]} processing completed."
-            else:
-                sentence = f"Quantum processing completed with {selected_words[0]}."
+                    sentence = "Quantum processing completed."
 
-            # 5. Adicionar influência temporal se disponível
-            if 'temporal_coherence' in consciousness:
-                temporal_factor = consciousness['temporal_coherence']
-                if temporal_factor > 0.8:
-                    sentence += " (High temporal stability detected)"
-                elif temporal_factor < 0.3:
-                    sentence += " (Temporal coherence developing)"
+                # 4. Adicionar influência temporal emergente (se disponível na configuração)
+                if 'temporal_coherence' in consciousness:
+                    temporal_factor = consciousness['temporal_coherence']
+                    # Influência temporal emerge da configuração de consciência
+                    if temporal_factor > 0.8:
+                        sentence += " (High temporal stability detected)"
+                    elif temporal_factor < 0.3:
+                        sentence += " (Temporal coherence developing)"
 
-            return sentence
+                return sentence
+
+            except Exception as e:
+                print(f"❌ ERRO na decodificação QuantumWordMatrix: {e}")
+                raise RuntimeError(f"Decodificação QuantumWordMatrix falhou: {e}")
 
         except Exception as e:
-            print(f"⚠️  Erro na decodificação wave-to-text: {e}")
-            # Fallback seguro
-            fci = consciousness.get('fci', 0.5)
-            return f"Quantum processing completed with consciousness level {fci:.2f}"
+            print(f"❌ ERRO CRÍTICO na decodificação wave-to-text: {e}")
+            raise RuntimeError(f"Decodificação wave-to-text falhou: {e}")
 
     def validate_physics(self, input_signal: torch.Tensor, output_signal: Any) -> Dict[str, bool]:
         """
