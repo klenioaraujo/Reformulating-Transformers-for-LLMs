@@ -6,11 +6,12 @@ import numpy as np
 from semantic_base import SemanticBase
 from semantic_fusion_engine import SemanticFusionEngine
 
-class PsiQRHSemanticPipeline:
+class PsiQRHSemanticPipeline(nn.Module):
     def __init__(self, config_path: str):
         """
-        Pipeline PsiQRH com análise semântica bilateral
+        Pipeline PsiQRH com análise semântica bilateral aprendível
         """
+        super().__init__()
         self.config = self._load_config(config_path)
         self.semantic_bases = self._initialize_semantic_bases()
         self.model = self._initialize_psiqrh_model()
@@ -20,13 +21,13 @@ class PsiQRHSemanticPipeline:
         with open(config_path, 'r') as f:
             return json.load(f)
 
-    def _initialize_semantic_bases(self) -> Dict:
-        """Inicializa bases semânticas bilaterais"""
-        return {
+    def _initialize_semantic_bases(self) -> nn.ModuleDict:
+        """Inicializa bases semânticas bilaterais aprendíveis"""
+        return nn.ModuleDict({
             'left_base': SemanticBase(direction='left'),
             'right_base': SemanticBase(direction='right'),
             'fusion_engine': SemanticFusionEngine()
-        }
+        })
 
     def _initialize_psiqrh_model(self):
         """Inicializa o modelo PsiQRH base"""
@@ -42,3 +43,9 @@ class PsiQRHSemanticPipeline:
             n_layers=self.config['num_layers'],
             n_heads=self.config['num_heads']
         )
+
+    def parameters(self):
+        """Retorna todos os parâmetros aprendíveis do pipeline"""
+        params = list(self.semantic_bases.parameters())
+        params.extend(list(self.model.parameters()))
+        return params

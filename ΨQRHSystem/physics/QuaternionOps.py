@@ -2,6 +2,7 @@ import torch
 import numpy as np
 import math
 from typing import Dict, Any, Optional, Tuple, List
+from core.TernaryLogicFramework import TernaryLogicFramework
 
 
 class QuaternionOps:
@@ -16,17 +17,18 @@ class QuaternionOps:
 
     def __init__(self, device: str = "cpu"):
         """
-        Inicializa operações quaterniônicas
+        Inicializa operações quaterniônicas com lógica ternária
 
         Args:
             device: Dispositivo de computação
         """
         self.device = device
-        print(f"🔄 Quaternion Operations inicializadas no dispositivo: {device}")
+        self.ternary_logic = TernaryLogicFramework(device=device)
+        print(f"🔄 Quaternion Operations inicializadas no dispositivo: {device} com lógica ternária")
 
     def hamilton_product(self, q1: torch.Tensor, q2: torch.Tensor) -> torch.Tensor:
         """
-        Produto de Hamilton entre quaternions
+        Produto de Hamilton entre quaternions com lógica ternária
 
         Args:
             q1: Primeiro quaternion [..., 4]
@@ -45,7 +47,22 @@ class QuaternionOps:
         y = w1 * y2 - x1 * z2 + y1 * w2 + z1 * x2
         z = w1 * z2 + x1 * y2 - y1 * x2 + z1 * w2
 
-        return torch.stack([w, x, y, z], dim=-1)
+        result = torch.stack([w, x, y, z], dim=-1)
+
+        # Aplicar lógica ternária para estabilização
+        # Converter para estados ternários e voltar para refinar o resultado
+        ternary_w = self._tensor_to_ternary_states(w)
+        ternary_x = self._tensor_to_ternary_states(x)
+        ternary_y = self._tensor_to_ternary_states(y)
+        ternary_z = self._tensor_to_ternary_states(z)
+
+        # Aplicar operações ternárias para estabilização
+        stabilized_w = self._apply_ternary_stabilization(w, ternary_w)
+        stabilized_x = self._apply_ternary_stabilization(x, ternary_x)
+        stabilized_y = self._apply_ternary_stabilization(y, ternary_y)
+        stabilized_z = self._apply_ternary_stabilization(z, ternary_z)
+
+        return torch.stack([stabilized_w, stabilized_x, stabilized_y, stabilized_z], dim=-1)
 
     def quaternion_conjugate(self, q: torch.Tensor) -> torch.Tensor:
         """
@@ -234,7 +251,7 @@ class QuaternionOps:
 
     def validate_unitarity(self, transformation: torch.Tensor) -> bool:
         """
-        Valida unitariedade da transformação quaterniônica
+        Valida unitariedade da transformação quaterniônica com lógica ternária
 
         Args:
             transformation: Matriz de transformação
@@ -255,7 +272,46 @@ class QuaternionOps:
             norm_after = self.quaternion_norm(transformed)
 
             conservation = torch.allclose(norm_before, norm_after, atol=1e-5)
-            return conservation
+
+            # Adicionar validação ternária: verificar se estados são consistentes
+            ternary_consistency = self._validate_ternary_consistency(test_q, transformed)
+
+            # Combinar validações usando lógica ternária
+            binary_result = 1 if conservation else -1
+            ternary_result = 1 if ternary_consistency else -1
+
+            final_result = self.ternary_logic.ternary_and(binary_result, ternary_result)
+            return final_result == 1
+
+        except Exception:
+            return False
+
+    def _validate_ternary_consistency(self, input_q: torch.Tensor, output_q: torch.Tensor) -> bool:
+        """
+        Valida consistência ternária entre entrada e saída
+
+        Args:
+            input_q: Quaternion de entrada
+            output_q: Quaternion de saída
+
+        Returns:
+            True se consistente
+        """
+        try:
+            # Converter para estados ternários
+            input_ternary = self._tensor_to_ternary_states(input_q)
+            output_ternary = self._tensor_to_ternary_states(output_q)
+
+            # Verificar se a distribuição de estados é similar
+            input_counts = torch.bincount(input_ternary.flatten() + 1, minlength=3)  # Shift para 0,1,2
+            output_counts = torch.bincount(output_ternary.flatten() + 1, minlength=3)
+
+            # Calcular diferença relativa
+            total_elements = input_q.numel()
+            diff_ratio = torch.sum(torch.abs(input_counts - output_counts)) / (2 * total_elements)
+
+            # Considerar consistente se diferença < 30%
+            return diff_ratio < 0.3
 
         except Exception:
             return False
@@ -302,3 +358,62 @@ class QuaternionOps:
         """
         # Aplicar transformação linear
         return torch.matmul(q, rotation_matrix.T)
+
+    def _tensor_to_ternary_states(self, tensor: torch.Tensor) -> torch.Tensor:
+        """
+        Converte tensor para estados ternários (-1, 0, 1)
+
+        Args:
+            tensor: Tensor de entrada
+
+        Returns:
+            Estados ternários
+        """
+        # Classificar baseado na magnitude e sinal
+        abs_tensor = torch.abs(tensor)
+        max_val = torch.max(abs_tensor)
+
+        if max_val == 0:
+            return torch.zeros_like(tensor, dtype=torch.long)
+
+        # Normalizar e classificar
+        normalized = tensor / (max_val + 1e-10)
+
+        # Converter para estados ternários
+        ternary_states = torch.zeros_like(tensor, dtype=torch.long)
+        ternary_states[normalized > 0.33] = 1
+        ternary_states[normalized < -0.33] = -1
+        # Valores entre -0.33 e 0.33 permanecem 0
+
+        return ternary_states
+
+    def _apply_ternary_stabilization(self, original: torch.Tensor, ternary_states: torch.Tensor) -> torch.Tensor:
+        """
+        Aplica estabilização baseada em estados ternários
+
+        Args:
+            original: Tensor original
+            ternary_states: Estados ternários correspondentes
+
+        Returns:
+            Tensor estabilizado
+        """
+        # Aplicar operações ternárias para estabilização
+        # Usar consenso ternário para valores próximos de transições
+        stabilized = original.clone()
+
+        # Para valores próximos de zero, aplicar estabilização ternária
+        near_zero_mask = torch.abs(original) < 0.1
+        if near_zero_mask.any():
+            # Usar consenso ternário para decidir direção
+            ternary_consensus = []
+            for i in range(min(5, original.numel())):  # Amostra pequena para eficiência
+                sample_idx = torch.randint(0, original.numel(), (1,))
+                sample_val = original.flatten()[sample_idx]
+                ternary_val = 1 if sample_val > 0.01 else (-1 if sample_val < -0.01 else 0)
+                ternary_consensus.append(ternary_val)
+
+            consensus_result = self.ternary_logic.ternary_majority_vote(ternary_consensus)
+            stabilized[near_zero_mask] = consensus_result * 0.05  # Pequeno viés baseado no consenso
+
+        return stabilized

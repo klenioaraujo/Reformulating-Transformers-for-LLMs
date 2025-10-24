@@ -15,6 +15,7 @@ import torch.nn as nn
 import numpy as np
 from typing import Dict, Any, Optional, Tuple, List
 from dataclasses import dataclass
+from core.TernaryLogicFramework import TernaryLogicFramework
 
 
 @dataclass
@@ -102,7 +103,10 @@ class ConsciousnessMetrics(nn.Module):
         self.enable_nan_protection = measurement_quality.get('enable_nan_protection', True)
         self.default_fci_on_nan = measurement_quality.get('default_fci_on_nan', 0.5)
 
-        # Pesos para componentes do FCI (aprendíveis)
+        # Inicializar lógica ternária
+        self.ternary_logic = TernaryLogicFramework(device=self.device)
+
+        # Pesos para componentes do FCI (aprendíveis) com suporte ternário
         fci_weights_config = metrics_config.get('fci_weights', {})
         fci_weights = [
             fci_weights_config.get('d_eeg', 0.4),
@@ -113,6 +117,14 @@ class ConsciousnessMetrics(nn.Module):
             'fci_weights',
             nn.Parameter(torch.tensor(fci_weights))  # [D_EEG, H_fMRI, CLZ]
         )
+
+        # Estados ternários para consciência
+        self.consciousness_ternary_states = {
+            'coma': -1,
+            'analysis': 0,
+            'meditation': 0,
+            'emergence': 1
+        }
 
         # Correlation method settings - ZERO FALLBACK POLICY
         correlation_method = metrics_config.get('correlation_method', {})
@@ -459,7 +471,7 @@ class ConsciousnessMetrics(nn.Module):
 
     def compute_fci_from_fractal_dimension(self, fractal_dimension: float) -> float:
         """
-        Mapeia dimensão fractal diretamente para FCI.
+        Mapeia dimensão fractal diretamente para FCI com lógica ternária.
 
         Fórmula corrigida: FCI = (D - D_min) / (D_max - D_min)
         Onde D ∈ [1, 3]:
@@ -474,12 +486,40 @@ class ConsciousnessMetrics(nn.Module):
         Returns:
             FCI ∈ [0, 1]
         """
+        # Cálculo base
         fci = (fractal_dimension - self.fractal_dimension_min) / self.fractal_dimension_normalizer
 
+        # Aplicar refinamento ternário baseado na classificação de estados
+        ternary_state = self._classify_fractal_dimension_ternary(fractal_dimension)
+
+        # Ajustar FCI baseado no estado ternário
+        if ternary_state == 1:  # Alta complexidade fractal
+            fci = min(1.0, fci * 1.1)  # Aumento de 10%
+        elif ternary_state == -1:  # Baixa complexidade fractal
+            fci = max(0.0, fci * 0.9)  # Redução de 10%
+        # ternary_state == 0: manter fci original
+
         if self.log_fci_calculations:
-            print(f"🔬 FCI Calculation: D={fractal_dimension:.3f} → FCI={fci:.3f}")
+            print(f"🔬 FCI Calculation: D={fractal_dimension:.3f} → FCI={fci:.3f} (ternary_state={ternary_state})")
 
         return max(0.0, min(1.0, fci))
+
+    def _classify_fractal_dimension_ternary(self, fractal_dimension: float) -> int:
+        """
+        Classifica dimensão fractal em estados ternários.
+
+        Args:
+            fractal_dimension: Dimensão fractal D
+
+        Returns:
+            -1 (baixa complexidade), 0 (média), 1 (alta complexidade)
+        """
+        if fractal_dimension < 1.3:
+            return -1  # Baixa complexidade
+        elif fractal_dimension > 2.2:
+            return 1   # Alta complexidade
+        else:
+            return 0   # Complexidade média
 
     def _compute_measurement_confidence(
         self,
@@ -488,7 +528,7 @@ class ConsciousnessMetrics(nn.Module):
         clz: float
     ) -> float:
         """
-        Computa confiança da medição baseada na consistência dos componentes.
+        Computa confiança da medição baseada na consistência dos componentes com lógica ternária.
 
         Args:
             d_eeg: Componente D_EEG
@@ -508,17 +548,42 @@ class ConsciousnessMetrics(nn.Module):
         # Calcular coeficiente de variação
         mean_component = np.mean(components)
         std_component = np.std(components)
-        cv = std_component / mean_component
+        cv = std_component / mean_component if mean_component > 0 else 1.0
 
-        # Mapear coeficiente de variação para confiança
-        # Baixa variação → alta confiança
-        confidence = np.exp(-2 * cv)
+        # Aplicar lógica ternária para avaliar consistência
+        component_states = []
+        for comp in components:
+            if comp > 0.8:
+                component_states.append(1)   # Alto
+            elif comp < 0.2:
+                component_states.append(-1)  # Baixo
+            else:
+                component_states.append(0)   # Médio
+
+        # Usar consenso ternário para determinar qualidade geral
+        consensus_result = self.ternary_logic.ternary_consensus(
+            [self.ternary_logic.create_superposition() for _ in component_states],
+            threshold=0.7
+        )
+
+        # Ajustar confiança baseada no consenso ternário
+        base_confidence = np.exp(-2 * cv)
+
+        if consensus_result == 1:
+            # Consenso positivo - aumentar confiança
+            confidence = min(1.0, base_confidence * 1.2)
+        elif consensus_result == -1:
+            # Consenso negativo - reduzir confiança
+            confidence = max(0.0, base_confidence * 0.8)
+        else:
+            # Neutro - manter confiança base
+            confidence = base_confidence
 
         return np.clip(confidence, 0.0, 1.0)
 
     def _classify_fci_state(self, fci_value: float) -> str:
         """
-        Classifica estado baseado no valor FCI usando thresholds configuráveis.
+        Classifica estado baseado no valor FCI usando thresholds configuráveis e lógica ternária.
 
         Args:
             fci_value: Valor do FCI
@@ -526,14 +591,39 @@ class ConsciousnessMetrics(nn.Module):
         Returns:
             Nome do estado classificado
         """
+        # Classificação binária tradicional
         if fci_value >= self.threshold_emergence:
-            return "EMERGENCE"
+            state = "EMERGENCE"
         elif fci_value >= self.threshold_meditation:
-            return "MEDITATION"
+            state = "MEDITATION"
         elif fci_value >= self.threshold_analysis:
-            return "ANALYSIS"
+            state = "ANALYSIS"
         else:
-            return "COMA"
+            state = "COMA"
+
+        # Aplicar refinamento ternário
+        ternary_state = self.consciousness_ternary_states.get(state.lower(), 0)
+
+        # Usar lógica ternária para ajustar classificação baseada em contexto
+        # Se o estado for neutro (0), verificar se deve ser ajustado
+        if ternary_state == 0:
+            # Aplicar consenso ternário baseado no histórico recente
+            recent_states = [fci.state_classification for fci in self.fci_history[-5:]]
+            ternary_votes = [self.consciousness_ternary_states.get(s.lower(), 0) for s in recent_states]
+
+            consensus = self.ternary_logic.ternary_consensus(
+                [self.ternary_logic.create_superposition() for _ in ternary_votes],
+                threshold=0.6
+            )
+
+            if consensus is not None and consensus != 0:
+                # Ajustar estado baseado no consenso
+                if consensus == 1 and state == "ANALYSIS":
+                    state = "MEDITATION"
+                elif consensus == -1 and state == "ANALYSIS":
+                    state = "COMA"
+
+        return state
 
     def _update_fci_history(self, fci_object: FCI):
         """Atualiza histórico de medições FCI."""

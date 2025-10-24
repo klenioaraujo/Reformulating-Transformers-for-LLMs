@@ -3,6 +3,7 @@ import numpy as np
 import math
 from typing import Dict, Any, Optional, Tuple
 from configs.SystemConfig import SystemConfig
+from core.TernaryLogicFramework import TernaryLogicFramework
 
 
 class PhysicalProcessor:
@@ -34,7 +35,10 @@ class PhysicalProcessor:
         self.k = config.physics.k
         self.omega = config.physics.omega
 
-        print(f"🔬 Physical Processor inicializado com equação de Padilha")
+        # Inicializar lógica ternária
+        self.ternary_logic = TernaryLogicFramework(device=self.device)
+
+        print(f"🔬 Physical Processor inicializado com equação de Padilha e lógica ternária")
         print(f"   f(λ,t) = {self.I0} sin({self.omega}t + {self.alpha}λ) e^(i({self.omega}t - {self.k}λ + {self.beta}λ²))")
 
     def quaternion_map(self, signal: torch.Tensor) -> torch.Tensor:
@@ -324,7 +328,7 @@ class PhysicalProcessor:
 
     def validate_physics(self, input_signal: torch.Tensor, output_signal: Any) -> Dict[str, bool]:
         """
-        Valida propriedades físicas obrigatórias
+        Valida propriedades físicas obrigatórias com lógica ternária
 
         Args:
             input_signal: Sinal de entrada
@@ -346,8 +350,83 @@ class PhysicalProcessor:
         # Validação de unitariedade (simplificada)
         unitarity_valid = energy_conserved
 
+        # Adicionar validação ternária
+        ternary_consistency = self._validate_ternary_physics_consistency(input_signal, output_signal)
+
+        # Combinar validações usando lógica ternária
+        energy_result = 1 if energy_conserved else -1
+        unitarity_result = 1 if unitarity_valid else -1
+        ternary_result = 1 if ternary_consistency else -1
+
+        # Resultado final usando AND ternário
+        overall_valid = self.ternary_logic.ternary_and(
+            self.ternary_logic.ternary_and(energy_result, unitarity_result),
+            ternary_result
+        ) == 1
+
         return {
             'energy_conservation': energy_conserved,
             'unitarity': unitarity_valid,
-            'numerical_stability': True  # Placeholder
+            'numerical_stability': True,  # Placeholder
+            'ternary_consistency': ternary_consistency,
+            'overall_valid': overall_valid
         }
+
+    def _validate_ternary_physics_consistency(self, input_signal: torch.Tensor, output_signal: Any) -> bool:
+        """
+        Valida consistência ternária das propriedades físicas
+
+        Args:
+            input_signal: Sinal de entrada
+            output_signal: Sinal de saída
+
+        Returns:
+            True se consistente
+        """
+        try:
+            # Converter sinais para estados ternários
+            input_ternary = self._tensor_to_ternary_states(input_signal)
+
+            if isinstance(output_signal, torch.Tensor):
+                output_ternary = self._tensor_to_ternary_states(output_signal)
+
+                # Verificar se a distribuição de estados é similar
+                input_dist = torch.bincount(input_ternary.flatten() + 1, minlength=3)
+                output_dist = torch.bincount(output_ternary.flatten() + 1, minlength=3)
+
+                # Calcular diferença relativa
+                total_elements = input_signal.numel()
+                dist_diff = torch.sum(torch.abs(input_dist - output_dist)) / (2 * total_elements)
+
+                # Considerar consistente se diferença < 35%
+                return dist_diff < 0.35
+            else:
+                # Para saídas não-tensor, verificar se é válida
+                return isinstance(output_signal, (str, int, float)) and output_signal is not None
+
+        except Exception:
+            return False
+
+    def _tensor_to_ternary_states(self, tensor: torch.Tensor) -> torch.Tensor:
+        """
+        Converte tensor para estados ternários
+
+        Args:
+            tensor: Tensor de entrada
+
+        Returns:
+            Estados ternários
+        """
+        abs_tensor = torch.abs(tensor)
+        max_val = torch.max(abs_tensor)
+
+        if max_val == 0:
+            return torch.zeros_like(tensor, dtype=torch.long)
+
+        normalized = tensor / (max_val + 1e-10)
+
+        ternary_states = torch.zeros_like(tensor, dtype=torch.long)
+        ternary_states[normalized > 0.33] = 1
+        ternary_states[normalized < -0.33] = -1
+
+        return ternary_states

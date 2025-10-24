@@ -10,6 +10,7 @@ from configs.SystemConfig import SystemConfig
 from core.PhysicalProcessor import PhysicalProcessor
 from core.QuantumMemory import QuantumMemory
 from core.AutoCalibration import AutoCalibration
+from core.TernaryLogicFramework import TernaryLogicFramework, TernaryValidationFramework
 
 
 class PipelineManager:
@@ -37,15 +38,20 @@ class PipelineManager:
         self.quantum_memory = QuantumMemory(config)
         self.auto_calibration = AutoCalibration(config)
 
-        # Estado do pipeline
+        # Inicializar framework de lógica ternária
+        self.ternary_logic = TernaryLogicFramework(device=self.device)
+        self.ternary_validator = TernaryValidationFramework(self.ternary_logic)
+
+        # Estado do pipeline com lógica ternária
         self.pipeline_state = {
             'initialized': True,
             'calibration_applied': False,
             'validation_passed': False,
-            'energy_conserved': False
+            'energy_conserved': False,
+            'ternary_consistency': 0  # -1, 0, 1 para inconsistente, neutro, consistente
         }
 
-        print(f"✅ Pipeline Manager inicializado no dispositivo: {self.device}")
+        print(f"✅ Pipeline Manager inicializado no dispositivo: {self.device} com lógica ternária")
 
     def process(self, text: str) -> Dict[str, Any]:
         """
@@ -112,14 +118,20 @@ class PipelineManager:
             print("🎯 Passo 7: Interpretação final via Sistema DCF (Dinâmica de Consciência Fractal)...")
             output_text = self.physical_processor.wave_to_text(optical_output, consciousness)
 
-            # Validações matemáticas rigorosas obrigatórias
+            # Validações matemáticas rigorosas obrigatórias com lógica ternária
             validation_results = self._validate_pipeline_rigorous(
                 fractal_signal, quaternion_state, filtered_state,
                 rotated_state, optical_output
             )
 
-            # Verificar conservação de energia
+            # Verificar conservação de energia com lógica ternária
             energy_conserved = self._validate_energy_conservation(fractal_signal, optical_output)
+
+            # Validar consistência ternária
+            ternary_consistency = self._validate_ternary_consistency(
+                fractal_signal, quaternion_state, filtered_state,
+                rotated_state, optical_output
+            )
 
             # Inicialização do Sistema DCF
             print(">> [Pós-Calibração] Inicializando DCF com dimensões FIXAS...")
@@ -158,10 +170,11 @@ class PipelineManager:
                 "status": "success"
             }
 
-            # Atualizar estado do pipeline
+            # Atualizar estado do pipeline com lógica ternária
             self.pipeline_state.update({
                 'validation_passed': validation_results['validation_passed'],
-                'energy_conserved': energy_conserved
+                'energy_conserved': energy_conserved,
+                'ternary_consistency': ternary_consistency
             })
 
             print(f"✅ Pipeline concluído com sucesso")
@@ -440,7 +453,7 @@ class PipelineManager:
             return False
 
     def _validate_energy_conservation(self, input_signal: torch.Tensor,
-                                      output_signal: Any, tolerance: float = 0.05) -> bool:
+                                       output_signal: Any, tolerance: float = 0.05) -> bool:
         """
         Valida conservação de energia entre entrada e saída
 
@@ -473,6 +486,54 @@ class PipelineManager:
             print(f"⚠️  Erro na validação de energia: {e}")
             return False
 
+    def _validate_ternary_consistency(self, fractal_signal: torch.Tensor,
+                                     quaternion_state: torch.Tensor,
+                                     filtered_state: torch.Tensor,
+                                     rotated_state: torch.Tensor,
+                                     optical_output: Any) -> int:
+        """
+        Valida consistência ternária do pipeline usando lógica ternária
+
+        Args:
+            fractal_signal: Sinal fractal de entrada
+            quaternion_state: Estado quaterniônico
+            filtered_state: Estado filtrado
+            rotated_state: Estado rotacionado
+            optical_output: Saída óptica
+
+        Returns:
+            -1 (inconsistente), 0 (neutro), 1 (consistente)
+        """
+        try:
+            # Validar operações ternárias básicas
+            ternary_validation = self.ternary_validator.validate_ternary_operations()
+
+            # Verificar consistência de estados quânticos
+            states_consistent = True
+            if isinstance(optical_output, torch.Tensor):
+                # Verificar se estados mantêm propriedades ternárias
+                # (Simplificado: verificar se valores estão no range ternário)
+                for state in [quaternion_state, filtered_state, rotated_state, optical_output]:
+                    if torch.any((state < -1.1) | (state > 1.1)):
+                        states_consistent = False
+                        break
+
+            # Combinar validações usando lógica ternária
+            validation_score = sum(ternary_validation.values()) / len(ternary_validation)
+            states_score = 1 if states_consistent else -1
+
+            # Aplicar operação ternária AND
+            consistency_result = self.ternary_logic.ternary_and(
+                1 if validation_score > 0.8 else (-1 if validation_score < 0.5 else 0),
+                states_score
+            )
+
+            return consistency_result
+
+        except Exception as e:
+            print(f"⚠️  Erro na validação ternária: {e}")
+            return 0  # Neutro em caso de erro
+
     def get_pipeline_status(self) -> Dict[str, Any]:
         """
         Retorna status atual do pipeline
@@ -499,6 +560,7 @@ class PipelineManager:
         self.pipeline_state.update({
             'calibration_applied': False,
             'validation_passed': False,
-            'energy_conserved': False
+            'energy_conserved': False,
+            'ternary_consistency': 0
         })
-        print("🔄 Pipeline resetado")
+        print("🔄 Pipeline resetado com lógica ternária")

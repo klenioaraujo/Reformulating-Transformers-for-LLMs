@@ -2,6 +2,7 @@ import torch
 import numpy as np
 import math
 from typing import Dict, Any, Optional, Tuple, List
+from core.TernaryLogicFramework import TernaryLogicFramework
 
 
 class SpectralFiltering:
@@ -16,7 +17,7 @@ class SpectralFiltering:
     def __init__(self, alpha: float = 1.0, epsilon: float = 1e-10,
                  use_stable_activation: bool = True, device: str = "cpu"):
         """
-        Inicializa filtragem espectral
+        Inicializa filtragem espectral com lógica ternária
 
         Args:
             alpha: Parâmetro espectral α
@@ -28,13 +29,14 @@ class SpectralFiltering:
         self.epsilon = epsilon
         self.use_stable_activation = use_stable_activation
         self.device = device
+        self.ternary_logic = TernaryLogicFramework(device=device)
 
-        print(f"🌊 Spectral Filtering inicializada: F(k) = exp(i α · arctan(ln(|k| + ε)))")
+        print(f"🌊 Spectral Filtering inicializada com lógica ternária: F(k) = exp(i α · arctan(ln(|k| + ε)))")
         print(f"   α = {alpha}, ε = {epsilon}, stable_activation = {use_stable_activation}")
 
     def apply_filter(self, psi: torch.Tensor) -> torch.Tensor:
         """
-        Aplica filtragem espectral ao estado quântico
+        Aplica filtragem espectral ao estado quântico com lógica ternária
 
         Args:
             psi: Estado quântico [batch, seq_len, embed_dim, 4]
@@ -63,6 +65,9 @@ class SpectralFiltering:
         phase = torch.arctan(log_k)
         filter_response = torch.exp(1j * self.alpha * phase)
 
+        # Aplicar lógica ternária ao filtro
+        filter_response = self._apply_ternary_filter_modulation(filter_response, k)
+
         # Expandir filtro para todas as dimensões
         filter_response = filter_response.expand_as(psi_fft)
 
@@ -71,6 +76,9 @@ class SpectralFiltering:
 
         # Transformada inversa
         psi_filtered = torch.fft.ifft(psi_filtered_fft, dim=2).real
+
+        # Aplicar estabilização ternária ao resultado
+        psi_filtered = self._apply_ternary_state_stabilization(psi_filtered)
 
         # Garantir conservação de energia
         psi_filtered = self._ensure_energy_conservation(psi, psi_filtered)
@@ -111,7 +119,7 @@ class SpectralFiltering:
 
     def validate_filter_unitarity(self, embed_dim: int = 64) -> bool:
         """
-        Valida unitariedade do filtro espectral
+        Valida unitariedade do filtro espectral com lógica ternária
 
         Args:
             embed_dim: Dimensão do embedding
@@ -131,12 +139,52 @@ class SpectralFiltering:
             energy_out = torch.sum(filtered_signal.abs() ** 2)
 
             conservation_ratio = abs(energy_in - energy_out) / energy_in
-            is_unitary = conservation_ratio <= 0.01  # 1% tolerância
+            energy_conserved = conservation_ratio <= 0.01  # 1% tolerância
+
+            # Adicionar validação ternária
+            ternary_consistency = self._validate_ternary_filter_consistency(test_signal, filtered_signal)
+
+            # Combinar validações usando lógica ternária
+            energy_result = 1 if energy_conserved else -1
+            ternary_result = 1 if ternary_consistency else -1
+
+            final_result = self.ternary_logic.ternary_and(energy_result, ternary_result)
+            is_unitary = final_result == 1
 
             return is_unitary
 
         except Exception as e:
             print(f"⚠️  Filter unitarity validation failed: {e}")
+            return False
+
+    def _validate_ternary_filter_consistency(self, input_signal: torch.Tensor, output_signal: torch.Tensor) -> bool:
+        """
+        Valida consistência ternária do filtro
+
+        Args:
+            input_signal: Sinal de entrada
+            output_signal: Sinal de saída
+
+        Returns:
+            True se consistente
+        """
+        try:
+            # Converter sinais para estados ternários
+            input_ternary = self._tensor_to_ternary_states(input_signal)
+            output_ternary = self._tensor_to_ternary_states(output_signal)
+
+            # Verificar preservação de estrutura ternária
+            input_dist = torch.bincount(input_ternary.flatten() + 1, minlength=3)
+            output_dist = torch.bincount(output_ternary.flatten() + 1, minlength=3)
+
+            # Calcular diferença de distribuição
+            total_elements = input_signal.numel()
+            dist_diff = torch.sum(torch.abs(input_dist - output_dist)) / (2 * total_elements)
+
+            # Considerar consistente se diferença < 40% (mais tolerante que quaternions)
+            return dist_diff < 0.4
+
+        except Exception:
             return False
 
     def get_filter_response(self, embed_dim: int = 64) -> Dict[str, torch.Tensor]:
@@ -281,3 +329,118 @@ class SpectralFiltering:
 
         except Exception:
             return False
+
+    def _apply_ternary_filter_modulation(self, filter_response: torch.Tensor, k: torch.Tensor) -> torch.Tensor:
+        """
+        Aplica modulação ternária ao filtro espectral
+
+        Args:
+            filter_response: Resposta do filtro original
+            k: Vetor de frequências
+
+        Returns:
+            Filtro modulado com lógica ternária
+        """
+        # Converter frequências para estados ternários
+        k_ternary = self._frequency_to_ternary_states(k)
+
+        # Aplicar modulação baseada em estados ternários
+        modulation_factor = torch.where(
+            k_ternary == 1,  # Frequências positivas
+            torch.tensor(1.1, device=self.device),  # Aumento para positivas
+            torch.where(
+                k_ternary == -1,  # Frequências negativas
+                torch.tensor(0.9, device=self.device),  # Redução para negativas
+                torch.tensor(1.0, device=self.device)   # Neutro para zero
+            )
+        )
+
+        return filter_response * modulation_factor
+
+    def _apply_ternary_state_stabilization(self, psi_filtered: torch.Tensor) -> torch.Tensor:
+        """
+        Aplica estabilização de estados ternários ao sinal filtrado
+
+        Args:
+            psi_filtered: Sinal filtrado
+
+        Returns:
+            Sinal estabilizado
+        """
+        # Converter para estados ternários e aplicar estabilização
+        ternary_states = self._tensor_to_ternary_states(psi_filtered)
+
+        # Para regiões de alta frequência (valores extremos), aplicar consenso ternário
+        extreme_mask = torch.abs(psi_filtered) > torch.quantile(torch.abs(psi_filtered), 0.95)
+
+        if extreme_mask.any():
+            # Aplicar consenso ternário para estabilização
+            consensus_values = []
+            for i in range(min(10, psi_filtered.numel())):  # Amostra para consenso
+                sample_val = psi_filtered.flatten()[i]
+                ternary_val = 1 if sample_val > 0.1 else (-1 if sample_val < -0.1 else 0)
+                consensus_values.append(ternary_val)
+
+            consensus_result = self.ternary_logic.ternary_majority_vote(consensus_values)
+
+            # Aplicar estabilização baseada no consenso
+            stabilization_factor = 0.1 if consensus_result == 0 else 0.05
+            psi_filtered[extreme_mask] = torch.lerp(
+                psi_filtered[extreme_mask],
+                torch.full_like(psi_filtered[extreme_mask], consensus_result * stabilization_factor),
+                0.3  # Fator de interpolação
+            )
+
+        return psi_filtered
+
+    def _frequency_to_ternary_states(self, k: torch.Tensor) -> torch.Tensor:
+        """
+        Converte frequências para estados ternários
+
+        Args:
+            k: Vetor de frequências
+
+        Returns:
+            Estados ternários das frequências
+        """
+        # Classificar baseado no sinal e magnitude
+        k_abs = torch.abs(k)
+        max_k = torch.max(k_abs)
+
+        if max_k == 0:
+            return torch.zeros_like(k, dtype=torch.long)
+
+        # Normalizar
+        k_norm = k / (max_k + 1e-10)
+
+        # Converter para ternário
+        ternary_k = torch.zeros_like(k, dtype=torch.long)
+        ternary_k[k_norm > 0.2] = 1
+        ternary_k[k_norm < -0.2] = -1
+
+        return ternary_k
+
+    def _tensor_to_ternary_states(self, tensor: torch.Tensor) -> torch.Tensor:
+        """
+        Converte tensor para estados ternários
+
+        Args:
+            tensor: Tensor de entrada
+
+        Returns:
+            Estados ternários
+        """
+        # Similar ao método em QuaternionOps
+        abs_tensor = torch.abs(tensor)
+        max_val = torch.max(abs_tensor)
+
+        if max_val == 0:
+            return torch.zeros_like(tensor, dtype=torch.long)
+
+        normalized = tensor / (max_val + 1e-10)
+
+        ternary_states = torch.zeros_like(tensor, dtype=torch.long)
+        ternary_states[normalized > 0.33] = 1
+        ternary_states[normalized < -0.33] = -1
+
+        return ternary_states
