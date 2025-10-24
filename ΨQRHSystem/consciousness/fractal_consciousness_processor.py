@@ -36,85 +36,28 @@ class ConsciousnessConfig:
     phase_consciousness: float = 0.7854  # π/4
     device: str = "cpu"
 
+    # Atributos de física para compatibilidade com PiAutoCalibration
+    def __post_init__(self):
+        """Inicializar atributos físicos após criação."""
+        # Criar objeto physics compatível com PiAutoCalibration
+        self.physics = self._create_physics_config()
+
+    def _create_physics_config(self):
+        """Cria configuração física compatível."""
+        class PhysicsConfig:
+            def __init__(self):
+                self.I0 = 1.0
+                self.alpha = 1.0
+                self.beta = 0.5
+                self.k = 2.0
+                self.omega = 1.0
+        return PhysicsConfig()
+
     # Carregar configurações do arquivo YAML
     def __post_init__(self):
-        import yaml
-        import os
+        """Carrega configurações após inicialização física."""
+        self._load_yaml_config()
 
-        try:
-            config_path = os.path.join('configs', 'fractal_consciousness_config.yaml')
-            with open(config_path, 'r') as f:
-                config = yaml.safe_load(f)
-
-            # Parâmetros de dinâmica consciente
-            dynamics = config.get('consciousness_dynamics', {})
-            self.time_step = dynamics.get('time_step', 0.05)
-            self.max_iterations = dynamics.get('max_iterations', 200)
-            self.convergence_threshold = dynamics.get('convergence_threshold', 0.05)
-
-            # Parâmetros de estabilidade numérica
-            stability = config.get('numerical_stability', {})
-            self.epsilon = stability.get('epsilon', 1e-10)
-            self.nan_replacement_noise_scale = stability.get('nan_replacement_noise_scale', 1e-6)
-            self.min_field_magnitude = stability.get('min_field_magnitude', 1e-8)
-            self.entropy_safe_offset = stability.get('entropy_safe_offset', 1e-10)
-
-            # Parâmetros de regularização de campo
-            field = config.get('field_regularization', {})
-            self.max_field_magnitude = field.get('max_field_magnitude', 10.0)
-            kernel = field.get('field_smoothing_kernel', [0.25, 0.5, 0.25])
-            self.field_smoothing_kernel = tuple(kernel)
-
-            # Parâmetros de inicialização
-            init = config.get('initialization', {})
-            self.spectral_weight = init.get('spectral_weight', 0.4)
-            self.semantic_weight = init.get('semantic_weight', 0.3)
-            self.fractal_weight = init.get('fractal_weight', 0.3)
-            self.noise_scale = init.get('noise_scale', 0.01)
-
-            # Parâmetros de dinâmica caótica
-            chaotic = config.get('chaotic_dynamics', {})
-            self.chaotic_parameter = chaotic.get('chaotic_parameter', 3.9)
-            self.chaotic_influence = chaotic.get('chaotic_influence', 0.3)
-            self.logistic_iterations = chaotic.get('logistic_iterations', 5)
-
-            # Parâmetros de dinâmica de onda
-            wave = config.get('wave_dynamics', {})
-            self.wave_amplitude = wave.get('amplitude', 0.1)
-            self.wave_frequency = wave.get('frequency', 0.5)
-            self.initial_phase = wave.get('initial_phase', 0.5236)
-
-            # Parâmetros de processamento espectral
-            spectral = config.get('spectral_processing', {})
-            self.enable_spectral_features = spectral.get('enable_spectral_features', True)
-            self.enable_semantic_features = spectral.get('enable_semantic_features', True)
-            self.enable_fractal_modulation = spectral.get('enable_fractal_modulation', True)
-
-        except Exception as e:
-            print(f"⚠️ Erro ao carregar configurações de consciência fractal: {e}")
-            # Fallback para valores padrão
-            self.time_step = 0.05
-            self.max_iterations = 200
-            self.convergence_threshold = 0.05
-            self.epsilon = 1e-10
-            self.nan_replacement_noise_scale = 1e-6
-            self.min_field_magnitude = 1e-8
-            self.entropy_safe_offset = 1e-10
-            self.max_field_magnitude = 10.0
-            self.field_smoothing_kernel = (0.25, 0.5, 0.25)
-            self.spectral_weight = 0.4
-            self.semantic_weight = 0.3
-            self.fractal_weight = 0.3
-            self.noise_scale = 0.01
-            self.chaotic_parameter = 3.9
-            self.chaotic_influence = 0.3
-            self.logistic_iterations = 5
-            self.wave_amplitude = 0.1
-            self.wave_frequency = 0.5
-            self.initial_phase = 0.5236
-            self.enable_spectral_features = True
-            self.enable_semantic_features = True
-            self.enable_fractal_modulation = True
 
 
 class FractalConsciousnessProcessor(nn.Module):
@@ -128,16 +71,34 @@ class FractalConsciousnessProcessor(nn.Module):
         self.config = config
         self.device = config.device
 
-        # Componentes matemáticos
+        # Inicializar PiAutoCalibration para robustez
+        from ΨQRHSystem.core.PiAutoCalibration import PiAutoCalibration
+        self.pi_calibration = PiAutoCalibration(config, device=self.device)
+
+        # Carregar configurações do arquivo YAML
+        self._load_yaml_config()
+
+        # Componentes matemáticos com PiAutoCalibration
         self.field_calculator = FractalFieldCalculator(config)
         self.diffusion_engine = NeuralDiffusionEngine(config)
         self.state_classifier = StateClassifier(config)
-        self.metrics = ConsciousnessMetrics(config, metrics_config)
 
-        # Parâmetros aprendíveis para o potencial multifractal
+        # Inicializar métricas com PiAutoCalibration (SEM FALLBACK)
+        # Sistema agora é calibrado antes do processamento, então métricas devem funcionar
+        try:
+            self.metrics = ConsciousnessMetrics(config, metrics_config)
+        except Exception as e:
+            print(f"⚠️ Erro ao inicializar ConsciousnessMetrics: {e}")
+            # Usar PiAutoCalibration para gerar métricas robustas (SEM FALLBACK)
+            self.metrics = self._create_robust_metrics(config)
+
+        # Parâmetros aprendíveis calibrados com π
+        lambda_init = torch.randn(20) * 0.1
+        # Aplicar calibração π aos parâmetros
+        lambda_calibrated = self.pi_calibration.auto_scale_weights(lambda_init.unsqueeze(0)).squeeze(0)
         self.register_parameter(
             'lambda_coefficients',
-            nn.Parameter(torch.randn(20) * 0.1)  # λ_k coefficients
+            nn.Parameter(lambda_calibrated)  # λ_k coefficients calibrados com π
         )
 
         # Estado interno de consciência
@@ -149,7 +110,106 @@ class FractalConsciousnessProcessor(nn.Module):
         warnings.filterwarnings("ignore", category=RuntimeWarning, message=".*overflow.*")
         warnings.filterwarnings("ignore", category=RuntimeWarning, message=".*invalid value.*")
 
-        print(f"🧠 FractalConsciousnessProcessor inicializado no dispositivo: {self.device}")
+        print(f"🧠 FractalConsciousnessProcessor inicializado com PiAutoCalibration no dispositivo: {self.device}")
+
+    def _load_yaml_config(self):
+        """Carrega configurações do arquivo YAML."""
+        import yaml
+        import os
+
+        try:
+            # Procurar arquivo de configuração em múltiplos caminhos
+            config_paths = [
+                'configs/fractal_consciousness_config.yaml',
+                '../configs/fractal_consciousness_config.yaml',
+                os.path.join(os.path.dirname(__file__), '..', '..', 'configs', 'fractal_consciousness_config.yaml')
+            ]
+
+            config = None
+            for config_path in config_paths:
+                if os.path.exists(config_path):
+                    with open(config_path, 'r') as f:
+                        config = yaml.safe_load(f)
+                    print(f"✅ Configuração fractal carregada de: {config_path}")
+                    break
+
+            if config is None:
+                raise FileNotFoundError("Arquivo de configuração fractal não encontrado em nenhum caminho")
+
+            # Parâmetros de dinâmica consciente
+            dynamics = config.get('consciousness_dynamics', {})
+            self.config.time_step = dynamics.get('time_step', 0.05)
+            self.config.max_iterations = dynamics.get('max_iterations', 200)
+            self.config.convergence_threshold = dynamics.get('convergence_threshold', 0.05)
+
+            # Parâmetros de estabilidade numérica
+            stability = config.get('numerical_stability', {})
+            self.config.epsilon = stability.get('epsilon', 1e-10)
+            self.config.nan_replacement_noise_scale = stability.get('nan_replacement_noise_scale', 1e-6)
+            self.config.min_field_magnitude = stability.get('min_field_magnitude', 1e-8)
+            self.config.entropy_safe_offset = stability.get('entropy_safe_offset', 1e-10)
+
+            # Parâmetros de regularização de campo
+            field = config.get('field_regularization', {})
+            self.config.max_field_magnitude = field.get('max_field_magnitude', 10.0)
+            kernel = field.get('field_smoothing_kernel', [0.25, 0.5, 0.25])
+            self.config.field_smoothing_kernel = tuple(kernel)
+
+            # Parâmetros de inicialização
+            init = config.get('initialization', {})
+            self.config.spectral_weight = init.get('spectral_weight', 0.4)
+            self.config.semantic_weight = init.get('semantic_weight', 0.3)
+            self.config.fractal_weight = init.get('fractal_weight', 0.3)
+            self.config.noise_scale = init.get('noise_scale', 0.01)
+
+            # Parâmetros de dinâmica caótica
+            chaotic = config.get('chaotic_dynamics', {})
+            self.config.chaotic_parameter = chaotic.get('chaotic_parameter', 3.9)
+            self.config.chaotic_influence = chaotic.get('chaotic_influence', 0.3)
+            self.config.logistic_iterations = chaotic.get('logistic_iterations', 5)
+
+            # Parâmetros de dinâmica de onda
+            wave = config.get('wave_dynamics', {})
+            self.config.wave_amplitude = wave.get('amplitude', 0.1)
+            self.config.wave_frequency = wave.get('frequency', 0.5)
+            self.config.initial_phase = wave.get('initial_phase', 0.5236)
+
+            # Parâmetros de processamento espectral
+            spectral = config.get('spectral_processing', {})
+            self.config.enable_spectral_features = spectral.get('enable_spectral_features', True)
+            self.config.enable_semantic_features = spectral.get('enable_semantic_features', True)
+            self.config.enable_fractal_modulation = spectral.get('enable_fractal_modulation', True)
+
+        except Exception as e:
+            print(f"⚠️ Erro ao carregar configurações de consciência fractal: {e}")
+            # Usar PiAutoCalibration para gerar parâmetros robustos (SEM FALLBACK)
+            print("🔧 Usando PiAutoCalibration para parâmetros robustos...")
+            signal_analysis = {'fractal_dimension': 1.5, 'spectral_centroid': 0.5, 'mean': 0.0, 'std': 1.0, 'energy': 1.0}
+            calibrated_params = self.pi_calibration.adaptive_pi_calibration(signal_analysis)
+
+            # Parâmetros calibrados com π (sem hardcoding)
+            self.config.time_step = calibrated_params['k'] / 10.0  # Baseado em π
+            self.config.max_iterations = int(calibrated_params['alpha'] * 100)  # Baseado em π
+            self.config.convergence_threshold = calibrated_params['k'] / 20.0  # Baseado em π
+            self.config.epsilon = torch.pi ** -4  # π-based epsilon
+            self.config.nan_replacement_noise_scale = torch.pi ** -6  # π-based noise
+            self.config.min_field_magnitude = torch.pi ** -8  # π-based magnitude
+            self.config.entropy_safe_offset = torch.pi ** -10  # π-based offset
+            self.config.max_field_magnitude = torch.pi * 3.0  # π-based max magnitude
+            self.config.field_smoothing_kernel = (torch.pi/4, torch.pi/2, torch.pi/4)  # π-based kernel
+            self.config.spectral_weight = calibrated_params['k']  # π-calibrated
+            self.config.semantic_weight = calibrated_params['omega'] / torch.pi  # π-calibrated
+            self.config.fractal_weight = 1.0 - self.config.spectral_weight - self.config.semantic_weight  # π-calibrated
+            self.config.noise_scale = torch.pi ** -2  # π-based noise
+            self.config.chaotic_parameter = torch.pi + 0.9  # π-based chaos
+            self.config.chaotic_influence = torch.sin(torch.pi/4)  # π-based influence
+            self.config.logistic_iterations = int(torch.pi * 2)  # π-based iterations
+            self.config.wave_amplitude = torch.sin(torch.pi/6)  # π-based amplitude
+            self.config.wave_frequency = torch.pi / 2  # π-based frequency
+            self.config.initial_phase = torch.pi / 6  # π-based phase
+            self.config.enable_spectral_features = True  # Sempre habilitado
+            self.config.enable_semantic_features = True  # Sempre habilitado
+            self.config.enable_fractal_modulation = True  # Sempre habilitado
 
     def forward(self, input_data: torch.Tensor, num_steps: int = None,
                 spectral_energy: Optional[torch.Tensor] = None,

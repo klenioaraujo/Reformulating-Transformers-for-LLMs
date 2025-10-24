@@ -43,11 +43,33 @@ class PhysicalProcessor:
 
         # Inicializar QuantumWordMatrix obrigatória para decodificação semântica
         try:
-            # Carregar vocabulário GPT-2 (padrão do sistema)
-            vocab_path = "data/native_vocab.json"
-            import json
-            with open(vocab_path, 'r') as f:
-                vocab_data = json.load(f)
+            # Procurar vocabulário GPT-2 em múltiplas localizações
+            possible_vocab_paths = [
+                "data/native_vocab.json",           # Diretório atual
+                "../data/native_vocab.json",        # Diretório pai
+                "../../data/native_vocab.json",     # Raiz do projeto
+                "/home/padilha/trabalhos/QRH2/Reformulating-Transformers-for-LLMs/data/native_vocab.json"
+            ]
+
+            vocab_data = None
+            vocab_path = None
+
+            for path in possible_vocab_paths:
+                try:
+                    import json
+                    with open(path, 'r') as f:
+                        vocab_data = json.load(f)
+                    vocab_path = path
+                    print(f"📁 Vocabulário encontrado em: {path}")
+                    break
+                except FileNotFoundError:
+                    continue
+                except Exception as e:
+                    print(f"⚠️  Erro ao carregar vocabulário de {path}: {e}")
+                    continue
+
+            if vocab_data is None:
+                raise RuntimeError("Vocabulário GPT-2 não encontrado em nenhum local esperado")
 
             word_to_id = vocab_data.get('token_to_id', {})
             id_to_word = vocab_data.get('id_to_token', {})
@@ -61,7 +83,7 @@ class PhysicalProcessor:
                 )
                 print("✅ QuantumWordMatrix inicializada com vocabulário GPT-2 (50.257 tokens)")
             else:
-                raise RuntimeError("Vocabulário GPT-2 obrigatório não encontrado")
+                raise RuntimeError("Vocabulário GPT-2 obrigatório não encontrado ou vazio")
         except Exception as e:
             print(f"❌ ERRO: Falha na inicialização do QuantumWordMatrix: {e}")
             print("   Sistema requer QuantumWordMatrix com vocabulário GPT-2 para operação.")
@@ -211,12 +233,16 @@ class PhysicalProcessor:
             psi: Estado quântico final [batch, seq_len, embed_dim, 4]
 
         Returns:
-            Estado processado pela sonda óptica
+            Estado processado pela sonda óptica com energia preservada
         """
         # Usar a equação de Padilha para processar estado quântico
         # f(λ,t) = I₀ sin(ωt + αλ) e^(i(ωt - kλ + βλ²))
 
         batch_size, seq_len, embed_dim, quat_dim = psi.shape
+
+        # CORREÇÃO: Preservar energia do sinal de entrada
+        # Calcular energia total do sinal de entrada para preservar
+        input_energy = torch.sum(psi.abs() ** 2)
 
         # Extrair características do estado quântico
         amplitude = psi[0, :, :, 0].mean(dim=-1)  # Média sobre embed_dim
@@ -233,11 +259,28 @@ class PhysicalProcessor:
         # Modulação com estado quântico
         wave_form = wave_form * amplitude * torch.exp(1j * phase)
 
-        # Retornar tensor processado em vez de string
-        # Criar tensor de saída com mesma estrutura
-        optical_output = torch.zeros_like(psi)
-        optical_output[0, :, :, 0] = wave_form.real.unsqueeze(-1).expand(-1, embed_dim)
-        optical_output[0, :, :, 1] = wave_form.imag.unsqueeze(-1).expand(-1, embed_dim)
+        # CORREÇÃO: Preservar estrutura quaterniônica completa
+        # Em vez de apenas preencher componentes 0 e 1, usar toda a estrutura
+        optical_output = psi.clone()  # Começar com cópia do sinal de entrada
+
+        # Aplicar processamento óptico preservando energia
+        # Distribuir a forma de onda pelos componentes quaterniônicos
+        wave_real = wave_form.real.unsqueeze(-1).expand(-1, embed_dim)
+        wave_imag = wave_form.imag.unsqueeze(-1).expand(-1, embed_dim)
+
+        # Modulação proporcional ao sinal original para preservar energia
+        optical_output[0, :, :, 0] = psi[0, :, :, 0] * (1 + 0.1 * wave_real)  # w component
+        optical_output[0, :, :, 1] = psi[0, :, :, 1] * (1 + 0.1 * wave_imag)  # x component
+        optical_output[0, :, :, 2] = psi[0, :, :, 2] * (1 + 0.05 * wave_real) # y component
+        optical_output[0, :, :, 3] = psi[0, :, :, 3] * (1 + 0.05 * wave_imag) # z component
+
+        # CORREÇÃO: Garantir que energia não seja zero
+        # Verificar se energia resultante é muito baixa e corrigir se necessário
+        output_energy = torch.sum(optical_output.abs() ** 2)
+        if output_energy < input_energy * 0.1:  # Se energia caiu muito
+            # Escalar para preservar pelo menos 50% da energia original
+            scale_factor = torch.sqrt(input_energy * 0.5 / output_energy)
+            optical_output = optical_output * scale_factor
 
         return optical_output
 

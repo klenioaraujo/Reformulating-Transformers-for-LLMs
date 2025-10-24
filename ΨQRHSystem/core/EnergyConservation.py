@@ -68,6 +68,25 @@ class EnergyConservation:
 
         return energy_variation < tolerance
 
+    def validate_energy_conservation(self, input_energy: float, output_energy: float,
+                                    tolerance: float = 0.05) -> bool:
+        """
+        Valida conservação de energia
+
+        Args:
+            input_energy: Energia de entrada
+            output_energy: Energia de saída
+            tolerance: Tolerância (5% padrão)
+
+        Returns:
+            True se energia conservada dentro da tolerância
+        """
+        if input_energy == 0:
+            return True
+
+        conservation_ratio = abs(input_energy - output_energy) / input_energy
+        return conservation_ratio <= tolerance
+
     def _pi_based_tolerance(self, state: torch.Tensor) -> float:
         """
         Calcula tolerância baseada em π para verificação de energia

@@ -43,6 +43,82 @@ class PiAutoCalibration:
 
         print("🔧 π-based Auto-Calibration initialized with intrinsic normalization")
 
+    def _analyze_input_signal(self, signal: torch.Tensor) -> Dict[str, float]:
+        """
+        Analisa características do sinal de entrada
+
+        Args:
+            signal: Sinal de entrada
+
+        Returns:
+            Análise do sinal
+        """
+        # Estatísticas básicas
+        signal_mean = torch.mean(signal).item()
+        signal_std = torch.std(signal).item()
+        signal_energy = torch.sum(signal.abs() ** 2).item()
+
+        # Análise espectral básica
+        if signal.dim() >= 2:
+            # FFT ao longo da última dimensão
+            signal_fft = torch.fft.fft(signal.flatten())
+            spectral_centroid = torch.sum(torch.arange(len(signal_fft), device=self.device) *
+                                        torch.abs(signal_fft)) / (torch.sum(torch.abs(signal_fft)) + 1e-10)
+            spectral_centroid = spectral_centroid.item() / len(signal_fft)
+        else:
+            spectral_centroid = 0.5  # Valor padrão
+
+        # Complexidade fractal estimada
+        fractal_dimension = self._estimate_fractal_dimension(signal)
+
+        return {
+            'mean': signal_mean,
+            'std': signal_std,
+            'energy': signal_energy,
+            'spectral_centroid': spectral_centroid,
+            'fractal_dimension': fractal_dimension
+        }
+
+    def _estimate_fractal_dimension(self, signal: torch.Tensor) -> float:
+        """
+        Estima dimensão fractal usando análise de power-law
+
+        Args:
+            signal: Sinal de entrada
+
+        Returns:
+            Dimensão fractal estimada
+        """
+        # Implementação simplificada de análise fractal
+        # P(k) ~ k^(-β) → D = (3 - β) / 2
+
+        if signal.numel() < 10:
+            return 1.5  # Valor padrão
+
+        # Calcular power spectrum
+        signal_flat = signal.flatten()
+        spectrum = torch.abs(torch.fft.fft(signal_flat))
+
+        # Frequências
+        k = torch.arange(1, len(spectrum) + 1, dtype=torch.float32)
+
+        # Power-law fitting simplificado
+        log_k = torch.log(k + 1e-10)
+        log_P = torch.log(spectrum + 1e-10)
+
+        # Regressão linear simples
+        n = len(log_k)
+        beta = (n * torch.sum(log_k * log_P) - torch.sum(log_k) * torch.sum(log_P)) / \
+               (n * torch.sum(log_k**2) - torch.sum(log_k)**2)
+
+        # Dimensão fractal
+        D = (3.0 - beta.item()) / 2.0
+
+        # Clamping para valores físicos
+        D = max(1.0, min(D, 2.0))
+
+        return D
+
     def auto_scale_weights(self, weight_matrix: torch.Tensor) -> torch.Tensor:
         """
         Auto-calibragem baseada em relações π
