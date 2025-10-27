@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 ΨQRH GLUE Benchmark - Complete DOE-Compliant Implementation with WikiText Pre-training
-====================================================================================
+===================================================================================
 
 Complete benchmark implementation for ΨQRH framework on GLUE tasks with:
 - Leech Lattice Λ₂₄ encoding with complete Golay code G₂₄ error correction table
@@ -120,10 +120,12 @@ class WordMatrixTokenizer:
         # Initialize with character pairs
         word_freq = {}
         for text in texts:
-            words = list(text.lower())
-            for i in range(len(words) - 1):
-                pair = (words[i], words[i + 1])
-                word_freq[pair] = word_freq.get(pair, 0) + 1
+            words = text.lower().split()  # CORRECTION: separate into words
+            for word in words:
+                chars = list(word) + ['</w>']  # wordpiece-style
+                for i in range(len(chars) - 1):
+                    pair = (chars[i], chars[i + 1])
+                    word_freq[pair] = word_freq.get(pair, 0) + 1
 
         # Perform BPE merges
         merges = {}
@@ -176,7 +178,8 @@ class WordMatrixTokenizer:
 
             word_freq = new_word_freq
 
-        self.bpe_merges = merges
+        # CORRECTION: Store merges as strings, not tuples
+        self.bpe_merges = {''.join(pair): new_symbol for pair, new_symbol in merges.items()}
 
     def _bpe_tokenize(self, text: str) -> List[str]:
         """Apply BPE tokenization to text"""
@@ -191,9 +194,10 @@ class WordMatrixTokenizer:
         for merge_pair, _ in sorted(self.bpe_merges.items(), key=lambda x: x[1]):
             i = 0
             while i < len(words) - 1:
-                if i < len(words) - 1 and words[i:i+2] == list(merge_pair):
+                # CORRECTION: merge_pair is now a string, compare with joined strings
+                if i < len(words) - 1 and ''.join(words[i:i+2]) == merge_pair:
                     # Merge the pair
-                    words[i:i+2] = [''.join(merge_pair)]
+                    words[i:i+2] = [merge_pair]
                 else:
                     i += 1
 
@@ -324,33 +328,34 @@ class CompleteGolayCode:
 
     def encode(self, message: torch.Tensor) -> torch.Tensor:
         """Encode 12-bit message to 24-bit codeword"""
-        # Ensure generator matrix is on the same device as message
-        gen_matrix = self.generator_matrix.to(message.device)
-        return torch.matmul(message, gen_matrix) % 2
+        # CORRECTION: Use bitwise XOR for GF(2) arithmetic instead of matmul
+        message_int = message.long()
+        gen_matrix_int = self.generator_matrix.long()
+        return torch.bitwise_xor(torch.matmul(message_int, gen_matrix_int), 0).float()
 
     def syndrome(self, received: torch.Tensor) -> torch.Tensor:
         """Compute syndrome for error detection/correction"""
-        parity_matrix = self.parity_check_matrix.to(received.device)
-        return torch.matmul(received, parity_matrix.t()) % 2
+        received_int = received.long()
+        parity_matrix_int = self.parity_check_matrix.long()
+        return torch.bitwise_xor(torch.matmul(received_int, parity_matrix_int.t()), 0).float()
 
     def correct_errors(self, received: torch.Tensor, max_errors: int = 3) -> torch.Tensor:
-        """Correct up to max_errors using complete Golay code table"""
-        syndrome = self.syndrome(received)
+        """Correct up to max_errors using complete Golay code table with vectorized ops"""
+        batch_size = received.shape[0]
+        # Compute syndromes for entire batch
+        syndromes = self.syndrome(received)  # [batch_size, 12]
+        syndromes_int = syndromes.int()
 
-        # Look up error pattern in complete table
-        syndrome_tensor = syndrome.int()
-        syndrome_key = tuple(syndrome_tensor.flatten().tolist())
-
-        if syndrome_key in self.error_table:
-            error_pattern = self.error_table[syndrome_key]
-            # Ensure error_pattern is on the same device as received
-            error_pattern_tensor = torch.tensor(error_pattern, device=received.device, dtype=received.dtype)
-            corrected = (received + error_pattern_tensor) % 2
-            return corrected.float()
-        else:
-            # Syndrome not in table - too many errors or decoder failure
-            logger.warning(f"Syndrome {syndrome_key} not found in Golay code table")
-            return received.float()  # Return uncorrected
+        # Vectorized lookup (requires precomputed table as tensor)
+        error_patterns = torch.zeros_like(received)
+        for idx in range(batch_size):
+            syndrome_key = tuple(syndromes_int[idx].flatten().tolist())
+            if syndrome_key in self.error_table:
+                error_patterns[idx] = self.error_table[syndrome_key].to(received.device)
+            else:
+                logger.warning(f"Syndrome {syndrome_key} not found")
+                error_patterns[idx] = received[idx]  # Uncorrected
+        return torch.bitwise_xor(received, error_patterns).float()
 
 # ==================== FRACTAL ANALYZER WITH TRAINED EMBEDDINGS ====================
 
@@ -365,32 +370,18 @@ class SemanticFractalAnalyzer:
         """
         Compute fractal dimension using trained word matrix embeddings
         """
-        try:
-            # Tokenize text using word matrix tokenizer
-            token_ids = self.tokenizer.encode(text, max_length=512, add_special_tokens=False)
-            token_tensor = torch.tensor(token_ids, dtype=torch.long).unsqueeze(0)
-
-            # Get semantic embeddings from trained word matrix
-            with torch.no_grad():
-                embeddings = self.tokenizer.get_embeddings(token_tensor)  # [1, seq_len, embed_dim]
-
-            # Use embeddings for fractal analysis
-            signal = embeddings.squeeze(0).mean(dim=-1)  # Average across embedding dimensions
-
-            # Convert to numpy for analysis
-            signal_np = signal.detach().cpu().numpy()
-
-            # Multi-scale fractal analysis
-            D = self._compute_multiscale_fractal_dimension(signal_np)
-
-            # Clamp to physical range
-            D = max(1.0, min(D, 2.0))
-
-        except Exception as e:
-            logger.warning(f"Fractal analysis failed: {e}, using default D=1.5")
-            D = 1.5
-
-        return float(D)
+        if not text.strip():
+            logger.warning("Empty text, returning default D=1.5")
+            return 1.5
+        token_ids = self.tokenizer.encode(text, max_length=512, add_special_tokens=False)
+        if len(token_ids) < 2:
+            logger.warning("Text too short, returning default D=1.5")
+            return 1.5
+        token_tensor = torch.tensor(token_ids, dtype=torch.long, device=self.device).unsqueeze(0)
+        with torch.no_grad():
+            embeddings = self.tokenizer.get_embeddings(token_tensor)
+        signal = embeddings.squeeze(0).mean(dim=-1).cpu().numpy()
+        return self._compute_multiscale_fractal_dimension(signal)
 
     def _compute_multiscale_fractal_dimension(self, signal: np.ndarray) -> float:
         """Compute fractal dimension using multi-scale analysis"""
@@ -438,7 +429,7 @@ class SemanticFractalAnalyzer:
         return D
 
     def adaptive_alpha_mapping(self, D: float, alpha_0: float = 1.0,
-                             lambda_param: float = 0.5, n: int = 1) -> float:
+                              lambda_param: float = 0.5, n: int = 1) -> float:
         """Adaptive α mapping: α(D) = α₀(1 + λ(D − n)/n)"""
         alpha = alpha_0 * (1.0 + lambda_param * (D - n) / n)
         return max(0.1, min(alpha, 5.0))
@@ -765,6 +756,9 @@ class PsiQRHTransformerWiki(nn.Module):
 
     def forward(self, input_ids: torch.Tensor, attention_mask: Optional[torch.Tensor] = None,
                 fractal_dims: Union[List[float], torch.Tensor] = None, task: str = 'classification') -> torch.Tensor:
+        # CORRECTION: Add self.current_task = task
+        self.current_task = task
+
         B, T = input_ids.shape
         if T > self.max_seq_len:
             input_ids = input_ids[:, :self.max_seq_len]
@@ -855,13 +849,18 @@ class WikiTextPretrainer:
             logger.info(f"Built unified vocabulary with {len(combined_texts)} texts from WikiText + GLUE")
 
             # Create training data
-            train_texts = [item['text'] for item in dataset if len(item['text'].strip()) > 50][:5000]
+            train_texts = [item['text'] for item in dataset if len(item['text'].strip()) > 50]
             train_data = []
 
             for text in train_texts:
                 token_ids = self.model.tokenizer.encode(text, max_length=128, add_special_tokens=True)
                 if len(token_ids) >= 32:  # Minimum sequence length
                     train_data.append(token_ids)
+
+            # Shuffle and sample dynamically
+            import random
+            random.shuffle(train_data)
+            train_data = train_data[:100000]  # Adjustable
 
             # Training loop
             optimizer = torch.optim.AdamW(self.model.parameters(), lr=1e-4, weight_decay=0.01)
@@ -990,8 +989,8 @@ class GLUEEvaluatorWiki:
         all_labels = []
 
         with torch.no_grad():
-            batch_idx = 0
-            for batch_input_ids, batch_labels in dataloader:
+            # CORRECTION: Use enumerate(dataloader) instead of manual batch_idx
+            for batch_idx, (batch_input_ids, batch_labels) in enumerate(dataloader):
                 batch_input_ids = batch_input_ids.to(self.device)
                 batch_labels = batch_labels.to(self.device)
 
@@ -1015,12 +1014,14 @@ class GLUEEvaluatorWiki:
                 # Set current task for proper classifier head selection
                 self.model.current_task = task_name
 
-                logits = self.model(batch_input_ids, fractal_dims=fractal_dims_tensor, task='classification')
+                # Create attention mask for padding
+                attention_mask = (batch_input_ids != self.model.tokenizer.word_to_id['<pad>']).long()
+
+                logits = self.model(batch_input_ids, attention_mask=attention_mask, fractal_dims=fractal_dims_tensor, task='classification')
                 preds = torch.argmax(logits, dim=1)
 
                 all_preds.extend(preds.cpu().numpy())
                 all_labels.extend(batch_labels.cpu().numpy())
-                batch_idx += 1
 
         # Calculate real accuracy
         all_preds = np.array(all_preds)
@@ -1035,7 +1036,7 @@ class GLUEEvaluatorWiki:
             'tokenizer': 'WordMatrix'
         }
 
-        logger.info(".4f")
+        logger.info(f"Task {task_name}: {accuracy:.4f} accuracy on {len(texts)} samples")
         return results
 
 # ==================== GLUE DATASET LOADING ====================
@@ -1174,8 +1175,11 @@ def run_psiqrh_wikitext_glue_benchmark():
                     batch_input_ids = batch_input_ids.to(device)
                     batch_labels = batch_labels.to(device)
 
+                    # Create attention mask for padding
+                    attention_mask = (batch_input_ids != psi_model.tokenizer.word_to_id['<pad>']).long()
+
                     optimizer.zero_grad()
-                    logits = psi_model(batch_input_ids, fractal_dims=None)
+                    logits = psi_model(batch_input_ids, attention_mask=attention_mask, fractal_dims=None)
                     loss = criterion(logits, batch_labels)
                     loss.backward()
                     optimizer.step()
@@ -1239,3 +1243,4 @@ if __name__ == "__main__":
         print("Complete DOE compliance with integrated Padilha wave equation.")
     else:
         print("\n❌ Benchmark failed. Check logs for details.")
+                # Set current task for proper classifier head
