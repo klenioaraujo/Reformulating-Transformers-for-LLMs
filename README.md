@@ -9,8 +9,11 @@
 **Date**: September 2025
 **License**: [GNU GPLv3](LICENSE)
 
-
-
+<a href="https://www.paypal.com/donate/?hosted_button_id=FZLYHT3B5TNGC" target="_blank">
+  <img src="https://www.paypalobjects.com/webstatic/en_US/i/buttons/PP_logo_h_100x26.png" alt="Doar com PayPal" />
+  <br>
+  <strong>Faça uma doação ❤️</strong>
+</a>
 
 
 ## Abstract
